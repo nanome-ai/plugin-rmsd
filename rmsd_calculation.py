@@ -325,7 +325,6 @@ def hungarian(A, B):
 
     Assume A and B are coordinates for atoms of SAME type only
     """
-
     # should be kabasch here i think
     distances = cdist(A, B, 'euclidean')
 

@@ -4,8 +4,8 @@ class RMSDMenu():
     def __init__(self, rmsd_plugin):
         self._menu = rmsd_plugin.menu
         self._plugin = rmsd_plugin
-        self._selected_mobile = None # Tuple (button/complex)
-        self._selected_target = None # Tuple (button/complex)
+        self._selected_mobile = None # button
+        self._selected_target = None # button
         self._complex_list = []
         self._run_button = None
 
@@ -13,13 +13,7 @@ class RMSDMenu():
         self._plugin.request_refresh()
 
     def _run_rmsd(self):
-        self._plugin.run_rmsd(self._selected_mobile[1], self._selected_target[1])
-
-    def _find_complex(self, name):
-        for complex in self._complex_list:
-            if complex.name == name:
-                return complex
-        return None
+        self._plugin.run_rmsd(self._selected_mobile.complex, self._selected_target.complex)
 
     def make_plugin_usable(self, state = True):
         self._run_button.unusable = not state
@@ -27,27 +21,17 @@ class RMSDMenu():
 
     def change_complex_list(self, complex_list):
         def mobile_pressed(button):
-            complex = self._find_complex(button.text.value_idle)
-            if complex == None:
-                nanome.util.Logs.error("Couldn't retrieve a complex from its button text")
-                return
-
             if self._selected_mobile != None:
-                self._selected_mobile[0].selected = False
+                self._selected_mobile.selected = False
             button.selected = True
-            self._selected_mobile = (button, complex)
+            self._selected_mobile = button
             self._plugin.update_menu(self._menu)
 
         def target_pressed(button):
-            complex = self._find_complex(button.text.value_idle)
-            if complex == None:
-                nanome.util.Logs.error("Couldn't retrieve a complex from its button text")
-                return
-
             if self._selected_target != None:
-                self._selected_target[0].selected = False
+                self._selected_target.selected = False
             button.selected = True
-            self._selected_target = (button, complex)
+            self._selected_target = button
             self._plugin.update_menu(self._menu)
 
         self._complex_list = complex_list
@@ -62,12 +46,14 @@ class RMSDMenu():
             btn = ln_btn.get_content()
             btn.set_all_text(complex.name)
             btn.register_pressed_callback(mobile_pressed)
+            btn.complex = complex
             self._mobile_list.items.append(clone)
             
             clone1 = clone.clone()
             ln_btn = clone1.get_children()[0]
             btn = ln_btn.get_content()
             btn.register_pressed_callback(target_pressed)
+            btn.complex = complex
             self._target_list.items.append(clone1)
         self._plugin.update_menu(self._menu)
 

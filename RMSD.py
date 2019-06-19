@@ -15,7 +15,7 @@ class RMSD(nanome.PluginInstance):
     def on_run(self):
         menu = self.menu
         menu.enabled = True
-        self.update_menu(menu)
+        self._menu._request_refresh()
 
     def on_complex_added(self):
         nanome.util.Logs.debug("Complex added: refreshing")
@@ -46,13 +46,15 @@ class RMSD(nanome.PluginInstance):
 
     def on_workspace_received(self, workspace):
         complexes = workspace.complexes
+        print(self._mobile.index)
+        print(self._target.index)
         for complex in complexes:
             if complex.index == self._mobile.index:
                 mobile_complex = complex
             if complex.index == self._target.index:
                 target_complex = complex
 
-        self.align(target_complex, mobile_complex)
+        mobile_complex = self.align(target_complex, mobile_complex)
         self.update_workspace(workspace)
         Logs.debug("RMSD done")
         self.make_plugin_usable()
@@ -167,6 +169,8 @@ https://github.com/charnley/rmsd for further examples.
             q_all_atoms[i].position = nanome.util.Vector3(q_all[i][0], q_all[i][1], q_all[i][2])
 
         # align the complex itself
+        Logs.debug(complex1.position)
+        Logs.debug(complex0.position)
         complex1.position = complex0.position
         complex1.rotation = complex0.rotation
 
