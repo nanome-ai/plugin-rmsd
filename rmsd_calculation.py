@@ -600,7 +600,7 @@ def get_common_coordinates(complex0, complex1):
     residues1 = {}
     common_serials = {}
 
-
+    #finds residues that are in both complexes using chain name and residue serial.
     for molecule in complex0.molecules:
         for chain in molecule.chains:
             for residue in chain.residues:
@@ -614,9 +614,9 @@ def get_common_coordinates(complex0, complex1):
                     common_serials[key] = key
 
     atoms0 = list()
-    V0 = list()
+    atoms0_position = list()
     atoms1 = list()
-    V1 = list()
+    atoms1_position = list()
 
     for serial in common_serials:
         residue = residues0[serial]
@@ -627,7 +627,7 @@ def get_common_coordinates(complex0, complex1):
         for atom in atoms.values():
             atoms0.append(atom)                
             position = atom.position
-            V0.append(np.asarray([position.x, position.y, position.z], dtype = float))
+            atoms0_position.append(np.asarray([position.x, position.y, position.z], dtype = float))
 
         residue = residues1[serial]
         atoms = {}
@@ -637,14 +637,14 @@ def get_common_coordinates(complex0, complex1):
         for atom in atoms.values():
             atoms1.append(atom)                
             position = atom.position
-            V1.append(np.asarray([position.x, position.y, position.z], dtype = float))
+            atoms1_position.append(np.asarray([position.x, position.y, position.z], dtype = float))
 
-    V0 = np.asarray(V0)
+    atoms0_position = np.asarray(atoms0_position)
     atoms0 = np.asarray(atoms0)
-    V1 = np.asarray(V1)
+    atoms1_position = np.asarray(atoms1_position)
     atoms1 = np.asarray(atoms1)
 
-    return atoms0, V0, atoms1, V1 
+    return atoms0, atoms0_position, atoms1, atoms1_position 
 
 def print_coordinates(atoms, V, title=""):
     """

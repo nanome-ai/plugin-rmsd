@@ -45,19 +45,15 @@ class RMSD(nanome.PluginInstance):
         self.request_workspace(self.on_workspace_received)
 
     def on_workspace_received(self, workspace):
-        # complexes = workspace.complexes
-        # for complex in complexes:
-        #     if complex.index == self._mobile.index:
-        #         mobile_complex = complex
-        #     if complex.index == self._target.index:
-        #         target_complex = complex
+        complexes = workspace.complexes
+        for complex in complexes:
+            if complex.index == self._mobile.index:
+                mobile_complex = complex
+            if complex.index == self._target.index:
+                target_complex = complex
 
-        # self.align(target_complex, mobile_complex)
-        complexes = []
-        for complex in workspace.complexes:
-            print("COMPLEX: " + str(complex))
-            complexes.append(complex)
-        self.update_structures_deep(complexes)
+        self.align(target_complex, mobile_complex)
+        self.update_workspace(workspace)
         Logs.debug("RMSD done")
         self.make_plugin_usable()
  
