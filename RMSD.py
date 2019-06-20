@@ -105,18 +105,19 @@ class RMSD(nanome.PluginInstance):
             p_atoms = help.strip_hydrogens(p_atoms)
             q_atoms = help.strip_hydrogens(q_atoms)
 
-        p_coord = help.get_coordinates(p_atoms)
-        q_coord = help.get_coordinates(q_atoms)
+        p_atoms, p_coord = get_coordinates(p_atoms)
+        q_atoms, q_coord = get_coordinates(q_atoms)
+
+        p_atom_names = list(map(lambda a: a.name, p_atoms))
+        q_atom_names = list(map(lambda a: a.name, q_atoms))
 
         # Create the centroid of P and Q which is the geometric center of a
         # N-dimensional region and translate P and Q onto that center.
         # http://en.wikipedia.org/wiki/Centroid
         p_cent = centroid(p_coord)
         q_cent = centroid(q_coord)
-        for coord in p_coord:
-            coord -= p_cent
-        for coord in q_coord:
-            coord -= q_cent
+        p_coord -= p_cent
+        q_coord -= q_cent
 
         # set rotation method
         if args.rotation.lower() == "kabsch":
@@ -158,8 +159,8 @@ class RMSD(nanome.PluginInstance):
         if args.use_reflections:
 
             result_rmsd, q_swap, q_reflection, q_review = check_reflections(
-                p_atoms,
-                q_atoms,
+                p_atom_names,
+                q_atom_names,
                 p_coord,
                 q_coord,
                 reorder_method=reorder_method,
@@ -168,8 +169,8 @@ class RMSD(nanome.PluginInstance):
         elif args.use_reflections_keep_stereo:
 
             result_rmsd, q_swap, q_reflection, q_review = check_reflections(
-                p_atoms,
-                q_atoms,
+                p_atom_names,
+                q_atom_names,
                 p_coord,
                 q_coord,
                 reorder_method=reorder_method,
@@ -178,14 +179,26 @@ class RMSD(nanome.PluginInstance):
 
         elif args.reorder:
 
-            q_review = reorder_method(p_atoms, q_atoms, p_coord, q_coord)
+            q_review = reorder_method(p_atom_names, q_atom_names, p_coord, q_coord)
             q_coord = q_coord[q_review]
-            q_atoms = q_atoms[q_review]
+            q_atom_names = q_atom_names[q_review]
 
-            if not all(p_atoms == q_atoms):
+            if not all(p_atom_names == q_atom_names):
                 Logs.debug("error: Structure not aligned")
                 return
 
+
+        #calculare RMSD
+        if result_rmsd:
+            pass
+
+        elif rotation_method is None:
+            result_rmsd = rmsd(p_coord, q_coord)
+
+        else:
+            result_rmsd = rotation_method(p_coord, q_coord)
+        print(type(result_rmsd))
+        Logs.debug("{0}".format(result_rmsd))
 
         # Logs.debug result
         if args.update:
@@ -210,20 +223,11 @@ class RMSD(nanome.PluginInstance):
             q_coord += p_cent
 
             # done and done
+            for coord, atom in zip(q_coord, q_atoms):
+                atom.position.x = coord[0]
+                atom.position.y = coord[1]
+                atom.position.z = coord[2]
             Logs.debug("Finished update")
-
-        else:
-
-            if result_rmsd:
-                pass
-
-            elif rotation_method is None:
-                result_rmsd = rmsd(p_coord, q_coord)
-
-            else:
-                result_rmsd = rotation_method(p_coord, q_coord)
-
-            Logs.debug("{0}".format(result_rmsd))
         return
 
         

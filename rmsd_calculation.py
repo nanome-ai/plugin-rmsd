@@ -51,7 +51,6 @@ def rmsd(V, W):
     result = 0.0
     for v, w in zip(V, W):
         result += sum([(v[i] - w[i])**2.0 for i in range(D)])
-    print(math.sqrt(result/N), np.sqrt(result/N))
     return math.sqrt(result/N)
 
 
@@ -137,10 +136,7 @@ def kabsch(P, Q):
     
 
     # Computation of the covariance matrix
-    Q_Matrix = nanome.util.Matrix(len(Q), 3)
-    P_Matrix = nanome.util.Matrix(len(P), 3)
-    P_Matrix.transpose()
-    C = P*Q
+    C = np.dot(np.transpose(P), Q)
 
     # Computation of the optimal rotation matrix
     # This can be done using singular value decomposition (SVD)
@@ -275,16 +271,7 @@ def centroid(positions):
     C : float
         centroid
     """
-    mean_pos = nanome.util.Vector3()
-    for position in positions:
-        mean_pos.x += position.x
-        mean_pos.y += position.y
-        mean_pos.z += position.z
-    length = len(positions)
-    mean_pos.x /= length
-    mean_pos.y /= length
-    mean_pos.z /= length
-    return mean_pos
+    return positions.mean(axis=0)
 
 
 def reorder_distance(p_atoms, q_atoms, p_coord, q_coord):
@@ -580,7 +567,7 @@ def check_reflections(p_atoms, q_atoms, p_coord, q_coord,
 
     return min_rmsd, min_swap, min_reflection, min_review
 
-def get_coordinates(complex):
+def get_coordinates(atom_list):
     """
     Get coordinates from filename in format fmt. Supports XYZ and PDB.
     Parameters
@@ -596,19 +583,14 @@ def get_coordinates(complex):
     V : array
         (N,3) where N is number of atoms
     """
-    atoms = list()
     V = list()
 
-    for molecule in complex.molecules:
-        for chain in molecule.chains:
-            for residue in chain.residues:
-                for atom in residue.atoms:
-                    atoms.append(atom)
-                    position = atom.position
-                    V.append(np.asarray([position.x, position.y, position.z], dtype = float))
+    for atom in atom_list:
+        position = atom.position
+        V.append(np.asarray([position.x, position.y, position.z], dtype = float))
 
     V = np.asarray(V)
-    atoms = np.asarray(atoms)
+    atoms = np.asarray(atom_list)
 
     return atoms, V
 
