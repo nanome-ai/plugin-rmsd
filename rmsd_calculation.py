@@ -24,8 +24,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 import copy
 import re
-
+import math
 import numpy as np
+import nanome
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist
 
@@ -50,10 +51,12 @@ def rmsd(V, W):
     result = 0.0
     for v, w in zip(V, W):
         result += sum([(v[i] - w[i])**2.0 for i in range(D)])
-    return np.sqrt(result/N)
+    print(math.sqrt(result/N), np.sqrt(result/N))
+    return math.sqrt(result/N)
 
 
 def kabsch_rmsd(P, Q, translate=False):
+    print("KABASCH")
     """
     Rotate matrix P unto Q using Kabsch algorithm and calculate the RMSD.
 
@@ -131,8 +134,13 @@ def kabsch(P, Q):
         Rotation matrix (D,D)
     """
 
+    
+
     # Computation of the covariance matrix
-    C = np.dot(np.transpose(P), Q)
+    Q_Matrix = nanome.util.Matrix(len(Q), 3)
+    P_Matrix = nanome.util.Matrix(len(P), 3)
+    P_Matrix.transpose()
+    C = P*Q
 
     # Computation of the optimal rotation matrix
     # This can be done using singular value decomposition (SVD)
@@ -170,6 +178,7 @@ def quaternion_rmsd(P, Q):
     -------
     rmsd : float
     """
+    print("QUATERNION")
     rot = quaternion_rotate(P, Q)
     P = np.dot(P, rot)
     return rmsd(P, Q)
@@ -247,7 +256,7 @@ def matrix_to_quaternion(matrix):
     return nanome.Util.Quaternion(w, x, y, z)
 
 
-def centroid(X):
+def centroid(positions):
     """
     Centroid is the mean position of all the points in all of the coordinate
     directions, from a vectorset X.
@@ -266,8 +275,16 @@ def centroid(X):
     C : float
         centroid
     """
-    C = X.mean(axis=0)
-    return C
+    mean_pos = nanome.util.Vector3()
+    for position in positions:
+        mean_pos.x += position.x
+        mean_pos.y += position.y
+        mean_pos.z += position.z
+    length = len(positions)
+    mean_pos.x /= length
+    mean_pos.y /= length
+    mean_pos.z /= length
+    return mean_pos
 
 
 def reorder_distance(p_atoms, q_atoms, p_coord, q_coord):
@@ -320,6 +337,7 @@ def reorder_distance(p_atoms, q_atoms, p_coord, q_coord):
 
 
 def hungarian(A, B):
+    print("HUNGARIAN")
     """
     Hungarian reordering.
 

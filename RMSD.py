@@ -3,7 +3,7 @@ import sys
 import time
 from rmsd_calculation import *
 from rmsd_menu import RMSDMenu
-
+import rmsd_helpers as help
 from nanome.util import Logs
 
 class RMSD(nanome.PluginInstance):
@@ -46,135 +46,185 @@ class RMSD(nanome.PluginInstance):
 
     def on_workspace_received(self, workspace):
         complexes = workspace.complexes
-        print(self._mobile.index)
-        print(self._target.index)
         for complex in complexes:
             if complex.index == self._mobile.index:
                 mobile_complex = complex
             if complex.index == self._target.index:
                 target_complex = complex
 
-        mobile_complex = self.align(target_complex, mobile_complex)
-        self.update_workspace(workspace)
+        result = self.align(target_complex, mobile_complex)
+        if result :
+            self.update_workspace(workspace)
         Logs.debug("RMSD done")
         self.make_plugin_usable()
  
-    def align(self, complex0, complex1):
-        # flags
-        rotation = "kabsch"
-        # mutually exclusive flags
-        no_hydrogen = False
-        remove_idx = 0
-        add_idx = 0
-        p_all_atoms, p_all = get_coordinates(complex0)
-        q_all_atoms, q_all = get_coordinates(complex1)
-        p_common_atoms, p_common, q_common_atoms, q_common = get_common_coordinates(complex0, complex1)
+    class Args(object):
+        def __init__(self):
+            self.rotation = "kabsch" #alt: "quaternion", "none"
+            self.reorder = False
+            self.reorder_method = "hungarian" #alt "brute", "distance"
+            self.use_reflections = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). This will affect stereo-chemistry.
+            self.use_reflections_keep_stereo = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). Stereo-chemistry will be kept.
+            #exclusion options
+            self.no_hydrogen = False
+            self.selected_only = False
 
-        p_size = p_common.shape[0]
-        q_size = q_common.shape[0]
+            self.align = True
+
+        @property
+        def update(self):
+            if self.align and (self.no_hydrogen or self.selected_only):
+                Logs.debug('Invalid options: cannot use align with "no hydrogen" or "selected only" options')
+                return False
+            return self.align
+
+    def align(self, complex0, complex1):
+        args = RMSD.Args()
+
+        p_atoms = list(complex0.atoms)
+        q_atoms = list(complex1.atoms)
+
+        p_size = len(p_atoms)
+        q_size = len(q_atoms)
 
         if not p_size == q_size:
-            print("error: Structures not same size")
-            print("complex0 size = " + str(p_size))
-            print("complex1 size = " + str(q_size))
-            quit()
-        if p_size == 0:
-            print("error: no common residue found")
-            quit()
+            Logs.debug("error: Structures not same size")
+            return
 
-        p_common_symbols = list()
-        q_common_symbols = list()
-        for atom in p_common_atoms:
-            p_common_symbols.append(atom.symbol)
-        for atom in q_common_atoms:
-            q_common_symbols.append(atom.symbol)
+        if not help.same_order(p_atoms, q_atoms) and not args.reorder:
+            #message should be sent to nanome as notification?
+            msg = "\nerror: Atoms are not in the same order. \n reorder to align the atoms (can be expensive for large structures)."
+            Logs.debug(msg)
+            return
 
-        if np.count_nonzero(p_common_symbols != q_common_symbols) and not args.reorder:
-            msg = """
-error: Atoms are not in the same order.
+        if args.selected_only:
+            p_atoms = help.strip_nonselected(p_atoms)
+            q_atoms = help.strip_nonselected(q_atoms)
 
-Use --reorder to align the atoms (can be expensive for large structures).
+        if args.no_hydrogen:
+            p_atoms = help.strip_hydrogens(p_atoms)
+            q_atoms = help.strip_hydrogens(q_atoms)
 
-Please see --help or documentation for more information or
-https://github.com/charnley/rmsd for further examples.
-"""
-            print(msg)
-            exit()
-
-        # Set local view
-        p_view = None
-        q_view = None
-
-        if no_hydrogen:
-            p_view = np.where(p_common_atoms != 'H')
-            q_view = np.where(q_common_atoms != 'H')
-
-        elif remove_idx:
-            index = range(p_size)
-            index = set(index) - set(remove_idx)
-            index = list(index)
-            p_view = index
-            q_view = index
-
-        elif add_idx:
-            p_view = add_idx
-            q_view = add_idx
-
-        # Set local view
-        if p_view is None:
-            p_coord = copy.deepcopy(p_common)
-            q_coord = copy.deepcopy(q_common)
-
-        else:
-            p_coord = copy.deepcopy(p_common[p_view])
-            q_coord = copy.deepcopy(q_common[q_view])
+        p_coord = help.get_coordinates(p_atoms)
+        q_coord = help.get_coordinates(q_atoms)
 
         # Create the centroid of P and Q which is the geometric center of a
         # N-dimensional region and translate P and Q onto that center.
         # http://en.wikipedia.org/wiki/Centroid
         p_cent = centroid(p_coord)
         q_cent = centroid(q_coord)
-        p_coord -= p_cent
-        q_coord -= q_cent
+        for coord in p_coord:
+            coord -= p_cent
+        for coord in q_coord:
+            coord -= q_cent
 
         # set rotation method
-        if rotation.lower() == "kabsch":
+        if args.rotation.lower() == "kabsch":
             rotation_method = kabsch_rmsd
 
-        elif rotation.lower() == "quaternion":
+        elif args.rotation.lower() == "quaternion":
             rotation_method = quaternion_rmsd
 
-        elif rotation.lower() == "none":
+        elif args.rotation.lower() == "none":
             rotation_method = None
 
         else:
-            print("error: Unknown rotation method:", rotation)
-            quit()
+            Logs.debug("error: Unknown rotation method:", args.rotation)
+            return
+
+
+        # set reorder method
+        if not args.reorder:
+            reorder_method = None
+
+        if args.reorder_method == "hungarian":
+            reorder_method = reorder_hungarian
+
+        elif args.reorder_method == "brute":
+            reorder_method = reorder_brute
+
+        elif args.reorder_method == "distance":
+            reorder_method = reorder_distance
+
+        else:
+            Logs.debug("error: Unknown reorder method:", args.reorder_method)
+            return
+
 
         # Save the resulting RMSD
         result_rmsd = None
 
-        # Get rotation matrix
-        U = kabsch(q_coord, p_coord)
 
-        # recenter all atoms and rotate all atoms
-        q_all -= q_cent
-        q_all = np.dot(q_all, U)
+        if args.use_reflections:
 
-        # center q on p's original coordinates
-        q_all += p_cent
+            result_rmsd, q_swap, q_reflection, q_review = check_reflections(
+                p_atoms,
+                q_atoms,
+                p_coord,
+                q_coord,
+                reorder_method=reorder_method,
+                rotation_method=rotation_method)
 
-        # done and done
-        for i in range(0, int(q_all.shape[0])):
-            q_all_atoms[i].position = nanome.util.Vector3(q_all[i][0], q_all[i][1], q_all[i][2])
+        elif args.use_reflections_keep_stereo:
 
-        # align the complex itself
-        Logs.debug(complex1.position)
-        Logs.debug(complex0.position)
-        complex1.position = complex0.position
-        complex1.rotation = complex0.rotation
+            result_rmsd, q_swap, q_reflection, q_review = check_reflections(
+                p_atoms,
+                q_atoms,
+                p_coord,
+                q_coord,
+                reorder_method=reorder_method,
+                rotation_method=rotation_method,
+                keep_stereo=True)
 
-        return complex1
+        elif args.reorder:
+
+            q_review = reorder_method(p_atoms, q_atoms, p_coord, q_coord)
+            q_coord = q_coord[q_review]
+            q_atoms = q_atoms[q_review]
+
+            if not all(p_atoms == q_atoms):
+                Logs.debug("error: Structure not aligned")
+                return
+
+
+        # Logs.debug result
+        if args.update:
+
+            if args.reorder:
+
+                if q_review.shape[0] != len(q_coord):
+                    Logs.debug("error: Reorder length error. Full atom list needed for --Logs.debug")
+                    return
+
+                q_coord = q_coord[q_review]
+                q_atoms = q_atoms[q_review]
+
+            # Get rotation matrix
+            U = kabsch(q_coord, p_coord)
+
+            # recenter all atoms and rotate all atoms
+            q_coord -= q_cent
+            q_coord = np.dot(q_coord, U)
+
+            # center q on p's original coordinates
+            q_coord += p_cent
+
+            # done and done
+            Logs.debug("Finished update")
+
+        else:
+
+            if result_rmsd:
+                pass
+
+            elif rotation_method is None:
+                result_rmsd = rmsd(p_coord, q_coord)
+
+            else:
+                result_rmsd = rotation_method(p_coord, q_coord)
+
+            Logs.debug("{0}".format(result_rmsd))
+        return
 
         
 if __name__ == "__main__":
