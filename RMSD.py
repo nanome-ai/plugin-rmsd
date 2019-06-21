@@ -89,13 +89,13 @@ class RMSD(nanome.PluginInstance):
 
         if not p_size == q_size:
             Logs.debug("error: Structures not same size")
-            return
+            return False
 
         if not help.same_order(p_atoms, q_atoms) and not args.reorder:
             #message should be sent to nanome as notification?
             msg = "\nerror: Atoms are not in the same order. \n reorder to align the atoms (can be expensive for large structures)."
             Logs.debug(msg)
-            return
+            return False
 
         if args.selected_only:
             p_atoms = help.strip_nonselected(p_atoms)
@@ -105,8 +105,11 @@ class RMSD(nanome.PluginInstance):
             p_atoms = help.strip_hydrogens(p_atoms)
             q_atoms = help.strip_hydrogens(q_atoms)
 
-        p_atoms, p_coord = get_coordinates(p_atoms)
-        q_atoms, q_coord = get_coordinates(q_atoms)
+        p_atoms, p_coord_orig = get_coordinates(p_atoms)
+        q_atoms, q_coord_orig = get_coordinates(q_atoms)
+
+        p_coord = copy.deepcopy(p_coord_orig)
+        q_coord = copy.deepcopy(q_coord_orig)
 
         p_atom_names = list(map(lambda a: a.name, p_atoms))
         q_atom_names = list(map(lambda a: a.name, q_atoms))
@@ -122,52 +125,32 @@ class RMSD(nanome.PluginInstance):
         # set rotation method
         if args.rotation.lower() == "kabsch":
             rotation_method = kabsch_rmsd
-
         elif args.rotation.lower() == "quaternion":
             rotation_method = quaternion_rmsd
-
         elif args.rotation.lower() == "none":
             rotation_method = None
-
         else:
             Logs.debug("error: Unknown rotation method:", args.rotation)
-            return
-
+            return False
 
         # set reorder method
         if not args.reorder:
             reorder_method = None
-
         if args.reorder_method == "hungarian":
             reorder_method = reorder_hungarian
-
         elif args.reorder_method == "brute":
             reorder_method = reorder_brute
-
         elif args.reorder_method == "distance":
             reorder_method = reorder_distance
-
         else:
             Logs.debug("error: Unknown reorder method:", args.reorder_method)
-            return
+            return False
 
 
         # Save the resulting RMSD
         result_rmsd = None
 
-
-        if args.use_reflections:
-
-            result_rmsd, q_swap, q_reflection, q_review = check_reflections(
-                p_atom_names,
-                q_atom_names,
-                p_coord,
-                q_coord,
-                reorder_method=reorder_method,
-                rotation_method=rotation_method)
-
-        elif args.use_reflections_keep_stereo:
-
+        if args.use_reflections or args.use_reflections_keep_stereo:
             result_rmsd, q_swap, q_reflection, q_review = check_reflections(
                 p_atom_names,
                 q_atom_names,
@@ -175,60 +158,56 @@ class RMSD(nanome.PluginInstance):
                 q_coord,
                 reorder_method=reorder_method,
                 rotation_method=rotation_method,
-                keep_stereo=True)
-
+                keep_stereo=args.use_reflections_keep_stereo)
         elif args.reorder:
-
             q_review = reorder_method(p_atom_names, q_atom_names, p_coord, q_coord)
             q_coord = q_coord[q_review]
             q_atom_names = q_atom_names[q_review]
-
+            q_atoms = q_atoms[q_review]
             if not all(p_atom_names == q_atom_names):
                 Logs.debug("error: Structure not aligned")
-                return
+                return False
 
-
-        #calculare RMSD
+        #calculate RMSD
         if result_rmsd:
             pass
-
         elif rotation_method is None:
             result_rmsd = rmsd(p_coord, q_coord)
-
         else:
             result_rmsd = rotation_method(p_coord, q_coord)
-        print(type(result_rmsd))
         Logs.debug("{0}".format(result_rmsd))
 
         # Logs.debug result
         if args.update:
-
             if args.reorder:
-
-                if q_review.shape[0] != len(q_coord):
+                if q_review.shape[0] != len(q_coord_orig):
                     Logs.debug("error: Reorder length error. Full atom list needed for --Logs.debug")
-                    return
-
-                q_coord = q_coord[q_review]
+                    return False
+                q_coord_orig = q_coord_orig[q_review]
                 q_atoms = q_atoms[q_review]
-
             # Get rotation matrix
-            U = kabsch(q_coord, p_coord)
+            U = kabsch(q_coord_orig, p_coord)
 
             # recenter all atoms and rotate all atoms
-            q_coord -= q_cent
-            q_coord = np.dot(q_coord, U)
+            q_coord_orig -= q_cent
+            q_coord_orig = np.dot(q_coord_orig, U)
 
             # center q on p's original coordinates
-            q_coord += p_cent
+            q_coord_orig += p_cent
 
+            print("num q_atoms", (q_atoms.shape[0]))
+            print("q_atoms.type", type(q_atoms[0]))
             # done and done
-            for coord, atom in zip(q_coord, q_atoms):
+            print(q_atoms[0].position.x, q_coord_orig[0][0])
+            for coord, atom in zip(q_coord_orig, q_atoms):
                 atom.position.x = coord[0]
                 atom.position.y = coord[1]
                 atom.position.z = coord[2]
+            complex1.position = complex0.position
+            complex1.name = "mobile"
+            complex1.rotation = complex0.rotation
             Logs.debug("Finished update")
-        return
+        return True
 
         
 if __name__ == "__main__":
