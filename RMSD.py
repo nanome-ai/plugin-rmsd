@@ -2,7 +2,8 @@ import nanome
 import sys
 import time
 from rmsd_calculation import *
-from rmsd_menu import RMSDMenu
+# from rmsd_menu import RMSDMenu
+from  rmsd_NEW_MENU import RMSDMenu
 import rmsd_helpers as help
 from nanome.util import Logs
 
