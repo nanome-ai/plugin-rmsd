@@ -4,6 +4,7 @@ import time
 from rmsd_calculation import *
 from rmsd_menu import RMSDMenu
 import rmsd_helpers as help
+import calculate_rmsd as cr
 from nanome.util import Logs
 
 class RMSD(nanome.PluginInstance):
@@ -81,20 +82,14 @@ class RMSD(nanome.PluginInstance):
     def align(self, complex0, complex1):
         args = RMSD.Args()
 
-        p_atoms = list(complex0.atoms)
-        q_atoms = list(complex1.atoms)
+        p_atoms = list(complex0._molecules[0]._chains[0].atoms)
+        q_atoms = list(complex1._molecules[0]._chains[0].atoms)
 
         p_size = len(p_atoms)
         q_size = len(q_atoms)
 
         if not p_size == q_size:
             Logs.debug("error: Structures not same size")
-            return False
-
-        if not help.same_order(p_atoms, q_atoms) and not args.reorder:
-            #message should be sent to nanome as notification?
-            msg = "\nerror: Atoms are not in the same order. \n reorder to align the atoms (can be expensive for large structures)."
-            Logs.debug(msg)
             return False
 
         if args.selected_only:
@@ -105,14 +100,17 @@ class RMSD(nanome.PluginInstance):
             p_atoms = help.strip_hydrogens(p_atoms)
             q_atoms = help.strip_hydrogens(q_atoms)
 
-        p_atoms, p_coord_orig = get_coordinates(p_atoms)
-        q_atoms, q_coord_orig = get_coordinates(q_atoms)
+        p_atom_names, p_coord_orig = get_coordinates(p_atoms)
+        q_atom_names, q_coord_orig = get_coordinates(q_atoms)
+        q_atoms = np.asarray(q_atoms)
+        if np.count_nonzero(p_atom_names != q_atom_names) and not args.reorder:
+            #message should be sent to nanome as notification?
+            msg = "\nerror: Atoms are not in the same order. \n reorder to align the atoms (can be expensive for large structures)."
+            Logs.debug(msg)
+            return False
 
         p_coord = copy.deepcopy(p_coord_orig)
         q_coord = copy.deepcopy(q_coord_orig)
-
-        p_atom_names = list(map(lambda a: a.name, p_atoms))
-        q_atom_names = list(map(lambda a: a.name, q_atoms))
 
         # Create the centroid of P and Q which is the geometric center of a
         # N-dimensional region and translate P and Q onto that center.
@@ -175,7 +173,7 @@ class RMSD(nanome.PluginInstance):
             result_rmsd = rmsd(p_coord, q_coord)
         else:
             result_rmsd = rotation_method(p_coord, q_coord)
-        Logs.debug("{0}".format(result_rmsd))
+        Logs.debug("result: {0}".format(result_rmsd))
 
         # Logs.debug result
         if args.update:
@@ -210,8 +208,38 @@ class RMSD(nanome.PluginInstance):
         return True
 
         
-if __name__ == "__main__":
-    # Creates the server, register SimpleHBond as the class to instantiate, and start listening
-    plugin = nanome.Plugin("RMSD", "A simple plugin that aligns complexes through RMSD calculation", "Test", False)
-    plugin.set_plugin_class(RMSD)
-    plugin.run('127.0.0.1', 8888)
+# if __name__ == "__main__":
+#     # Creates the server, register SimpleHBond as the class to instantiate, and start listening
+#     plugin = nanome.Plugin("RMSD", "A simple plugin that aligns complexes through RMSD calculation", "Test", False)
+#     plugin.set_plugin_class(RMSD)
+#     plugin.run('127.0.0.1', 8888)
+import os
+
+download_path='/'.join( os.getcwd().split('\\')[:3] ) + '/Downloads' 
+nanome.util.Logs._set_verbose(True)
+# complex1 = nanome.api.structure.Complex.io.from_pdb(path=download_path + "/4aoj.pdb")
+# complex1.io.to_pdb(path=download_path + "/nanome_4aoj.pdb")
+c1_file = download_path + "/rmsd-master/tests/ci2_1.pdb"
+c2_file = download_path + "/rmsd-master/tests/ci2_2.pdb"
+complex1 = nanome.api.structure.Complex.io.from_pdb(path=c1_file)
+complex2 = nanome.api.structure.Complex.io.from_pdb(path=c2_file)
+
+c1_atoms = list(complex1._molecules[0]._chains[0].atoms)
+matoms, mpos = get_coordinates(c1_atoms)
+tatoms, tpos = cr.get_coordinates(c1_file, 'pdb')
+if (len(mpos) != len(tpos)):
+    print("different lengths")
+    print(len(mpos))
+    print(len(tpos))
+
+print(matoms[12])
+print(tatoms[12])
+
+for i, _ in enumerate(matoms):
+    m = mpos[i]
+    t = tpos[i]
+    if m[0] != t[0] or m[1] != t[1] or m[2] != t[2] :
+        print("difference")
+
+
+RMSD().align(complex1, complex2)

@@ -55,7 +55,6 @@ def rmsd(V, W):
 
 
 def kabsch_rmsd(P, Q, translate=False):
-    print("KABASCH")
     """
     Rotate matrix P unto Q using Kabsch algorithm and calculate the RMSD.
 
@@ -584,13 +583,23 @@ def get_coordinates(atom_list):
         (N,3) where N is number of atoms
     """
     V = list()
-
+    atoms = list()
     for atom in atom_list:
         position = atom.position
         V.append(np.asarray([position.x, position.y, position.z], dtype = float))
-
+        symbol = atom.name[0]
+        if symbol in ("H", "C", "N", "O","S", "P"):
+            atoms.append(symbol)
+        else:
+            # e.g. 1HD1
+            symbol = atom.name[1]
+            if symbol == "H":
+                atoms.append(symbol)
+            else:
+                nanome.util.Logs.error("Could not determine atom type. Atom name:", atom.name)
+                raise Exception
     V = np.asarray(V)
-    atoms = np.asarray(atom_list)
+    atoms = np.asarray(atoms)
 
     return atoms, V
 
