@@ -3,7 +3,7 @@ import sys
 import time
 from rmsd_calculation import *
 # from rmsd_menu import RMSDMenu
-from  rmsd_NEW_MENU import RMSDMenu
+from  rmsd_new_menu import RMSDMenu
 import rmsd_helpers as help
 from nanome.util import Logs
 
@@ -12,6 +12,11 @@ class RMSD(nanome.PluginInstance):
         Logs.debug("Start RMSD Plugin")
         self._menu = RMSDMenu(self)
         self._menu.build_menu()
+        self.current_args={"rotation":"kabsch","reorder_method":"hungarian",
+                            "use_reflections":False,"use_reflections_keep_stereo":False,
+                            "no_hydrogen":False,"selected_only":False}
+        
+    
 
     def on_run(self):
         menu = self.menu
@@ -58,17 +63,43 @@ class RMSD(nanome.PluginInstance):
             self.update_workspace(workspace)
         Logs.debug("RMSD done")
         self.make_plugin_usable()
- 
+    
+    def update_args(self,arg,option):
+        if arg not in ["rotation","use_reflections","use_reflections_keep_stereo", "no_hydrogen","selected_only","reorder_method"]:
+            Logs.debug("Invalid argument")
+        else:
+            # binary args
+            if arg in ["no_hydrogen","selected_only","use_reflections"]:
+                self.current_args[arg]=not self.current_args[arg]
+            # non binary args
+            else:
+                self.current_args[arg]=option
+
     class Args(object):
-        def __init__(self):
-            self.rotation = "kabsch" #alt: "quaternion", "none"
-            self.reorder = False
-            self.reorder_method = "hungarian" #alt "brute", "distance"
-            self.use_reflections = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). This will affect stereo-chemistry.
-            self.use_reflections_keep_stereo = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). Stereo-chemistry will be kept.
+        def __init__(self,rmsd_plugin):
+            self.plugin = rmsd_plugin
+            Logs.debug("Args Created")
+            #self.rotation = "kabsch" #alt: "quaternion", "none"
+            #self.reorder = False
+            #self.reorder_method = "hungarian" #alt "brute", "distance"
+            #self.use_reflections = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). This will affect stereo-chemistry.
+            #self.use_reflections_keep_stereo = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). Stereo-chemistry will be kept.
             #exclusion options
-            self.no_hydrogen = False
-            self.selected_only = False
+            #self.no_hydrogen = False
+            #self.selected_only = False
+
+            self.rotation = self.plugin.current_args["rotation"]
+            self.use_reflections = self.plugin.current_args["use_reflections"]
+            self.use_reflections_keep_stereo = self.plugin.current_args["use_reflections_keep_stereo"]
+            self.no_hydrogen = self.plugin.current_args["no_hydrogen"]
+            self.selected_only = self.plugin.current_args["selected_only"]
+            if self.plugin.current_args["reorder_method"] == "None":
+                self.reorder = False
+                # not sure what to set as the reorder_method
+            else:
+                self.reorder = True
+                self.reorder_method = self.plugin.current_args["reorder_method"]
+
 
             self.align = True
 
@@ -79,9 +110,11 @@ class RMSD(nanome.PluginInstance):
                 return False
             return self.align
 
-    def align(self, complex0, complex1):
-        args = RMSD.Args()
+       
 
+    def align(self, complex0, complex1):
+        args = RMSD.Args(self)
+        
         p_atoms = list(complex0.atoms)
         q_atoms = list(complex1.atoms)
 
@@ -116,7 +149,7 @@ class RMSD(nanome.PluginInstance):
         q_atom_names = list(map(lambda a: a.name, q_atoms))
 
         # Create the centroid of P and Q which is the geometric center of a
-        # N-dimensional region and translate P and Q onto that center.
+        # N-dimensional region and translate P and Q onto that center. 
         # http://en.wikipedia.org/wiki/Centroid
         p_cent = centroid(p_coord)
         q_cent = centroid(q_coord)
@@ -135,6 +168,7 @@ class RMSD(nanome.PluginInstance):
             return False
 
         # set reorder method
+        # when reorder==False, set reorder_method to "None"
         if not args.reorder:
             reorder_method = None
         if args.reorder_method == "hungarian":
