@@ -17,3 +17,7 @@ def get_coordinates(atoms):
         coords.append(atom.position.get_copy())
 
     return coords
+
+def IsBackbone(atom):
+    atomName = atom.name
+    return atomName == "N" or atomName == "CA" or atomName == "C" or atomName == "O" or atomName == "OXT" or atomName == "OC"
