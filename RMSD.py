@@ -12,11 +12,10 @@ class RMSD(nanome.PluginInstance):
         Logs.debug("Start RMSD Plugin")
         self._menu = RMSDMenu(self)
         self._menu.build_menu()
-        self.current_args={"rotation":"kabsch","reorder_method":"hungarian",
+        self.current_args={"rotation":"kabsch","reorder_method":"none","reorder":False,
                             "use_reflections":False,"use_reflections_keep_stereo":False,
-                            "no_hydrogen":False,"selected_only":False}
-        
-    
+                            "no_hydrogen":False,"selected_only":False,
+                            "backbone_only":False}
 
     def on_run(self):
         menu = self.menu
@@ -65,7 +64,8 @@ class RMSD(nanome.PluginInstance):
         self.make_plugin_usable()
     
     def update_args(self,arg,option):
-        if arg not in ["rotation","use_reflections","use_reflections_keep_stereo", "no_hydrogen","selected_only","reorder_method"]:
+        if arg not in ["rotation","use_reflections","use_reflections_keep_stereo",
+                       "no_hydrogen","selected_only","reorder_method","backbone_only"]:
             Logs.debug("Invalid argument")
         else:
             # binary args
@@ -93,7 +93,8 @@ class RMSD(nanome.PluginInstance):
             self.use_reflections_keep_stereo = self.plugin.current_args["use_reflections_keep_stereo"]
             self.no_hydrogen = self.plugin.current_args["no_hydrogen"]
             self.selected_only = self.plugin.current_args["selected_only"]
-            if self.plugin.current_args["reorder_method"] == "None":
+            self.reorder = self.plugin.current_args["reorder"]
+            if self.plugin.current_args["reorder_method"] == "none":
                 self.reorder = False
                 # not sure what to set as the reorder_method
             else:
@@ -171,14 +172,15 @@ class RMSD(nanome.PluginInstance):
         # when reorder==False, set reorder_method to "None"
         if not args.reorder:
             reorder_method = None
-        if args.reorder_method == "hungarian":
+        elif args.reorder_method.lower() == "hungarian":
             reorder_method = reorder_hungarian
-        elif args.reorder_method == "brute":
+        elif args.reorder_method.lower() == "brute":
             reorder_method = reorder_brute
-        elif args.reorder_method == "distance":
+        elif args.reorder_method.lower() == "distance":
             reorder_method = reorder_distance
         else:
             Logs.debug("error: Unknown reorder method:", args.reorder_method)
+            Logs.debug("The value of reorder is: ",args.reorder)
             return False
 
 
