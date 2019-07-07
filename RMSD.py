@@ -69,7 +69,7 @@ class RMSD(nanome.PluginInstance):
             #exclusion options
             self.no_hydrogen = False
             self.selected_only = False
-
+            self.backbone_only = False
             self.align = True
 
         @property
@@ -99,6 +99,10 @@ class RMSD(nanome.PluginInstance):
         if args.no_hydrogen:
             p_atoms = help.strip_hydrogens(p_atoms)
             q_atoms = help.strip_hydrogens(q_atoms)
+
+        if args.backbone_only:
+            p_atoms = help.strip_non_backbone(p_atoms)
+            q_atoms = help.strip_non_backbone(q_atoms)
 
         p_atom_names, p_coord_orig = get_coordinates(p_atoms)
         q_atom_names, q_coord_orig = get_coordinates(q_atoms)
