@@ -5,7 +5,6 @@ from rmsd_calculation import *
 # from rmsd_menu import RMSDMenu
 from  rmsd_new_menu import RMSDMenu
 import rmsd_helpers as help
-import calculate_rmsd as cr
 from nanome.util import Logs
 
 class RMSD(nanome.PluginInstance):
@@ -29,11 +28,18 @@ class RMSD(nanome.PluginInstance):
 
     def on_complex_removed(self):
         nanome.util.Logs.debug("Complex removed: refreshing")
-        self.request_refresh()
+        # self.request_refresh()
+        self.request_refresh2()
 
     def request_refresh(self):
         self.request_complex_list(self.on_complex_list_received)
         nanome.util.Logs.debug("Complex list requested")
+
+    # 
+    def request_refresh2(self):
+        self.request_complex_list(self.on_complex_list_received2)
+        nanome.util.Logs.debug("Complex list requested")
+
 
     def update_button(self, button):
         self.update_content(button)
@@ -63,14 +69,15 @@ class RMSD(nanome.PluginInstance):
             self.update_workspace(workspace)
         Logs.debug("RMSD done")
         self.make_plugin_usable()
-    
+        self.request_refresh()
+
     def update_args(self,arg,option):
         if arg not in ["rotation","use_reflections","use_reflections_keep_stereo",
                        "no_hydrogen","selected_only","reorder_method","backbone_only"]:
             Logs.debug("Invalid argument")
         else:
             # binary args
-            if arg in ["no_hydrogen","selected_only","use_reflections"]:
+            if arg in ["no_hydrogen","selected_only","use_reflections","backbone_only"]:
                 self.current_args[arg]=not self.current_args[arg]
             # non binary args
             else:
@@ -218,6 +225,7 @@ class RMSD(nanome.PluginInstance):
         else:
             result_rmsd = rotation_method(p_coord, q_coord)
         Logs.debug("result: {0}".format(result_rmsd))
+        self._menu.update_score(result_rmsd)
 
         # Logs.debug result
         if args.update:
