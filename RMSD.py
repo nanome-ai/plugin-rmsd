@@ -211,39 +211,8 @@ class RMSD(nanome.PluginInstance):
             Logs.debug("Finished update")
         return True
 
-        
-# if __name__ == "__main__":
-#     # Creates the server, register SimpleHBond as the class to instantiate, and start listening
-#     plugin = nanome.Plugin("RMSD", "A simple plugin that aligns complexes through RMSD calculation", "Test", False)
-#     plugin.set_plugin_class(RMSD)
-#     plugin.run('127.0.0.1', 8888)
-import os
-
-download_path='/'.join( os.getcwd().split('\\')[:3] ) + '/Downloads' 
-nanome.util.Logs._set_verbose(True)
-# complex1 = nanome.api.structure.Complex.io.from_pdb(path=download_path + "/4aoj.pdb")
-# complex1.io.to_pdb(path=download_path + "/nanome_4aoj.pdb")
-c1_file = download_path + "/rmsd-master/tests/ci2_1.pdb"
-c2_file = download_path + "/rmsd-master/tests/ci2_2.pdb"
-complex1 = nanome.api.structure.Complex.io.from_pdb(path=c1_file)
-complex2 = nanome.api.structure.Complex.io.from_pdb(path=c2_file)
-
-c1_atoms = list(complex1._molecules[0]._chains[0].atoms)
-matoms, mpos = get_coordinates(c1_atoms)
-tatoms, tpos = cr.get_coordinates(c1_file, 'pdb')
-if (len(mpos) != len(tpos)):
-    print("different lengths")
-    print(len(mpos))
-    print(len(tpos))
-
-print(matoms[12])
-print(tatoms[12])
-
-for i, _ in enumerate(matoms):
-    m = mpos[i]
-    t = tpos[i]
-    if m[0] != t[0] or m[1] != t[1] or m[2] != t[2] :
-        print("difference")
-
-
-RMSD().align(complex1, complex2)
+if __name__ == "__main__":
+    # Creates the server, register SimpleHBond as the class to instantiate, and start listening
+    plugin = nanome.Plugin("RMSD", "A simple plugin that aligns complexes through RMSD calculation", "Test", False)
+    plugin.set_plugin_class(RMSD)
+    plugin.run('127.0.0.1', 8888)
