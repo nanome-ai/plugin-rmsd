@@ -10,6 +10,9 @@ def strip_hydrogens(atoms):
 def strip_nonselected(atoms):
     return list(filter(lambda a: a.selected, atoms))
 
+def strip_non_backbone(atoms):
+    return list(filter(lambda a: IsBackbone(a), atoms))
+
 def get_coordinates(atoms):
     coords = list()
 
@@ -17,3 +20,7 @@ def get_coordinates(atoms):
         coords.append(atom.position.get_copy())
 
     return coords
+
+def IsBackbone(atom):
+    atomName = atom.name
+    return atomName == "N" or atomName == "CA" or atomName == "C" or atomName == "O" or atomName == "OXT" or atomName == "OC"
