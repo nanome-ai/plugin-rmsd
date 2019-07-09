@@ -1,4 +1,5 @@
 import nanome
+from nanome.util import Logs
 
 class RMSDMenu():
     def __init__(self, rmsd_plugin):
@@ -27,6 +28,11 @@ class RMSDMenu():
     def update_args(self,arg,option):
         self._plugin.update_args(arg,option)
 
+    def update_score(self,value):
+        Logs.debug("update score called: ",value)
+        self.rmsd_score_label.text_value = str("%.3g"%value)
+        self._plugin.update_menu(self._menu)
+
     def make_plugin_usable(self, state = True):
         self._run_button.unusable = not state
         self._plugin.update_button(self._run_button)
@@ -39,6 +45,7 @@ class RMSDMenu():
                 self._selected_mobile.selected = False
             button.selected = True
             self._selected_mobile = button
+            self.receptor_text.text_value ="Receptor: "+ button.complex.name
             self._plugin.update_menu(self._menu)
 
         def target_pressed(button):
@@ -46,6 +53,7 @@ class RMSDMenu():
                 self._selected_target.selected = False
             button.selected = True
             self._selected_target = button
+            self.target_text.text_value = "Target: "+button.complex.name
             self._plugin.update_menu(self._menu)
 
         self._selected_mobile = None
@@ -58,8 +66,8 @@ class RMSDMenu():
             ln_btn = clone.get_children()[0]
             btn = ln_btn.get_content()
             btn.set_all_text(complex.name)
-            btn.register_pressed_callback(mobile_pressed)
             btn.complex = complex
+            btn.register_pressed_callback(mobile_pressed)
             self._mobile_list.append(clone)
             
             #clone1 = clone.clone()
@@ -67,10 +75,14 @@ class RMSDMenu():
             ln_btn = clone1.get_children()[0]
             btn = ln_btn.get_content()
             btn.set_all_text(complex.name)
-            btn.register_pressed_callback(target_pressed)
             btn.complex = complex
+            btn.register_pressed_callback(target_pressed)
             self._target_list.append(clone1)
-
+        if self._selected_mobile == None:
+            self.receptor_text.text_value ="Receptor: Unselected"
+        if self._selected_target == None:
+            self.target_text.text_value ="Target: Unselected "
+ 
         if self._current_tab == "receptor":
             self._show_list.items=self._mobile_list
         else:
@@ -226,7 +238,13 @@ class RMSDMenu():
         rotation_button.register_pressed_callback(rotation_button_pressed_callback)
 
         # create the rmsd score
-        rmsd_score_label = menu.root.find_node("RMSD number",True)
+        self.rmsd_score_label = menu.root.find_node("RMSD number",True).get_content()
+
+        # create the receptor text
+        self.receptor_text = menu.root.find_node("Receptor").get_content()
+        
+        # create the target text
+        self.target_text = menu.root.find_node("Target").get_content()
         
         self._menu = menu
         

@@ -5,7 +5,6 @@ from rmsd_calculation import *
 # from rmsd_menu import RMSDMenu
 from  rmsd_new_menu import RMSDMenu
 import rmsd_helpers as help
-# import calculate_rmsd as cr
 from nanome.util import Logs
 
 class RMSD(nanome.PluginInstance):
@@ -26,11 +25,18 @@ class RMSD(nanome.PluginInstance):
 
     def on_complex_removed(self):
         nanome.util.Logs.debug("Complex removed: refreshing")
-        self.request_refresh()
+        # self.request_refresh()
+        self.request_refresh2()
 
     def request_refresh(self):
         self.request_complex_list(self.on_complex_list_received)
         nanome.util.Logs.debug("Complex list requested")
+
+    # 
+    def request_refresh2(self):
+        self.request_complex_list(self.on_complex_list_received2)
+        nanome.util.Logs.debug("Complex list requested")
+
 
     def update_button(self, button):
         self.update_content(button)
@@ -60,6 +66,7 @@ class RMSD(nanome.PluginInstance):
             self.update_workspace(workspace)
         Logs.debug("RMSD done")
         self.make_plugin_usable()
+        self.request_refresh()
     
     def update_args(self, arg, option):
         setattr(self.args, arg, option)
@@ -75,7 +82,6 @@ class RMSD(nanome.PluginInstance):
             self.no_hydrogen = False
             self.selected_only = False
             self.backbone_only = False
-
             self.align = True
 
         @property
@@ -185,6 +191,7 @@ class RMSD(nanome.PluginInstance):
         else:
             result_rmsd = rotation_method(p_coord, q_coord)
         Logs.debug("result: {0}".format(result_rmsd))
+        self._menu.update_score(result_rmsd)
 
         # Logs.debug result
         if args.update:
@@ -221,7 +228,10 @@ class RMSD(nanome.PluginInstance):
             Logs.debug("Finished update")
         return result_rmsd
 
+<<<<<<< HEAD
         
+=======
+>>>>>>> mujo
 if __name__ == "__main__":
     # Creates the server, register SimpleHBond as the class to instantiate, and start listening
     plugin = nanome.Plugin("RMSD", "A simple plugin that aligns complexes through RMSD calculation", "Test", False)
