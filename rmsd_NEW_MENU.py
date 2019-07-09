@@ -56,8 +56,6 @@ class RMSDMenu():
             self.target_text.text_value = "Target: "+button.complex.name
             self._plugin.update_menu(self._menu)
 
-        self._selected_mobile = None
-        self._selected_target = None
         self._mobile_list = []
         self._target_list = []
 
