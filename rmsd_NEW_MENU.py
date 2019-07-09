@@ -170,7 +170,6 @@ class RMSDMenu():
             post_index = (pre_index + 1) % temp_length
 
             post_option = drop_down[post_index]
-            self._current_rotation = post_option
 
             rotation_button.selected = post_option == "None"
             rotation_button.set_all_text(post_option)
