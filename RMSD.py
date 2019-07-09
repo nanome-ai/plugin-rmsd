@@ -228,10 +228,6 @@ class RMSD(nanome.PluginInstance):
             Logs.debug("Finished update")
         return result_rmsd
 
-<<<<<<< HEAD
-        
-=======
->>>>>>> mujo
 if __name__ == "__main__":
     # Creates the server, register SimpleHBond as the class to instantiate, and start listening
     plugin = nanome.Plugin("RMSD", "A simple plugin that aligns complexes through RMSD calculation", "Test", False)
