@@ -2,14 +2,16 @@ import nanome
 import sys
 import time
 from rmsd_calculation import *
-from rmsd_menu import RMSDMenu
+# from rmsd_menu import RMSDMenu
+from  rmsd_new_menu import RMSDMenu
 import rmsd_helpers as help
-import calculate_rmsd as cr
+# import calculate_rmsd as cr
 from nanome.util import Logs
 
 class RMSD(nanome.PluginInstance):
     def start(self):
         Logs.debug("Start RMSD Plugin")
+        self.args = RMSD.Args()
         self._menu = RMSDMenu(self)
         self._menu.build_menu()
 
@@ -58,7 +60,10 @@ class RMSD(nanome.PluginInstance):
             self.update_workspace(workspace)
         Logs.debug("RMSD done")
         self.make_plugin_usable()
- 
+    
+    def update_args(self, arg, option):
+        setattr(self.args, arg, option)
+
     class Args(object):
         def __init__(self):
             self.rotation = "kabsch" #alt: "quaternion", "none"
@@ -70,6 +75,7 @@ class RMSD(nanome.PluginInstance):
             self.no_hydrogen = False
             self.selected_only = False
             self.backbone_only = False
+
             self.align = True
 
         @property
@@ -80,10 +86,9 @@ class RMSD(nanome.PluginInstance):
             return self.align
 
     def align(self, complex0, complex1):
-        args = RMSD.Args()
-
-        p_atoms = list(complex0._molecules[0]._chains[0].atoms)
-        q_atoms = list(complex1._molecules[0]._chains[0].atoms)
+        args = self.args
+        p_atoms = list(complex0.atoms)
+        q_atoms = list(complex1.atoms)
 
         p_size = len(p_atoms)
         q_size = len(q_atoms)
@@ -117,7 +122,7 @@ class RMSD(nanome.PluginInstance):
         q_coord = copy.deepcopy(q_coord_orig)
 
         # Create the centroid of P and Q which is the geometric center of a
-        # N-dimensional region and translate P and Q onto that center.
+        # N-dimensional region and translate P and Q onto that center. 
         # http://en.wikipedia.org/wiki/Centroid
         p_cent = centroid(p_coord)
         q_cent = centroid(q_coord)
@@ -136,16 +141,18 @@ class RMSD(nanome.PluginInstance):
             return False
 
         # set reorder method
+        # when reorder==False, set reorder_method to "None"
         if not args.reorder:
             reorder_method = None
-        if args.reorder_method == "hungarian":
+        elif args.reorder_method.lower() == "hungarian":
             reorder_method = reorder_hungarian
-        elif args.reorder_method == "brute":
+        elif args.reorder_method.lower() == "brute":
             reorder_method = reorder_brute
-        elif args.reorder_method == "distance":
+        elif args.reorder_method.lower() == "distance":
             reorder_method = reorder_distance
         else:
             Logs.debug("error: Unknown reorder method:", args.reorder_method)
+            Logs.debug("The value of reorder is: ",args.reorder)
             return False
 
 
@@ -187,6 +194,9 @@ class RMSD(nanome.PluginInstance):
                     return False
                 q_coord_orig = q_coord_orig[q_review]
                 q_atoms = q_atoms[q_review]
+            
+            q_complex_position = complex1.position
+
             # Get rotation matrix
             U = kabsch(q_coord_orig, p_coord)
 
@@ -205,45 +215,15 @@ class RMSD(nanome.PluginInstance):
                 atom.position.x = coord[0]
                 atom.position.y = coord[1]
                 atom.position.z = coord[2]
-            complex1.position = complex0.position
-            complex1.name = "mobile"
-            complex1.rotation = complex0.rotation
+            complex1.name = complex1.name[::-1]
+            #complex1.position = complex0.position
+            #complex1.rotation = complex0.rotation
             Logs.debug("Finished update")
-        return True
+        return result_rmsd
 
         
-# if __name__ == "__main__":
-#     # Creates the server, register SimpleHBond as the class to instantiate, and start listening
-#     plugin = nanome.Plugin("RMSD", "A simple plugin that aligns complexes through RMSD calculation", "Test", False)
-#     plugin.set_plugin_class(RMSD)
-#     plugin.run('127.0.0.1', 8888)
-import os
-
-download_path='/'.join( os.getcwd().split('\\')[:3] ) + '/Downloads' 
-nanome.util.Logs._set_verbose(True)
-# complex1 = nanome.api.structure.Complex.io.from_pdb(path=download_path + "/4aoj.pdb")
-# complex1.io.to_pdb(path=download_path + "/nanome_4aoj.pdb")
-c1_file = download_path + "/rmsd-master/tests/ci2_1.pdb"
-c2_file = download_path + "/rmsd-master/tests/ci2_2.pdb"
-complex1 = nanome.api.structure.Complex.io.from_pdb(path=c1_file)
-complex2 = nanome.api.structure.Complex.io.from_pdb(path=c2_file)
-
-c1_atoms = list(complex1._molecules[0]._chains[0].atoms)
-matoms, mpos = get_coordinates(c1_atoms)
-tatoms, tpos = cr.get_coordinates(c1_file, 'pdb')
-if (len(mpos) != len(tpos)):
-    print("different lengths")
-    print(len(mpos))
-    print(len(tpos))
-
-print(matoms[12])
-print(tatoms[12])
-
-for i, _ in enumerate(matoms):
-    m = mpos[i]
-    t = tpos[i]
-    if m[0] != t[0] or m[1] != t[1] or m[2] != t[2] :
-        print("difference")
-
-
-RMSD().align(complex1, complex2)
+if __name__ == "__main__":
+    # Creates the server, register SimpleHBond as the class to instantiate, and start listening
+    plugin = nanome.Plugin("RMSD", "A simple plugin that aligns complexes through RMSD calculation", "Test", False)
+    plugin.set_plugin_class(RMSD)
+    plugin.run('127.0.0.1', 8888)
