@@ -3,7 +3,7 @@ import sys
 import time
 from rmsd_calculation import *
 # from rmsd_menu import RMSDMenu
-from  rmsd_new_menu import RMSDMenu
+from  rmsd_menu import RMSDMenu
 import rmsd_helpers as help
 from nanome.util import Logs
 
@@ -25,17 +25,17 @@ class RMSD(nanome.PluginInstance):
 
     def on_complex_removed(self):
         nanome.util.Logs.debug("Complex removed: refreshing")
-        # self.request_refresh()
-        self.request_refresh2()
+        self.request_refresh()
+        #self.request_refresh2()
 
     def request_refresh(self):
         self.request_complex_list(self.on_complex_list_received)
         nanome.util.Logs.debug("Complex list requested")
 
     # 
-    def request_refresh2(self):
-        self.request_complex_list(self.on_complex_list_received2)
-        nanome.util.Logs.debug("Complex list requested")
+    # def request_refresh2(self):
+    #     self.request_complex_list(self.on_complex_list_received2)
+    #     nanome.util.Logs.debug("Complex list requested")
 
 
     def update_button(self, button):
@@ -227,6 +227,7 @@ class RMSD(nanome.PluginInstance):
             #complex1.rotation = complex0.rotation
             Logs.debug("Finished update")
         return result_rmsd
+
 
 if __name__ == "__main__":
     # Creates the server, register SimpleHBond as the class to instantiate, and start listening
