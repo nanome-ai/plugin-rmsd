@@ -10,12 +10,9 @@ from nanome.util import Logs
 class RMSD(nanome.PluginInstance):
     def start(self):
         Logs.debug("Start RMSD Plugin")
+        self.args = RMSD.Args()
         self._menu = RMSDMenu(self)
         self._menu.build_menu()
-        self.current_args={"rotation":"kabsch","reorder_method":"none","reorder":False,
-                            "use_reflections":False,"use_reflections_keep_stereo":False,
-                            "no_hydrogen":False,"selected_only":False,
-                            "backbone_only":False}
 
     def on_run(self):
         menu = self.menu
@@ -70,46 +67,20 @@ class RMSD(nanome.PluginInstance):
         Logs.debug("RMSD done")
         self.make_plugin_usable()
         self.request_refresh()
-
-    def update_args(self,arg,option):
-        if arg not in ["rotation","use_reflections","use_reflections_keep_stereo",
-                       "no_hydrogen","selected_only","reorder_method","backbone_only"]:
-            Logs.debug("Invalid argument")
-        else:
-            # binary args
-            if arg in ["no_hydrogen","selected_only","use_reflections","backbone_only"]:
-                self.current_args[arg]=not self.current_args[arg]
-            # non binary args
-            else:
-                self.current_args[arg]=option
+    
+    def update_args(self, arg, option):
+        setattr(self.args, arg, option)
 
     class Args(object):
-        def __init__(self,rmsd_plugin):
-            self.plugin = rmsd_plugin
-            Logs.debug("Args Created")
-            # self.rotation = "kabsch" #alt: "quaternion", "none"
-            # self.reorder = False
-            # self.reorder_method = "hungarian" #alt "brute", "distance"
-            # self.use_reflections = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). This will affect stereo-chemistry.
-            # self.use_reflections_keep_stereo = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). Stereo-chemistry will be kept.
-            # exclusion options
-            # self.no_hydrogen = False
-            # self.selected_only = False
-
-            self.rotation = self.plugin.current_args["rotation"]
-            self.use_reflections = self.plugin.current_args["use_reflections"]
-            self.use_reflections_keep_stereo = self.plugin.current_args["use_reflections_keep_stereo"]
-            self.no_hydrogen = self.plugin.current_args["no_hydrogen"]
-            self.selected_only = self.plugin.current_args["selected_only"]
-            self.reorder = self.plugin.current_args["reorder"]
-            if self.plugin.current_args["reorder_method"] == "none":
-                self.reorder = False
-                # not sure what to set as the reorder_method
-            else:
-                self.reorder = True
-                self.reorder_method = self.plugin.current_args["reorder_method"]
-
-
+        def __init__(self):
+            self.rotation = "kabsch" #alt: "quaternion", "none"
+            self.reorder = False
+            self.reorder_method = "hungarian" #alt "brute", "distance"
+            self.use_reflections = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). This will affect stereo-chemistry.
+            self.use_reflections_keep_stereo = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). Stereo-chemistry will be kept.
+            #exclusion options
+            self.no_hydrogen = False
+            self.selected_only = False
             self.backbone_only = False
             self.align = True
 
@@ -120,15 +91,10 @@ class RMSD(nanome.PluginInstance):
                 return False
             return self.align
 
-       
-
     def align(self, complex0, complex1):
-        args = RMSD.Args(self)
-        
-        # p_atoms = list(complex0.atoms)
-        # q_atoms = list(complex1.atoms)
-        p_atoms = list(complex0._molecules[0]._chains[0].atoms)
-        q_atoms = list(complex1._molecules[0]._chains[0].atoms)
+        args = self.args
+        p_atoms = list(complex0.atoms)
+        q_atoms = list(complex1.atoms)
 
         p_size = len(p_atoms)
         q_size = len(q_atoms)
@@ -235,6 +201,9 @@ class RMSD(nanome.PluginInstance):
                     return False
                 q_coord_orig = q_coord_orig[q_review]
                 q_atoms = q_atoms[q_review]
+            
+            q_complex_position = complex1.position
+
             # Get rotation matrix
             U = kabsch(q_coord_orig, p_coord)
 
@@ -253,11 +222,11 @@ class RMSD(nanome.PluginInstance):
                 atom.position.x = coord[0]
                 atom.position.y = coord[1]
                 atom.position.z = coord[2]
-            complex1.position = complex0.position
-            complex1.name = "mobile"
-            complex1.rotation = complex0.rotation
+            complex1.name = complex1.name[::-1]
+            #complex1.position = complex0.position
+            #complex1.rotation = complex0.rotation
             Logs.debug("Finished update")
-        return True
+        return result_rmsd
 
 if __name__ == "__main__":
     # Creates the server, register SimpleHBond as the class to instantiate, and start listening

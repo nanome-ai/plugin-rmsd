@@ -7,7 +7,6 @@ class RMSDMenu():
         self._plugin = rmsd_plugin
         self._selected_mobile = None # button
         self._selected_target = None # button
-        self._complex_list = []
         self._run_button = None
         self._current_tab = "receptor" #receptor = 0, target = 1
         self._drop_down_dict={"rotation":["None", "Kabsch","Quaternion"],"reorder_method":["None","Hungarian","Brute", "Distance"]}
@@ -57,22 +56,10 @@ class RMSDMenu():
             self.target_text.text_value = "Target: "+button.complex.name
             self._plugin.update_menu(self._menu)
 
-        self._complex_list = complex_list
-        # if self._selected_mobile != None:
-        #     Logs.debug("selected_mobile exists") 
-        #     if self._selected_mobile.complex not in complex_list:
-        #         Logs.debug("selected_mobile not in complex list")
-        #         self._selected_mobile = None
-        # if self._selected_target != None:
-        #     Logs.debug("selected_target exists") 
-        #     if self._selected_target.complex not in complex_list:
-        #         Logs.debug("selected_mobile not in complex list")
-        #         self._selected_target = None       
-
-        # self._selected_mobile = None
-        # self._selected_target = None
-        self._mobile_list.items = []
-        self._target_list.items = []
+        self._selected_mobile = None
+        self._selected_target = None
+        self._mobile_list = []
+        self._target_list = []
 
         for complex in complex_list:
             clone = self._complex_item_prefab.clone()
@@ -81,7 +68,7 @@ class RMSDMenu():
             btn.set_all_text(complex.name)
             btn.complex = complex
             btn.register_pressed_callback(mobile_pressed)
-            self._mobile_list.items.append(clone)
+            self._mobile_list.append(clone)
             
             #clone1 = clone.clone()
             clone1 = self._complex_item_prefab.clone()
@@ -90,16 +77,16 @@ class RMSDMenu():
             btn.set_all_text(complex.name)
             btn.complex = complex
             btn.register_pressed_callback(target_pressed)
-            self._target_list.items.append(clone1)
+            self._target_list.append(clone1)
         if self._selected_mobile == None:
             self.receptor_text.text_value ="Receptor: Unselected"
         if self._selected_target == None:
             self.target_text.text_value ="Target: Unselected "
  
         if self._current_tab == "receptor":
-            self._show_list.items=self._mobile_list.items
+            self._show_list.items=self._mobile_list
         else:
-            self._show_list.items=self._target_list.items
+            self._show_list.items=self._target_list
 
         self._plugin.update_menu(self._menu)
 
@@ -119,7 +106,7 @@ class RMSDMenu():
             self._current_tab="receptor"
             receptor_tab.selected = True
             target_tab.selected = False
-            self._show_list.items = self._mobile_list.items
+            self._show_list.items = self._mobile_list
             self._plugin.update_menu(self._menu)
 
         # show the target list when the target tab is pressed
@@ -127,99 +114,70 @@ class RMSDMenu():
             self._current_tab="target"
             target_tab.selected = True
             receptor_tab.selected = False
-            self._show_list.items = self._target_list.items
+            self._show_list.items = self._target_list
             self._plugin.update_menu(self._menu)
             
         
         # no hydrogen = ! no hydrogen
         def no_hydrogen_button_pressed_callback(button):
-            self.update_args("no_hydrogen",0)
+            self.update_args("no_hydrogen", False)
             no_hydrogen_button.selected = not no_hydrogen_button.selected
             self._plugin.update_menu(self._menu)
 
         # use reflections = ! use reflections
         # def use_reflections_button_pressed_callback(button):
-        #     self.update_args("use_reflections",0)
+        #     self.update_args("use_reflections", False)
         #     use_reflections_button.selected = not use_reflections_button.selected
         #     self._plugin.update_menu(self._menu)
 
         # backbone only = ! backbone only
         def backbone_only_button_pressed_callback(button):
-            self.update_args("backbone_only",0)
+            self.update_args("backbone_only", False)
             backbone_only_button.selected = not backbone_only_button.selected
             self._plugin.update_menu(self._menu)
         
         # selected only = ! selected only
         def selected_only_button_pressed_callback(button):
-            self.update_args("selected_only",0)
+            self.update_args("selected_only", False)
             selected_only_button.selected = not selected_only_button.selected            
             self._plugin.update_menu(self._menu)
 
         # change Reorder to the next option
         def reorder_button_pressed_callback(button):
+            drop_down  = self._drop_down_dict["reorder_method"]
+            temp_length=len(drop_down)
             
-            temp_length=len(self._drop_down_dict["reorder_method"])
-            temp_before = self._current_reorder
-            
-            if self._drop_down_dict["reorder_method"].index(self._current_reorder) == temp_length-1:
-                self._current_reorder = self._drop_down_dict["reorder_method"][0]
-            else:
-                self._current_reorder = self._drop_down_dict["reorder_method"][(self._drop_down_dict["reorder_method"].index(self._current_reorder)+1)]
-            
-            # if from None to not None, selected = ! selected
-            if temp_before == "None":
-                reorder_button.selected = not reorder_button.selected
-            # if from last not None to None, selected = ! selected, selected text = first not None
-            elif self._drop_down_dict["reorder_method"].index(temp_before) == temp_length-1:
-                reorder_button.selected = not reorder_button.selected
-                reorder_button.text.value_selected = self._drop_down_dict["reorder_method"][1]
-                reorder_button.text.value_selected_highlighted = self._drop_down_dict["reorder_method"][1]
+            pre_index = drop_down.index(self._current_reorder)
+            post_index = (pre_index + 1) % temp_length
 
-            # if from not None to not None, selected text = self._current_reorder
-            else:
-                reorder_button.text.value_selected = self._current_reorder
-                reorder_button.text.value_selected_highlighted = self._current_reorder
+            post_option = drop_down[post_index]
+
+            reorder_button.selected = post_option == "None"
+            reorder_button.set_all_text(post_option)
             
             # tell the plugin and update the menu
-            self.update_args("reorder_method",self._current_reorder)
-            if self._current_reorder == "None":
-                self.update_args("reorder",False)
-            else:
-                self.update_args("reorer",True)
+            self._current_reorder = post_option
+            self.update_args("reorder_method", post_option)
+            self.update_args("reorder", post_option != "None")
             self._plugin.update_menu(self._menu)
-
 
         # change Rotation to the next option
         def rotation_button_pressed_callback(button):
+            drop_down  = self._drop_down_dict["rotation_method"]
+            temp_length=len(drop_down)
             
-            temp_length=len(self._drop_down_dict["rotation"])
-            temp_before = self._current_rotation
-            
-            if self._drop_down_dict["rotation"].index(self._current_rotation) == temp_length-1:
-                self._current_rotation = self._drop_down_dict["rotation"][0]
-            
-            else:
-                self._current_rotation = self._drop_down_dict["rotation"][(self._drop_down_dict["rotation"].index(self._current_rotation)+1)]
-            
-            # if from None to not None, selected = ! selected
-            if temp_before == "None":
-                rotation_button.selected = not rotation_button.selected
-            
-            # if from last not None to None, selected = ! selected,
-            # selected text = first not None
-            elif self._drop_down_dict["rotation"].index(temp_before) == temp_length-1:
-                rotation_button.selected = not rotation_button.selected
-                rotation_button.text.value_selected = self._drop_down_dict["rotation"][1]
-                rotation_button.text.value_selected_highlighted = self._drop_down_dict["rotation"][1]
+            pre_index = drop_down.index(self._current_rotation)
+            post_index = (pre_index + 1) % temp_length
 
-            # if from not None to not None, selected text = self._current_rotation
-            else:
-                rotation_button.text.value_selected = self._current_rotation
-                rotation_button.text.value_selected_highlighted = self._current_rotation
+            post_option = drop_down[post_index]
+
+            rotation_button.selected = post_option == "None"
+            rotation_button.set_all_text(post_option)
+            
             # tell the plugin and update the menu
-            self.update_args("rotation",self._current_rotation)
+            self._current_rotation = post_option
+            self.update_args("rotation_method", post_option)
             self._plugin.update_menu(self._menu)
-
         
         # Create a prefab that will be used to populate the lists
         self._complex_item_prefab = nanome.ui.LayoutNode()
@@ -243,8 +201,8 @@ class RMSDMenu():
 
         # create the List 
         self._show_list = menu.root.find_node("List", True).get_content()
-        self._mobile_list = nanome.ui.UIList()
-        self._target_list = nanome.ui.UIList()
+        self._mobile_list = []
+        self._target_list = []
 
         # create the Receptor tab
         receptor_tab = menu.root.find_node("Receptor_tab",True).get_content()
