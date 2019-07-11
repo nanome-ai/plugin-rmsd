@@ -115,8 +115,10 @@ class RMSD(nanome.PluginInstance):
             p_atoms = help.strip_non_backbone(p_atoms)
             q_atoms = help.strip_non_backbone(q_atoms)
 
-        p_atom_names, p_coord_orig = get_coordinates(p_atoms)
-        q_atom_names, q_coord_orig = get_coordinates(q_atoms)
+        p_atom_names = get_atom_types(p_atoms)
+        q_atom_names = get_atom_types(q_atoms)
+        p_pos_orig = help.get_positions(p_atoms)
+        q_pos_orig = help.get_positions(q_atoms)
         q_atoms = np.asarray(q_atoms)
         if np.count_nonzero(p_atom_names != q_atom_names) and not args.reorder:
             #message should be sent to nanome as notification?
@@ -124,16 +126,16 @@ class RMSD(nanome.PluginInstance):
             Logs.debug(msg)
             return False
 
-        p_coord = copy.deepcopy(p_coord_orig)
-        q_coord = copy.deepcopy(q_coord_orig)
+        p_coords = help.position_to_array(p_pos_orig)
+        q_coords = help.position_to_array(q_pos_orig)
 
         # Create the centroid of P and Q which is the geometric center of a
         # N-dimensional region and translate P and Q onto that center. 
         # http://en.wikipedia.org/wiki/Centroid
-        p_cent = centroid(p_coord)
-        q_cent = centroid(q_coord)
-        p_coord -= p_cent
-        q_coord -= q_cent
+        p_cent = centroid(p_coords)
+        q_cent = centroid(q_coords)
+        p_coords -= p_cent
+        q_coords -= q_cent
 
         # set rotation method
         if args.rotation.lower() == "kabsch":
@@ -169,14 +171,14 @@ class RMSD(nanome.PluginInstance):
             result_rmsd, q_swap, q_reflection, q_review = check_reflections(
                 p_atom_names,
                 q_atom_names,
-                p_coord,
-                q_coord,
+                p_coords,
+                q_coords,
                 reorder_method=reorder_method,
                 rotation_method=rotation_method,
                 keep_stereo=args.use_reflections_keep_stereo)
         elif args.reorder:
-            q_review = reorder_method(p_atom_names, q_atom_names, p_coord, q_coord)
-            q_coord = q_coord[q_review]
+            q_review = reorder_method(p_atom_names, q_atom_names, p_coords, q_coords)
+            q_coords = q_coords[q_review]
             q_atom_names = q_atom_names[q_review]
             q_atoms = q_atoms[q_review]
             if not all(p_atom_names == q_atom_names):
@@ -187,26 +189,39 @@ class RMSD(nanome.PluginInstance):
         if result_rmsd:
             pass
         elif rotation_method is None:
-            result_rmsd = rmsd(p_coord, q_coord)
+            result_rmsd = rmsd(p_coords, q_coords)
         else:
-            result_rmsd = rotation_method(p_coord, q_coord)
+            result_rmsd = rotation_method(p_coords, q_coords)
         Logs.debug("result: {0}".format(result_rmsd))
         self._menu.update_score(result_rmsd)
 
         # Logs.debug result
         if args.update:
+            #Getting global coords
+            p_coords = []
+            for pp in p_pos_orig:
+                pp = complex0.rotation.rotate_vector(pp)
+                pp = pp + complex0.position
+                p_coords.append(help.position_to_array(pp))
+            p_coords = np.asarray(p_coords)
+
+            q_coords = []
+            for qq in q_pos_orig:
+                qq = complex0.rotation.rotate_vector(qq)
+                qq = qq + complex0.position
+                q_coords.append(help.position_to_array(qq))
+            q_coords = np.asarray(q_coords)
+
+            #reordering coords  ???
             if args.reorder:
-                if q_review.shape[0] != len(q_coord_orig):
+                if q_review.shape[0] != len(q_coords):
                     Logs.debug("error: Reorder length error. Full atom list needed for --Logs.debug")
                     return False
-                q_coord_orig = q_coord_orig[q_review]
+                q_coords = q_coords[q_review]
                 q_atoms = q_atoms[q_review]
-            
-            q_coord_orig -= complex0.position
-            p_coord_orig -= complex1.position
 
             # Get rotation matrix
-            U = kabsch(q_coord_orig, p_coord_orig)
+            U = kabsch(q_coords, q_coords)
 
             #update rotation
             U_matrix = nanome.util.Matrix(4,4)
