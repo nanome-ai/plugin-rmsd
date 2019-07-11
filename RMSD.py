@@ -202,29 +202,27 @@ class RMSD(nanome.PluginInstance):
                 q_coord_orig = q_coord_orig[q_review]
                 q_atoms = q_atoms[q_review]
             
-            q_complex_position = complex1.position
+            q_coord_orig -= complex0.position
+            p_coord_orig -= complex1.position
 
             # Get rotation matrix
-            U = kabsch(q_coord_orig, p_coord)
+            U = kabsch(q_coord_orig, p_coord_orig)
 
-            # recenter all atoms and rotate all atoms
-            q_coord_orig -= q_cent
-            q_coord_orig = np.dot(q_coord_orig, U)
+            #update rotation
+            U_matrix = nanome.util.Matrix(4,4)
+            for i in range(3):
+                for k in range(3):
+                    U_matrix[i][k] = U[i][k]
+            U_matrix[3][3] = 1
 
-            # center q on p's original coordinates
-            q_coord_orig += p_cent
-
-            print("num q_atoms", (q_atoms.shape[0]))
-            print("q_atoms.type", type(q_atoms[0]))
-            # done and done
-            print(q_atoms[0].position.x, q_coord_orig[0][0])
-            for coord, atom in zip(q_coord_orig, q_atoms):
-                atom.position.x = coord[0]
-                atom.position.y = coord[1]
-                atom.position.z = coord[2]
+            rot_quat = complex1.rotation
+            rot_matrix = nanome.util.Matrix.from_quaternion(rot_quat)
+            result_matrix = U_matrix * rot_matrix
+            result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
+            complex1.rotation = result_quat
+            #update position
+            complex1.position = np.dot(complex1.position, U)
             complex1.name = complex1.name[::-1]
-            #complex1.position = complex0.position
-            #complex1.rotation = complex0.rotation
             Logs.debug("Finished update")
         return result_rmsd
 
