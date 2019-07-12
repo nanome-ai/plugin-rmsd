@@ -106,12 +106,10 @@ class RMSD(nanome.PluginInstance):
     def align(self, p_complex, q_complex):
         #p is fixed q is mobile
         args = self.args
-        print(args)
         p_atoms = list(p_complex.atoms)
         q_atoms = list(q_complex.atoms)
 
         if args.selected_only:
-            print("stripping non-selected")
             p_atoms = help.strip_non_selected(p_atoms)
             q_atoms = help.strip_non_selected(q_atoms)
 
@@ -247,17 +245,6 @@ class RMSD(nanome.PluginInstance):
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
             q_complex.position = p_complex.position + p_cent - q_cent
-            print("scale:", self.workspace.scale.x)
-            q_pos = q_complex.position
-            print("q_pos:", q_pos)
-            print( "q_Cent:", q_cent)
-            print("q_cent_global:", q_cent + q_pos)
-            print("=============")
-            p_pos = p_complex.position
-            print("p_pos:", p_pos)
-            print( "p_Cent:", p_cent)
-            print("p_cent_global:", p_cent + p_pos)
-
         return result_rmsd
 
 
