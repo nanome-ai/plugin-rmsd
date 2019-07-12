@@ -7,10 +7,10 @@ def same_order(atoms1, atoms2):
     return True
 
 def get_positions(atom_list):
-    return map(lambda atom: atom.position(), atom_list)
+    return list(map(lambda atom: atom.position, atom_list))
 
 def positions_to_array(pos_list):
-    return map(lambda pos: position_to_array(pos), pos_list)
+    return np.asarray(list(map(lambda pos: position_to_array(pos), pos_list)))
 
 def position_to_array(position):
     return np.asarray([position.x, position.y, position.z], dtype = float)

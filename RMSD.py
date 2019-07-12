@@ -91,10 +91,11 @@ class RMSD(nanome.PluginInstance):
                 return False
             return self.align
 
-    def align(self, complex0, complex1):
+    def align(self, p_complex, q_complex):
+        #p is fixed q is mobile
         args = self.args
-        p_atoms = list(complex0.atoms)
-        q_atoms = list(complex1.atoms)
+        p_atoms = list(p_complex.atoms)
+        q_atoms = list(q_complex.atoms)
 
         p_size = len(p_atoms)
         q_size = len(q_atoms)
@@ -126,8 +127,8 @@ class RMSD(nanome.PluginInstance):
             Logs.debug(msg)
             return False
 
-        p_coords = help.position_to_array(p_pos_orig)
-        q_coords = help.position_to_array(q_pos_orig)
+        p_coords = help.positions_to_array(p_pos_orig)
+        q_coords = help.positions_to_array(q_pos_orig)
 
         # Create the centroid of P and Q which is the geometric center of a
         # N-dimensional region and translate P and Q onto that center. 
@@ -197,20 +198,26 @@ class RMSD(nanome.PluginInstance):
 
         # Logs.debug result
         if args.update:
-            #Getting global coords
-            p_coords = []
-            for pp in p_pos_orig:
-                pp = complex0.rotation.rotate_vector(pp)
-                pp = pp + complex0.position
-                p_coords.append(help.position_to_array(pp))
-            p_coords = np.asarray(p_coords)
+            #resetting coords
+            p_coords = help.positions_to_array(p_pos_orig)
+            q_coords = help.positions_to_array(q_pos_orig)
 
-            q_coords = []
-            for qq in q_pos_orig:
-                qq = complex0.rotation.rotate_vector(qq)
-                qq = qq + complex0.position
-                q_coords.append(help.position_to_array(qq))
-            q_coords = np.asarray(q_coords)
+            p_coords -= p_cent
+            q_coords -= q_cent
+
+            test_qs = copy.deepcopy(q_coords)
+            test_inverse_U = [0,0,0]
+            # 45 off
+            # test_inverse_U[0]=np.asarray([1.0,     0.0,          0.0])
+            # test_inverse_U[1]=np.asarray([0.0,     -.4480736,    -0.8939967])
+            # test_inverse_U[2]=np.asarray([0.0,     0.8939967,    -0.4480736])
+            # 90 off
+            test_inverse_U[0]=np.asarray([1.0,     0.0,          0.0])
+            test_inverse_U[1]=np.asarray([0.0,     -.5984601,    -0.8011526])
+            test_inverse_U[2]=np.asarray([0.0,     0.8011526,    -0.5984601])
+
+            test_inverse_U = np.asarray(test_inverse_U)
+            test_qs = np.dot(test_qs, test_inverse_U)
 
             #reordering coords  ???
             if args.reorder:
@@ -221,24 +228,46 @@ class RMSD(nanome.PluginInstance):
                 q_atoms = q_atoms[q_review]
 
             # Get rotation matrix
-            U = kabsch(q_coords, q_coords)
+            U = kabsch(p_coords, q_coords)
+            U = kabsch(p_coords, test_qs)
 
+            # Fake_U = [0,0,0,0]
+            # Fake_U[0]=np.asarray([1.0,0.0,0.0,0.0,])
+            # Fake_U[1]=np.asarray([0.0,1.0,0.0,0.0,])
+            # Fake_U[2]=np.asarray([0.0,0.0,1.0,0.0,])
+            # Fake_U[3]=np.asarray([0.0,0.0,0.0,1.0,])
+            # Fake_U = np.asarray(Fake_U)
+            # U = Fake_U
             #update rotation
             U_matrix = nanome.util.Matrix(4,4)
             for i in range(3):
                 for k in range(3):
                     U_matrix[i][k] = U[i][k]
             U_matrix[3][3] = 1
+            print("********")
 
-            rot_quat = complex1.rotation
+            print(U * test_inverse_U)
+
+            print("==============")
+            print(U_matrix)
+            print("==============")
+            rot_quat = p_complex.rotation
             rot_matrix = nanome.util.Matrix.from_quaternion(rot_quat)
-            result_matrix = U_matrix * rot_matrix
+            result_matrix = rot_matrix * U_matrix
             result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
-            complex1.rotation = result_quat
-            #update position
-            complex1.position = np.dot(complex1.position, U)
-            complex1.name = complex1.name[::-1]
+            print(rot_quat)
+            print("==============")
+            print(result_matrix)
+            print("==============")            
+            print(q_complex.rotation)
+            q_complex.rotation = result_quat
+            q_complex.name = q_complex.name[::-1]
+            print(p_complex.rotation)
+            print(q_complex.rotation)
             Logs.debug("Finished update")
+
+            #align centroids
+            q_complex.position = p_complex.position + help.array_to_position(p_cent - q_cent)
         return result_rmsd
 
 
