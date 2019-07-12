@@ -1,10 +1,10 @@
 import nanome
 import sys
 import time
-from rmsd_calculation import *
+from .rmsd_calculation import *
 # from rmsd_menu import RMSDMenu
-from  rmsd_menu import RMSDMenu
-import rmsd_helpers as help
+from .rmsd_menu import RMSDMenu
+from . import rmsd_helpers as help
 from nanome.util import Logs
 
 class RMSD(nanome.PluginInstance):
@@ -271,8 +271,10 @@ class RMSD(nanome.PluginInstance):
         return result_rmsd
 
 
-if __name__ == "__main__":
-    # Creates the server, register SimpleHBond as the class to instantiate, and start listening
+def main():
     plugin = nanome.Plugin("RMSD", "A simple plugin that aligns complexes through RMSD calculation", "Test", False)
     plugin.set_plugin_class(RMSD)
     plugin.run('127.0.0.1', 8888)
+
+if __name__ == "__main__":
+    main()
