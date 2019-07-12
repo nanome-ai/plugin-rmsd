@@ -1,6 +1,8 @@
 import nanome
 from nanome.util import Logs
 
+import os
+
 class RMSDMenu():
     def __init__(self, rmsd_plugin):
         self._menu = rmsd_plugin.menu
@@ -198,7 +200,7 @@ class RMSDMenu():
         prefabButton.text.active = True
 
         # import the json file of the new UI
-        menu = nanome.ui.Menu.io.from_json("rmsd_pluginator.json")
+        menu = nanome.ui.Menu.io.from_json(os.path.join(os.path.dirname(__file__), 'rmsd_pluginator.json'))
         self._plugin.menu = menu
 
         # create the Run button
