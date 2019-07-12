@@ -132,8 +132,8 @@ class RMSDMenu():
         
         # no hydrogen = ! no hydrogen
         def no_hydrogen_button_pressed_callback(button):
-            self.update_args("no_hydrogen", False)
             no_hydrogen_button.selected = not no_hydrogen_button.selected
+            self.update_args("no_hydrogen", no_hydrogen_button.selected)
             self._plugin.update_menu(self._menu)
 
         # use reflections = ! use reflections
@@ -144,14 +144,14 @@ class RMSDMenu():
 
         # backbone only = ! backbone only
         def backbone_only_button_pressed_callback(button):
-            self.update_args("backbone_only", False)
             backbone_only_button.selected = not backbone_only_button.selected
+            self.update_args("backbone_only", backbone_only_button.selected)
             self._plugin.update_menu(self._menu)
         
         # selected only = ! selected only
         def selected_only_button_pressed_callback(button):
-            self.update_args("selected_only", False)
             selected_only_button.selected = not selected_only_button.selected            
+            self.update_args("selected_only", selected_only_button.selected)
             self._plugin.update_menu(self._menu)
 
         # change Reorder to the next option
@@ -175,7 +175,7 @@ class RMSDMenu():
 
         # change Rotation to the next option
         def rotation_button_pressed_callback(button):
-            drop_down  = self._drop_down_dict["rotation_method"]
+            drop_down  = self._drop_down_dict["rotation"]
             temp_length=len(drop_down)
             
             pre_index = drop_down.index(self._current_rotation)

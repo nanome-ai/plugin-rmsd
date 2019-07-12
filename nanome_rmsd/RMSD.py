@@ -60,7 +60,7 @@ class RMSD(nanome.PluginInstance):
                 mobile_complex = complex
             if complex.index == self._target.index:
                 target_complex = complex
-
+        self.workspace = workspace
         result = self.align(target_complex, mobile_complex)
         if result :
             self.update_workspace(workspace)
@@ -86,27 +86,34 @@ class RMSD(nanome.PluginInstance):
 
         @property
         def update(self):
-            if self.align and (self.no_hydrogen or self.selected_only):
-                Logs.debug('Invalid options: cannot use align with "no hydrogen" or "selected only" options')
-                return False
             return self.align
+
+        def __str__(self):
+            ln = "\n"
+            tab = "\t"
+            output  = "args:" + ln
+            output += tab + "rotation:" + str(self.rotation) + ln
+            output += tab + "reorder:" + str(self.reorder) + ln
+            output += tab + "reorder_method:" + str(self.reorder_method) + ln
+            output += tab + "use_reflections:" + str(self.use_reflections) + ln
+            output += tab + "use_reflections_keep_stereo:" + str(self.use_reflections_keep_stereo) + ln
+            output += tab + "no_hydrogen:" + str(self.no_hydrogen) + ln
+            output += tab + "selected_only:" + str(self.selected_only) + ln
+            output += tab + "backbone_only:" + str(self.backbone_only) + ln
+            output += tab + "align:" + str(self.align) + ln
+            return output
 
     def align(self, p_complex, q_complex):
         #p is fixed q is mobile
         args = self.args
+        print(args)
         p_atoms = list(p_complex.atoms)
         q_atoms = list(q_complex.atoms)
 
-        p_size = len(p_atoms)
-        q_size = len(q_atoms)
-
-        if not p_size == q_size:
-            Logs.debug("error: Structures not same size")
-            return False
-
         if args.selected_only:
-            p_atoms = help.strip_nonselected(p_atoms)
-            q_atoms = help.strip_nonselected(q_atoms)
+            print("stripping non-selected")
+            p_atoms = help.strip_non_selected(p_atoms)
+            q_atoms = help.strip_non_selected(q_atoms)
 
         if args.no_hydrogen:
             p_atoms = help.strip_hydrogens(p_atoms)
@@ -115,6 +122,12 @@ class RMSD(nanome.PluginInstance):
         if args.backbone_only:
             p_atoms = help.strip_non_backbone(p_atoms)
             q_atoms = help.strip_non_backbone(q_atoms)
+
+        p_size = len(p_atoms)
+        q_size = len(q_atoms)
+        if not p_size == q_size:
+            Logs.debug("error: Structures not same size receptor size:", q_size, "target size:", p_size)
+            return False
 
         p_atom_names = get_atom_types(p_atoms)
         q_atom_names = get_atom_types(q_atoms)
@@ -205,20 +218,6 @@ class RMSD(nanome.PluginInstance):
             p_coords -= p_cent
             q_coords -= q_cent
 
-            test_qs = copy.deepcopy(q_coords)
-            test_inverse_U = [0,0,0]
-            # 45 off
-            # test_inverse_U[0]=np.asarray([1.0,     0.0,          0.0])
-            # test_inverse_U[1]=np.asarray([0.0,     -.4480736,    -0.8939967])
-            # test_inverse_U[2]=np.asarray([0.0,     0.8939967,    -0.4480736])
-            # 90 off
-            test_inverse_U[0]=np.asarray([1.0,     0.0,          0.0])
-            test_inverse_U[1]=np.asarray([0.0,     -.5984601,    -0.8011526])
-            test_inverse_U[2]=np.asarray([0.0,     0.8011526,    -0.5984601])
-
-            test_inverse_U = np.asarray(test_inverse_U)
-            test_qs = np.dot(test_qs, test_inverse_U)
-
             #reordering coords  ???
             if args.reorder:
                 if q_review.shape[0] != len(q_coords):
@@ -229,45 +228,36 @@ class RMSD(nanome.PluginInstance):
 
             # Get rotation matrix
             U = kabsch(p_coords, q_coords)
-            U = kabsch(p_coords, test_qs)
 
-            # Fake_U = [0,0,0,0]
-            # Fake_U[0]=np.asarray([1.0,0.0,0.0,0.0,])
-            # Fake_U[1]=np.asarray([0.0,1.0,0.0,0.0,])
-            # Fake_U[2]=np.asarray([0.0,0.0,1.0,0.0,])
-            # Fake_U[3]=np.asarray([0.0,0.0,0.0,1.0,])
-            # Fake_U = np.asarray(Fake_U)
-            # U = Fake_U
             #update rotation
             U_matrix = nanome.util.Matrix(4,4)
             for i in range(3):
                 for k in range(3):
                     U_matrix[i][k] = U[i][k]
             U_matrix[3][3] = 1
-            print("********")
-
-            print(U * test_inverse_U)
-
-            print("==============")
-            print(U_matrix)
-            print("==============")
             rot_quat = p_complex.rotation
             rot_matrix = nanome.util.Matrix.from_quaternion(rot_quat)
             result_matrix = rot_matrix * U_matrix
             result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
-            print(rot_quat)
-            print("==============")
-            print(result_matrix)
-            print("==============")            
-            print(q_complex.rotation)
             q_complex.rotation = result_quat
             q_complex.name = q_complex.name[::-1]
-            print(p_complex.rotation)
-            print(q_complex.rotation)
             Logs.debug("Finished update")
 
             #align centroids
-            q_complex.position = p_complex.position + help.array_to_position(p_cent - q_cent)
+            p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
+            q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
+            q_complex.position = p_complex.position + p_cent - q_cent
+            print("scale:", self.workspace.scale.x)
+            q_pos = q_complex.position
+            print("q_pos:", q_pos)
+            print( "q_Cent:", q_cent)
+            print("q_cent_global:", q_cent + q_pos)
+            print("=============")
+            p_pos = p_complex.position
+            print("p_pos:", p_pos)
+            print( "p_Cent:", p_cent)
+            print("p_cent_global:", p_cent + p_pos)
+
         return result_rmsd
 
 
