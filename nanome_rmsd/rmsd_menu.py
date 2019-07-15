@@ -20,11 +20,26 @@ class RMSDMenu():
 
     # run the rmsd algorithm
     def _run_rmsd(self):
-        if self._selected_mobile != None or self._selected_target != None:
+        if self._selected_mobile != None and self._selected_target != None:
             self._plugin.run_rmsd(self._selected_mobile.complex, self._selected_target.complex)
+            self.change_error("unselected")
         else:
-            # TODO, need to let the RUN button able to be selected again
-            pass
+            self.change_error("unselected")
+            self.make_plugin_usable()
+
+        
+
+    # show the error message texts
+    def change_error(self,type):
+        if(type=="unselected"):
+            Logs.debug("change error message [unselected]")
+            if self._selected_mobile == None or self._selected_target == None:
+                self.error_message.text_value = "Please select both the target and the receptor"
+            else:
+                self.error_message.text_value = ""
+                
+        
+        self._plugin.update_menu(self._menu)
 
     # change the args in the plugin
     def update_args(self,arg,option):
@@ -49,6 +64,7 @@ class RMSDMenu():
             self._selected_mobile = button
             self.receptor_text.text_value ="Receptor: "+ button.complex.name
             self._plugin.update_menu(self._menu)
+            self.change_error("unselected")
 
         def target_pressed(button):
             if self._selected_target != None:
@@ -57,9 +73,8 @@ class RMSDMenu():
             self._selected_target = button
             self.target_text.text_value = "Target: "+button.complex.name
             self._plugin.update_menu(self._menu)
+            self.change_error("unselected")
 
-        # self._selected_mobile = None
-        # self._selected_target = None
         self._mobile_list = []
         self._target_list = []
 
@@ -257,6 +272,10 @@ class RMSDMenu():
         # create the target text
         self.target_text = menu.root.find_node("Target").get_content()
         
+        # create the error message text
+        error_node = menu.root.find_node("Error Message")
+        self.error_message = error_node.get_content()
+
         self._menu = menu
         
 

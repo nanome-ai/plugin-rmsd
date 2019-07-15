@@ -26,16 +26,12 @@ class RMSD(nanome.PluginInstance):
     def on_complex_removed(self):
         nanome.util.Logs.debug("Complex removed: refreshing")
         self.request_refresh()
-        #self.request_refresh2()
 
     def request_refresh(self):
+        self._menu._selected_mobile = None
+        self._menu._selected_target = None
         self.request_complex_list(self.on_complex_list_received)
         nanome.util.Logs.debug("Complex list requested")
-
-    # 
-    # def request_refresh2(self):
-    #     self.request_complex_list(self.on_complex_list_received2)
-    #     nanome.util.Logs.debug("Complex list requested")
 
 
     def update_button(self, button):
