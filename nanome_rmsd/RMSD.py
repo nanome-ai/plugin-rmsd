@@ -6,6 +6,7 @@ from .rmsd_calculation import *
 from .rmsd_menu import RMSDMenu
 from . import rmsd_helpers as help
 from nanome.util import Logs
+# from .quaternion import Quaternion
 
 class RMSD(nanome.PluginInstance):
     def start(self):
