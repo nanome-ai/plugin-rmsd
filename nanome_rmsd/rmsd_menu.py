@@ -39,33 +39,45 @@ class RMSDMenu():
         if(error_type == "unselected"):
             if self._selected_mobile == None or self._selected_target == None:
                 if from_run == True:
-                    self.error_message.text_value = "Error: Please select both the target and the receptor"
+                    self.error_message.text_auto_size=False
+                    self.error_message.text_size = 0.198
+                    self.error_message.text_value = "Error: Select both target and receptor"
                     self._plugin.update_content(self.error_message)
                 return True
             else:
                 self.error_message.text_value = ""
+                self.error_message.text_auto_size = True
         if(error_type == "select_same"):
             if self._selected_mobile.complex.index == self._selected_target.complex.index:
                 if from_run == True:
-                    self.error_message.text_value = "Error: Please select different complexes"
+                    self.error_message.text_auto_size=False
+                    self.error_message.text_size = 0.22
+                    self.error_message.text_value = "Error: Select different complexes"
                     self._plugin.update_content(self.error_message)
                 return True
             else:
                 self.error_message.text_value = ""
+                self.error_message.text_auto_size = True
         if(error_type == "different_size"):
             if from_run == True:
+                self.error_message.text_auto_size=False
+                self.error_message.text_size = 0.159
                 self.error_message.text_value = "Error: Receptor and target have different sizes"
                 self._plugin.update_content(self.error_message)
                 return True
             else:
                 self.error_message.text_value = ""
+                self.error_message.text_auto_size = True
         if(error_type == "different_order"):
             if from_run == True:
+                self.error_message.text_auto_size=False
+                self.error_message.text_size = 0.159
                 self.error_message.text_value = "Error: Receptor and target have different order"
                 self._plugin.update_content(self.error_message)
                 return True
             else:
                 self.error_message.text_value = ""
+                self.error_message.text_auto_size = True
 
     # change the args in the plugin
     def update_args(self,arg,option):
