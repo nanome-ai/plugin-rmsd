@@ -33,6 +33,7 @@ class RMSDMenu():
             self.make_plugin_usable()
         elif self._selected_mobile.complex.index == self._selected_target.complex.index:
             self.change_error("select_same",from_run = True)
+            self.make_plugin_usable()
         else:
             self._plugin.run_rmsd(self._selected_mobile.complex, self._selected_target.complex)
             self.change_error("unselected",from_run = True)
@@ -45,16 +46,17 @@ class RMSDMenu():
             if self._selected_mobile == None or self._selected_target == None:
                 if from_run == True:
                     self.error_message.text_value = "Please select both the target and the receptor"
+                    self._plugin.update_menu(self._menu)
                 return True
             else:
                 self.error_message.text_value = ""
         if(error_type == "select_same"):
             if self._selected_mobile.complex.index == self._selected_target.complex.index:
                 if from_run == True:
-                    self.error_message.text_value = "Please select different complexes as the target and the receptor"
+                    self.error_message.text_value = "Please select different complexes"
+                    self._plugin.update_menu(self._menu)
             else:
                 self.error_message.text_value = ""
-        self._plugin.update_menu(self._menu)
 
     # change the args in the plugin
     def update_args(self,arg,option):
@@ -86,9 +88,9 @@ class RMSDMenu():
                 button.selected = True
                 self._selected_mobile = button
                 self.receptor_text.text_value ="Receptor: "+ button.complex.name
-            self._plugin.update_menu(self._menu)
             if not self.change_error("unselected"):
                 self.change_error("select_same")
+            self._plugin.update_menu(self._menu)
 
         def target_pressed(button):
             if self._selected_target != None:
@@ -104,9 +106,10 @@ class RMSDMenu():
                 button.selected = True
                 self._selected_target = button
                 self.target_text.text_value ="Target: "+ button.complex.name
-            self._plugin.update_menu(self._menu)
             if not self.change_error("unselected"):
                 self.change_error("select_same")
+            self._plugin.update_menu(self._menu)
+
 
         self._mobile_list = []
         self._target_list = []
