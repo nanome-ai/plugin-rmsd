@@ -20,17 +20,11 @@ class RMSDMenu():
 
     # run the rmsd algorithm
     def _run_rmsd(self):
-        # if self._selected_mobile != None and self._selected_target != None:
-        #     if self._selected_mobile.complex.index != self._selected_target.complex.index:
-        #         self._plugin.run_rmsd(self._selected_mobile.complex, self._selected_target.complex)
-        #         self.change_error("unselected",from_run = True)
-        #         self.change_error("select_same")
-        # else:
-        #     self.change_error("unselected",from_run = True)
-        #     self.make_plugin_usable()
+        # check if both target and receptor are selected
         if self._selected_mobile == None or self._selected_target == None:
             self.change_error("unselected",from_run = True)
             self.make_plugin_usable()
+        # check if one complex is selected as both
         elif self._selected_mobile.complex.index == self._selected_target.complex.index:
             self.change_error("select_same",from_run = True)
             self.make_plugin_usable()
@@ -73,7 +67,8 @@ class RMSDMenu():
 
     # change the complex list
     def change_complex_list(self, complex_list):
-
+        
+        # a button in the receptor list is pressed
         def mobile_pressed(button):
             if self._selected_mobile != None:
                 self._selected_mobile.selected = False 
@@ -92,6 +87,7 @@ class RMSDMenu():
                 self.change_error("select_same")
             self._plugin.update_menu(self._menu)
 
+        # a button in the target list is pressed
         def target_pressed(button):
             if self._selected_target != None:
                 self._selected_target.selected = False 
@@ -114,9 +110,11 @@ class RMSDMenu():
         self._mobile_list = []
         self._target_list = []
 
-        if self._selected_mobile != None and self._selected_mobile.complex.index not in [i.index for i in complex_list]:
+        if self._selected_mobile != None and \
+           self._selected_mobile.complex.index not in [i.index for i in complex_list]:
             self._selected_mobile =None
-        if self._selected_target != None and self._selected_target.complex.index not in [i.index for i in complex_list]:
+        if self._selected_target != None and \
+           self._selected_target.complex.index not in [i.index for i in complex_list]:
             self._selected_target = None
         
         for complex in complex_list:
