@@ -122,6 +122,7 @@ class RMSD(nanome.PluginInstance):
         q_size = len(q_atoms)
         if not p_size == q_size:
             Logs.debug("error: Structures not same size receptor size:", q_size, "target size:", p_size)
+            self._menu.change_error("different_size",from_run=True)
             return False
 
         p_atom_names = get_atom_types(p_atoms)
@@ -133,6 +134,8 @@ class RMSD(nanome.PluginInstance):
             #message should be sent to nanome as notification?
             msg = "\nerror: Atoms are not in the same order. \n reorder to align the atoms (can be expensive for large structures)."
             Logs.debug(msg)
+            self._menu.change_error("different_order",from_run=True)
+
             return False
 
         p_coords = help.positions_to_array(p_pos_orig)
