@@ -20,26 +20,40 @@ class RMSDMenu():
 
     # run the rmsd algorithm
     def _run_rmsd(self):
-        if self._selected_mobile != None and self._selected_target != None:
-            self._plugin.run_rmsd(self._selected_mobile.complex, self._selected_target.complex)
-            self.change_error("unselected",True)
-        else:
-            self.change_error("unselected",True)
+        # if self._selected_mobile != None and self._selected_target != None:
+        #     if self._selected_mobile.complex.index != self._selected_target.complex.index:
+        #         self._plugin.run_rmsd(self._selected_mobile.complex, self._selected_target.complex)
+        #         self.change_error("unselected",from_run = True)
+        #         self.change_error("select_same")
+        # else:
+        #     self.change_error("unselected",from_run = True)
+        #     self.make_plugin_usable()
+        if self._selected_mobile == None or self._selected_target == None:
+            self.change_error("unselected",from_run = True)
             self.make_plugin_usable()
+        elif self._selected_mobile.complex.index == self._selected_target.complex.index:
+            self.change_error("select_same",from_run = True)
+        else:
+            self._plugin.run_rmsd(self._selected_mobile.complex, self._selected_target.complex)
+            self.change_error("unselected",from_run = True)
+            self.change_error("select_same",from_run = True)
 
-        
 
     # show the error message texts, fromRun means if the it is called after Run is pressed
-    def change_error(self,type,fromRun):
-        if(type=="unselected"):
-            Logs.debug("change error message [unselected]")
+    def change_error(self,error_type,from_run = False):
+        if(error_type == "unselected"):
             if self._selected_mobile == None or self._selected_target == None:
-                if fromRun == True:
+                if from_run == True:
                     self.error_message.text_value = "Please select both the target and the receptor"
+                return True
             else:
                 self.error_message.text_value = ""
-                
-        
+        if(error_type == "select_same"):
+            if self._selected_mobile.complex.index == self._selected_target.complex.index:
+                if from_run == True:
+                    self.error_message.text_value = "Please select different complexes as the target and the receptor"
+            else:
+                self.error_message.text_value = ""
         self._plugin.update_menu(self._menu)
 
     # change the args in the plugin
@@ -60,21 +74,39 @@ class RMSDMenu():
 
         def mobile_pressed(button):
             if self._selected_mobile != None:
-                self._selected_mobile.selected = False
-            button.selected = True
-            self._selected_mobile = button
-            self.receptor_text.text_value ="Receptor: "+ button.complex.name
+                self._selected_mobile.selected = False 
+                if self._selected_mobile.complex != button.complex: 
+                    button.selected = True
+                    self._selected_mobile = button
+                    self.receptor_text.text_value ="Receptor: "+ button.complex.name
+                else: 
+                    self._selected_mobile = None
+                    self.receptor_text.text_value = "Receptor: Unselected"
+            else: 
+                button.selected = True
+                self._selected_mobile = button
+                self.receptor_text.text_value ="Receptor: "+ button.complex.name
             self._plugin.update_menu(self._menu)
-            self.change_error("unselected",False)
+            if not self.change_error("unselected"):
+                self.change_error("select_same")
 
         def target_pressed(button):
             if self._selected_target != None:
-                self._selected_target.selected = False
-            button.selected = True
-            self._selected_target = button
-            self.target_text.text_value = "Target: "+button.complex.name
+                self._selected_target.selected = False 
+                if self._selected_target.complex != button.complex: 
+                    button.selected = True
+                    self._selected_target = button
+                    self.target_text.text_value ="Target: "+ button.complex.name
+                else: 
+                    self._selected_target = None
+                    self.target_text.text_value = "Target: Unselected"
+            else: 
+                button.selected = True
+                self._selected_target = button
+                self.target_text.text_value ="Target: "+ button.complex.name
             self._plugin.update_menu(self._menu)
-            self.change_error("unselected",False)
+            if not self.change_error("unselected"):
+                self.change_error("select_same")
 
         self._mobile_list = []
         self._target_list = []
@@ -123,6 +155,7 @@ class RMSDMenu():
         # refresh the lists
         def refresh_button_pressed_callback(button):
             self._request_refresh()
+            
 
         # press the run button and run the algorithm
         def run_button_pressed_callback(button):
@@ -180,7 +213,7 @@ class RMSDMenu():
 
             post_option = drop_down[post_index]
 
-            reorder_button.selected = post_option == "None"
+            reorder_button.selected = post_option != "None"
             reorder_button.set_all_text(post_option)
             
             # tell the plugin and update the menu
@@ -199,7 +232,7 @@ class RMSDMenu():
 
             post_option = drop_down[post_index]
 
-            rotation_button.selected = post_option == "None"
+            rotation_button.selected = post_option != "None"
             rotation_button.set_all_text(post_option)
             
             # tell the plugin and update the menu

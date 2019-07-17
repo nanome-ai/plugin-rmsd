@@ -63,7 +63,7 @@ class RMSD(nanome.PluginInstance):
             self.update_workspace(workspace)
         Logs.debug("RMSD done")
         self.make_plugin_usable()
-        self.request_refresh()
+        # self.request_refresh()
     
     def update_args(self, arg, option):
         setattr(self.args, arg, option)
@@ -235,7 +235,6 @@ class RMSD(nanome.PluginInstance):
             result_matrix = rot_matrix * U_matrix
             result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
             q_complex.rotation = result_quat
-            q_complex.name = q_complex.name[::-1]
             Logs.debug("Finished update")
 
             #align centroids
