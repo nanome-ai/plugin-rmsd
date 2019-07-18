@@ -21,91 +21,89 @@ class RMSDMenu():
     # run the rmsd algorithm
     def _run_rmsd(self):
         # check if both target and receptor are selected
-        if self._selected_mobile == None or self._selected_target == None:
-            self.change_error("unselected",from_run = True)
-            self.make_plugin_usable()
+        # if self._selected_mobile == None or self._selected_target == None:
+        #     self.change_error("unselected")
+        #     self.make_plugin_usable()
         # check if one complex is selected as both
-        elif self._selected_mobile.complex.index == self._selected_target.complex.index:
-            self.change_error("select_same",from_run = True)
-            self.make_plugin_usable()
-        else:
+        # elif self._selected_mobile.complex.index == self._selected_target.complex.index:
+        #     self.change_error("select_same")
+        #     self.make_plugin_usable()
+        # else:
+        #     self._plugin.run_rmsd(self._selected_mobile.complex, self._selected_target.complex)
+        #     self.change_error("unselected")
+        #     self.change_error("select_same")
+        if self.check_resolve_error():
             self._plugin.run_rmsd(self._selected_mobile.complex, self._selected_target.complex)
-            self.change_error("unselected",from_run = True)
-            self.change_error("select_same",from_run = True)
+        else:
+            self.make_plugin_usable()
+
+    # check the "unselect" and "select_same" error and call change_error
+    def check_resolve_error(self,clear=False):
+        if self._selected_mobile == None or self._selected_target == None:
+            if(not clear):
+                self.change_error("unselected")
+                return False
+        elif self._selected_mobile.complex.index == self._selected_target.complex.index:
+            if(not clear):
+                self.change_error("select_same")
+                return False
+        else:
+            self.change_error("clear")
+            return True
+
 
 
     # show the error message texts, fromRun means if the it is called after Run is pressed
-    def change_error(self,error_type,from_run = False):
+    def change_error(self,error_type):
         if(error_type == "unselected"):
-            if self._selected_mobile == None or self._selected_target == None:
-                if from_run == True:
-                    self.error_message.text_auto_size=False
-                    self.error_message.text_size = 0.198
-                    self.error_message.text_value = "Error: Select both target and receptor"
-                    self.update_score(0,reset=True)
-                    self._plugin.update_content(self.error_message)
-                return True
-            else:
-                self.error_message.text_value = ""
-                self.error_message.text_auto_size = True
-                self._plugin.update_content(self.error_message)
+            self.error_message.text_auto_size=False
+            self.error_message.text_size = 0.198
+            self.error_message.text_value = "Error: Select both target and receptor"
+            self.update_score(None)
+            self._plugin.update_content(self.error_message)
+            return True
         if(error_type == "select_same"):
-            if self._selected_mobile.complex.index == self._selected_target.complex.index:
-                if from_run == True:
-                    self.error_message.text_auto_size=False
-                    self.error_message.text_size = 0.22
-                    self.error_message.text_value = "Error: Select different complexes"
-                    self.update_score(0,reset=True)
-                    self._plugin.update_content(self.error_message)
-                return True
-            else:
-                self.error_message.text_value = ""
-                self.error_message.text_auto_size = True
-                self._plugin.update_content(self.error_message)
+            self.error_message.text_auto_size=False
+            self.error_message.text_size = 0.22
+            self.error_message.text_value = "Error: Select different complexes"
+            self.update_score()
+            self._plugin.update_content(self.error_message)
+            return True
         if(error_type == "different_size"):
-            if from_run == True:
-                self.error_message.text_auto_size=False
-                self.error_message.text_size = 0.159
-                self.error_message.text_value = "Error: Receptor and target have different sizes"
-                self.update_score(0,reset=True)
-                self._plugin.update_content(self.error_message)
-                return True
-            else:
-                self.error_message.text_value = ""
-                self.error_message.text_auto_size = True
-                self._plugin.update_content(self.error_message)
+            self.error_message.text_auto_size=False
+            self.error_message.text_size = 0.159
+            self.error_message.text_value = "Error: Receptor and target have different sizes"
+            self.update_score()
+            self._plugin.update_content(self.error_message)
+            return True
         if(error_type == "different_order"):
-            if from_run == True:
-                self.error_message.text_auto_size=False
-                self.error_message.text_size = 0.159
-                self.error_message.text_value = "Error: Receptor and target have different order"
-                self.update_score(0,reset=True)
-                self._plugin.update_content(self.error_message)
-                return True
-            else:
-                self.error_message.text_value = ""
-                self.error_message.text_auto_size = True
+            self.error_message.text_auto_size=False
+            self.error_message.text_size = 0.159
+            self.error_message.text_value = "Error: Receptor and target have different order"
+            self.update_score()
+            self._plugin.update_content(self.error_message)
+            return True
         if(error_type == "zero_size"):
-            if from_run == True:
-                self.error_message.text_auto_size=False
-                self.error_message.text_size = 0.15
-                self.error_message.text_value = "Error: At least one complex has no atom selected"
-                self.update_score(0,reset=True)
-                self._plugin.update_content(self.error_message)
-                return True
-            else:
-                self.error_message.text_value = ""
-                self.error_message.text_auto_size = True
-                self._plugin.update_content(self.error_message)
+            self.error_message.text_auto_size=False
+            self.error_message.text_size = 0.15
+            self.error_message.text_value = "Error: At least one complex has no atom selected"
+            self.update_score()
+            self._plugin.update_content(self.error_message)
+            return True
+        if(error_type == "clear"):
+            self.error_message.text_value = ""
+            self.error_message.text_auto_size = True
+            self._plugin.update_content(self.error_message)
+
 
 
     # change the args in the plugin
     def update_args(self,arg,option):
         self._plugin.update_args(arg,option)
 
-    def update_score(self,value,reset=False):
+    def update_score(self,value=None):
         Logs.debug("update score called: ",value)
-        if reset == True:
+        if value == None:
             self.rmsd_score_label.text_value = "--"
         else:
             self.rmsd_score_label.text_value = str("%.3g"%value)
@@ -133,10 +131,11 @@ class RMSDMenu():
                 button.selected = True
                 self._selected_mobile = button
                 self.receptor_text.text_value ="Receptor: "+ button.complex.name
-            if not self.change_error("unselected"):
-                if not self.change_error("select_same"):
-                    if not self.change_error("different_size"):
-                        self.change_error("different_order")
+            # if not self.change_error("unselected"):
+            #     if not self.change_error("select_same"):
+            #         if not self.change_error("different_size"):
+            #             self.change_error("different_order")
+            self.check_resolve_error(clear=True)
             self._plugin.update_content(self._show_list)
             self._plugin.update_content(self.receptor_text)
             self._plugin.update_content(self.target_text)
@@ -156,10 +155,11 @@ class RMSDMenu():
                 button.selected = True
                 self._selected_target = button
                 self.target_text.text_value ="Target: "+ button.complex.name
-            if not self.change_error("unselected"):
-                if not self.change_error("select_same"):
-                    if not self.change_error("different_size"):
-                        self.change_error("different_order")
+            # if not self.change_error("unselected"):
+            #     if not self.change_error("select_same"):
+            #         if not self.change_error("different_size"):
+            #             self.change_error("different_order")
+            self.check_resolve_error(clear=True)
             self._plugin.update_content(self._show_list)
             self._plugin.update_content(self.receptor_text)
             self._plugin.update_content(self.target_text)
