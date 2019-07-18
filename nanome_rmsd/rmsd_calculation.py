@@ -566,7 +566,7 @@ def check_reflections(p_atoms, q_atoms, p_coord, q_coord,
 
     return min_rmsd, min_swap, min_reflection, min_review
 
-def get_coordinates(atom_list):
+def get_atom_types(atom_list):
     """
     Get coordinates from filename in format fmt. Supports XYZ and PDB.
     Parameters
@@ -579,14 +579,9 @@ def get_coordinates(atom_list):
     -------
     atoms : list
         List of atomic types
-    V : array
-        (N,3) where N is number of atoms
     """
-    V = list()
     atoms = list()
     for atom in atom_list:
-        position = atom.position
-        V.append(np.asarray([position.x, position.y, position.z], dtype = float))
         symbol = atom.name[0]
         if symbol in ("H", "C", "N", "O","S", "P"):
             atoms.append(symbol)
@@ -598,10 +593,9 @@ def get_coordinates(atom_list):
             else:
                 nanome.util.Logs.error("Could not determine atom type. Atom name:", atom.name)
                 raise Exception
-    V = np.asarray(V)
     atoms = np.asarray(atoms)
 
-    return atoms, V
+    return atoms
 
 def get_common_coordinates(complex0, complex1):
     residues0 = {}
