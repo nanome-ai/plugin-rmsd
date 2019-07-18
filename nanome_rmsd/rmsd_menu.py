@@ -47,6 +47,7 @@ class RMSDMenu():
             else:
                 self.error_message.text_value = ""
                 self.error_message.text_auto_size = True
+                self._plugin.update_content(self.error_message)
         if(error_type == "select_same"):
             if self._selected_mobile.complex.index == self._selected_target.complex.index:
                 if from_run == True:
@@ -58,6 +59,7 @@ class RMSDMenu():
             else:
                 self.error_message.text_value = ""
                 self.error_message.text_auto_size = True
+                self._plugin.update_content(self.error_message)
         if(error_type == "different_size"):
             if from_run == True:
                 self.error_message.text_auto_size=False
@@ -68,6 +70,7 @@ class RMSDMenu():
             else:
                 self.error_message.text_value = ""
                 self.error_message.text_auto_size = True
+                self._plugin.update_content(self.error_message)
         if(error_type == "different_order"):
             if from_run == True:
                 self.error_message.text_auto_size=False
@@ -78,6 +81,18 @@ class RMSDMenu():
             else:
                 self.error_message.text_value = ""
                 self.error_message.text_auto_size = True
+        if(error_type == "zero_size"):
+            if from_run == True:
+                self.error_message.text_auto_size=False
+                self.error_message.text_size = 0.15
+                self.error_message.text_value = "Error: At least one complex has no atom selected"
+                self._plugin.update_content(self.error_message)
+                return True
+            else:
+                self.error_message.text_value = ""
+                self.error_message.text_auto_size = True
+                self._plugin.update_content(self.error_message)
+
 
     # change the args in the plugin
     def update_args(self,arg,option):

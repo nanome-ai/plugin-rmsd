@@ -120,10 +120,18 @@ class RMSD(nanome.PluginInstance):
 
         p_size = len(p_atoms)
         q_size = len(q_atoms)
+
+        if p_size == 0 or q_size == 0:
+            Logs.debug("error: sizes of selected complexes are 0")
+            self._menu.change_error("zero_size",from_run=True)
+            return False
+
         if not p_size == q_size:
             Logs.debug("error: Structures not same size receptor size:", q_size, "target size:", p_size)
             self._menu.change_error("different_size",from_run=True)
             return False
+        else:
+            self._menu.change_error("different_size")
 
         p_atom_names = get_atom_types(p_atoms)
         q_atom_names = get_atom_types(q_atoms)
