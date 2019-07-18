@@ -20,33 +20,23 @@ class RMSDMenu():
 
     # run the rmsd algorithm
     def _run_rmsd(self):
-        # check if both target and receptor are selected
-        # if self._selected_mobile == None or self._selected_target == None:
-        #     self.change_error("unselected")
-        #     self.make_plugin_usable()
-        # check if one complex is selected as both
-        # elif self._selected_mobile.complex.index == self._selected_target.complex.index:
-        #     self.change_error("select_same")
-        #     self.make_plugin_usable()
-        # else:
-        #     self._plugin.run_rmsd(self._selected_mobile.complex, self._selected_target.complex)
-        #     self.change_error("unselected")
-        #     self.change_error("select_same")
         if self.check_resolve_error():
             self._plugin.run_rmsd(self._selected_mobile.complex, self._selected_target.complex)
         else:
             self.make_plugin_usable()
 
     # check the "unselect" and "select_same" error and call change_error
-    def check_resolve_error(self,clear=False):
-        if self._selected_mobile == None or self._selected_target == None:
-            if(not clear):
+    def check_resolve_error(self,clear_only=False):
+        if(not clear_only):
+            if self._selected_mobile == None or self._selected_target == None:
                 self.change_error("unselected")
                 return False
-        elif self._selected_mobile.complex.index == self._selected_target.complex.index:
-            if(not clear):
+            elif self._selected_mobile.complex.index == self._selected_target.complex.index:
                 self.change_error("select_same")
                 return False
+            else:
+                self.change_error("clear")
+                return True
         else:
             self.change_error("clear")
             return True
@@ -131,11 +121,7 @@ class RMSDMenu():
                 button.selected = True
                 self._selected_mobile = button
                 self.receptor_text.text_value ="Receptor: "+ button.complex.name
-            # if not self.change_error("unselected"):
-            #     if not self.change_error("select_same"):
-            #         if not self.change_error("different_size"):
-            #             self.change_error("different_order")
-            self.check_resolve_error(clear=True)
+            self.check_resolve_error(clear_only=True)
             self._plugin.update_content(self._show_list)
             self._plugin.update_content(self.receptor_text)
             self._plugin.update_content(self.target_text)
@@ -155,11 +141,7 @@ class RMSDMenu():
                 button.selected = True
                 self._selected_target = button
                 self.target_text.text_value ="Target: "+ button.complex.name
-            # if not self.change_error("unselected"):
-            #     if not self.change_error("select_same"):
-            #         if not self.change_error("different_size"):
-            #             self.change_error("different_order")
-            self.check_resolve_error(clear=True)
+            self.check_resolve_error(clear_only=True)
             self._plugin.update_content(self._show_list)
             self._plugin.update_content(self.receptor_text)
             self._plugin.update_content(self.target_text)
@@ -247,12 +229,6 @@ class RMSDMenu():
             no_hydrogen_button.selected = not no_hydrogen_button.selected
             self.update_args("no_hydrogen", no_hydrogen_button.selected)
             self._plugin.update_content(no_hydrogen_button)
-
-        # use reflections = ! use reflections
-        # def use_reflections_button_pressed_callback(button):
-        #     self.update_args("use_reflections", False)
-        #     use_reflections_button.selected = not use_reflections_button.selected
-        #     self._plugin.update_content(use_reflections_button)
 
         # backbone only = ! backbone only
         def backbone_only_button_pressed_callback(button):
