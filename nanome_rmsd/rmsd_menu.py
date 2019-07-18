@@ -42,6 +42,7 @@ class RMSDMenu():
                     self.error_message.text_auto_size=False
                     self.error_message.text_size = 0.198
                     self.error_message.text_value = "Error: Select both target and receptor"
+                    self.update_score(0,reset=True)
                     self._plugin.update_content(self.error_message)
                 return True
             else:
@@ -54,6 +55,7 @@ class RMSDMenu():
                     self.error_message.text_auto_size=False
                     self.error_message.text_size = 0.22
                     self.error_message.text_value = "Error: Select different complexes"
+                    self.update_score(0,reset=True)
                     self._plugin.update_content(self.error_message)
                 return True
             else:
@@ -65,6 +67,7 @@ class RMSDMenu():
                 self.error_message.text_auto_size=False
                 self.error_message.text_size = 0.159
                 self.error_message.text_value = "Error: Receptor and target have different sizes"
+                self.update_score(0,reset=True)
                 self._plugin.update_content(self.error_message)
                 return True
             else:
@@ -76,6 +79,7 @@ class RMSDMenu():
                 self.error_message.text_auto_size=False
                 self.error_message.text_size = 0.159
                 self.error_message.text_value = "Error: Receptor and target have different order"
+                self.update_score(0,reset=True)
                 self._plugin.update_content(self.error_message)
                 return True
             else:
@@ -86,6 +90,7 @@ class RMSDMenu():
                 self.error_message.text_auto_size=False
                 self.error_message.text_size = 0.15
                 self.error_message.text_value = "Error: At least one complex has no atom selected"
+                self.update_score(0,reset=True)
                 self._plugin.update_content(self.error_message)
                 return True
             else:
@@ -98,9 +103,12 @@ class RMSDMenu():
     def update_args(self,arg,option):
         self._plugin.update_args(arg,option)
 
-    def update_score(self,value):
+    def update_score(self,value,reset=False):
         Logs.debug("update score called: ",value)
-        self.rmsd_score_label.text_value = str("%.3g"%value)
+        if reset == True:
+            self.rmsd_score_label.text_value = "--"
+        else:
+            self.rmsd_score_label.text_value = str("%.3g"%value)
         self._plugin.update_content(self.rmsd_score_label)
 
     def make_plugin_usable(self, state = True):
