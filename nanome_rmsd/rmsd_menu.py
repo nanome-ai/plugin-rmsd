@@ -291,12 +291,16 @@ class RMSDMenu():
         menu = nanome.ui.Menu.io.from_json(os.path.join(os.path.dirname(__file__), 'rmsd_pluginator.json'))
         self._plugin.menu = menu
 
+        # add the refresh icon
+        refresh_img = menu.root.find_node("Refresh Image", True)
+        refresh_img.add_new_image(file_path = "./nanome_rmsd/Refresh.png")
+
         # create the Run button
         self._run_button = menu.root.find_node("Run", True).get_content()
         self._run_button.register_pressed_callback(run_button_pressed_callback)
 
         # create the Refresh button
-        refresh_button = menu.root.find_node("Refresh", True).get_content()
+        refresh_button = menu.root.find_node("Refresh Button", True).get_content()
         refresh_button.register_pressed_callback(refresh_button_pressed_callback)
 
         # create the List 
