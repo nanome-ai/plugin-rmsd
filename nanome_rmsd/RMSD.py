@@ -254,18 +254,22 @@ class RMSD(nanome.PluginInstance):
         return result_rmsd
 
     # auto select with global/local alignment
-    def select():
+    def select(self,mobile,target):
         # create seq1 and seq2
         #run the alignment
-        if (self.args.select == global):
-            self.global_align(self._mobile,self._target)
-        if (self.args.select == local):
+        self._mobile = mobile
+        self._target = target
+        if (self.args.select.lower() == "global"):
+            Logs.debug("type of mobile is ",type(mobile))
+            self.global_align(self._mobile , self._target)
+        if (self.args.select.lower() == "local"):
             self.local_align(self._mobile,self._target)
 
     # needleman wunsch algorithm
-    def global_align(res1, res2, gap_penalty = -1, mismatch_penalty = -1, match_reward = 2):
-        seq1 = res1.residules
-        seq2 = res2.residules
+    def global_align(self, res1, res2, gap_penalty = -1, mismatch_penalty = -1, match_reward = 2):
+        Logs.debug("type in global align function is",type(res1))
+        seq1 = res1.residues
+        seq2 = res2.residues
         #create the table
         m, n = len(seq1), len(seq2)
         score = zeros((m+1, n+1))      

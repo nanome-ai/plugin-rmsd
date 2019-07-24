@@ -12,9 +12,10 @@ class RMSDMenu():
         self._run_button = None
         self._current_tab = "receptor" #receptor = 0, target = 1
         self._drop_down_dict={"rotation":["None", "Kabsch","Quaternion"],"reorder_method":["None","Hungarian","Brute", "Distance"],\
-        "select":["None","global","local"]}
+        "select":["None","Global","Local"]}
         self._current_reorder = "None"
         self._current_rotation = "None"
+        self._current_select = "None"
 
     def _request_refresh(self):
         self._plugin.request_refresh()
@@ -281,21 +282,25 @@ class RMSDMenu():
             self._plugin.update_content(rotation_button)
 
         def select_button_pressed_callback(button):
-            drop_down  = self._drop_down_dict["select"]
-            temp_length=len(drop_down)
             
-            pre_index = drop_down.index(self._current_select)
-            post_index = (pre_index + 1) % temp_length
+            if self._selected_mobile != None and self._selected_target != None:
+                self._plugin.select(self._selected_mobile.complex,self._selected_target.complex)
+                drop_down  = self._drop_down_dict["select"]
+                temp_length=len(drop_down)
+                
+                pre_index = drop_down.index(self._current_select)
+                post_index = (pre_index + 1) % temp_length
 
-            post_option = drop_down[post_index]
+                post_option = drop_down[post_index]
 
-            select_button.selected = post_option != "None"
-            select_button.set_all_text(post_option)
-            
-            # tell the plugin and update the menu
-            self._select = post_option
-            self.update_args("select", post_option)
-            self.plugin.select()
+                select_button.selected = post_option != "None"
+                select_button.set_all_text(post_option)
+                
+                # tell the plugin and update the menu
+                self._select = post_option
+                self.update_args("select", post_option)
+            else:
+                self.check_resolve_error()
             self._plugin.update_content(select_button)
 
         # Create a prefab that will be used to populate the lists
