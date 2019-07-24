@@ -11,7 +11,8 @@ class RMSDMenu():
         self._selected_target = None # button
         self._run_button = None
         self._current_tab = "receptor" #receptor = 0, target = 1
-        self._drop_down_dict={"rotation":["None", "Kabsch","Quaternion"],"reorder_method":["None","Hungarian","Brute", "Distance"]}
+        self._drop_down_dict={"rotation":["None", "Kabsch","Quaternion"],"reorder_method":["None","Hungarian","Brute", "Distance"],\
+        "select":["None","global","local"]}
         self._current_reorder = "None"
         self._current_rotation = "None"
 
@@ -278,7 +279,25 @@ class RMSDMenu():
             self._current_rotation = post_option
             self.update_args("rotation_method", post_option)
             self._plugin.update_content(rotation_button)
-        
+
+        def select_button_pressed_callback(button):
+            drop_down  = self._drop_down_dict["select"]
+            temp_length=len(drop_down)
+            
+            pre_index = drop_down.index(self._current_select)
+            post_index = (pre_index + 1) % temp_length
+
+            post_option = drop_down[post_index]
+
+            select_button.selected = post_option != "None"
+            select_button.set_all_text(post_option)
+            
+            # tell the plugin and update the menu
+            self._select = post_option
+            self.update_args("select", post_option)
+            self.plugin.select()
+            self._plugin.update_content(select_button)
+
         # Create a prefab that will be used to populate the lists
         self._complex_item_prefab = nanome.ui.LayoutNode()
         self._complex_item_prefab.layout_orientation = nanome.ui.LayoutNode.LayoutTypes.horizontal
@@ -339,6 +358,10 @@ class RMSDMenu():
         # create the roation "drop down"
         rotation_button = menu.root.find_node("Rotation menu",True).get_content()
         rotation_button.register_pressed_callback(rotation_button_pressed_callback)
+
+        # create the select cycle button
+        select_button = menu.root.find_node("Auto Select",True).get_content()
+        select_button.register_pressed_callback(select_button_pressed_callback)
 
         # create the rmsd score
         self.rmsd_score_label = menu.root.find_node("RMSD number",True).get_content()

@@ -73,6 +73,7 @@ class RMSD(nanome.PluginInstance):
             self.rotation = "kabsch" #alt: "quaternion", "none"
             self.reorder = False
             self.reorder_method = "hungarian" #alt "brute", "distance"
+            self.select = "global"
             self.use_reflections = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). This will affect stereo-chemistry.
             self.use_reflections_keep_stereo = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). Stereo-chemistry will be kept.
             #exclusion options
@@ -252,6 +253,93 @@ class RMSD(nanome.PluginInstance):
             q_complex.position = p_complex.position + p_cent - q_cent
         return result_rmsd
 
+    # auto select with global/local alignment
+    def select():
+        # create seq1 and seq2
+        #run the alignment
+        if (self.args.select == global):
+            self.global_align(self._mobile,self._target)
+        if (self.args.select == local):
+            self.local_align(self._mobile,self._target)
+
+    # needleman wunsch algorithm
+    def global_align(res1, res2, gap_penalty = -1, mismatch_penalty = -1, match_reward = 2):
+        seq1 = res1.residules
+        seq2 = res2.residules
+        #create the table
+        m, n = len(seq1), len(seq2)
+        score = zeros((m+1, n+1))      
+    
+        # file the first column and row
+        for i in range(0, m + 1):
+            score[i][0] = gap_penalty * i
+        for j in range(0, n + 1):
+            score[0][j] = gap_penalty * j
+        # fill the table wtih scores
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                if seq1[i-1] == seq2[j-1]:
+                    match = score[i - 1][j - 1] + match_reward
+                else:
+                    match = score[i - 1][j - 1] + mismatch_penalty
+                delete = score[i - 1][j] + gap_penalty
+                insert = score[i][j - 1] + gap_penalty
+                score[i][j] = max(match, delete, insert)
+
+        # Traceback and compute the alignment 
+        # align1, align2 = '', ''
+        # start from the bottom right cell
+        i,j = m,n
+        while i > 0 and j > 0: 
+            score_current = score[i][j]
+            score_diagonal = score[i-1][j-1]
+            score_up = score[i][j-1]
+            score_left = score[i-1][j]
+            # two residuses match, only deselect when the selected atoms are not matched
+            if score_current == score_diagonal + mismatch_penalty and seq1[i-1] == seq2[j-1]:
+                # align1 += seq1[i-1]
+                # align2 += seq2[j-1]
+                
+                i -= 1
+                j -= 1
+            # two of the residues do not match, the deselect both
+            elif score_current == score_diagonal + match_reward and seq1[i-1] != seq2[j-1]:
+                for x in res1.atoms:
+                    x.select = False
+                for y in res2.atoms:
+                    y.select = False
+                i -= 1
+                j -= 1
+            # seq1 has an extra residue, deselect it
+            elif score_current == score_left + gap_penalty:
+                # align1 += seq1[i-1]
+                # align2 += '-'
+                for x in res1.atoms:
+                    x.select = False
+                i -= 1
+            # seq2 has an extra residue, deselect it
+            elif score_current == score_up + gap_penalty:
+                # align1 += '-'
+                # align2 += seq2[j-1]
+                for x in res2.atoms:
+                    x.select = False
+                j -= 1
+
+        # Finish tracing up to the top left cell
+        # while i > 0:
+        #     align1 += seq1[i-1]
+        #     align2 += '-'
+        #     i -= 1
+        # while j > 0:
+        #     align1 += '-'
+        #     align2 += seq2[j-1]
+        #     j -= 1
+
+        # finalize(align1, align2)
+
+    def local_align(res1,res2):
+        pass
+                
 
 def main():
     plugin = nanome.Plugin("RMSD", "A simple plugin that aligns complexes through RMSD calculation", "Test", False)
