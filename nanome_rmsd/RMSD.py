@@ -7,6 +7,7 @@ from .rmsd_menu import RMSDMenu
 from . import rmsd_helpers as help
 from nanome.util import Logs
 # from .quaternion import Quaternion
+import numpy as np
 
 class RMSD(nanome.PluginInstance):
     def start(self):
@@ -260,19 +261,19 @@ class RMSD(nanome.PluginInstance):
         self._mobile = mobile
         self._target = target
         if (self.args.select.lower() == "global"):
-            Logs.debug("type of mobile is ",type(mobile))
             self.global_align(self._mobile , self._target)
         if (self.args.select.lower() == "local"):
             self.local_align(self._mobile,self._target)
 
     # needleman wunsch algorithm
     def global_align(self, res1, res2, gap_penalty = -1, mismatch_penalty = -1, match_reward = 2):
-        Logs.debug("type in global align function is",type(res1))
-        seq1 = res1.residues
-        seq2 = res2.residues
+        # seq1 = res1.residues
+        # seq2 = res2.residues
+        seq1 = list(map(lambda res: res.type, res1.residues))
+        seq2 = list(map(lambda res: res.type, res2.residues))
         #create the table
         m, n = len(seq1), len(seq2)
-        score = zeros((m+1, n+1))      
+        score = np.zeros((m+1, n+1))      
     
         # file the first column and row
         for i in range(0, m + 1):
