@@ -284,21 +284,18 @@ class RMSDMenu():
         def select_button_pressed_callback(button):
             
             if self._selected_mobile != None and self._selected_target != None:
-                Logs.debug("select button clicked")
                 self._plugin.select(self._selected_mobile.complex,self._selected_target.complex)
                 drop_down  = self._drop_down_dict["select"]
                 temp_length=len(drop_down)
                 
                 pre_index = drop_down.index(self._current_select)
                 post_index = (pre_index + 1) % temp_length
-                Logs.debug("post index is",post_index)
                 post_option = drop_down[post_index]
-
                 select_button.selected = post_option != "None"
                 select_button.set_all_text(post_option)
                 
                 # tell the plugin and update the menu
-                self._select = post_option
+                self._current_select = post_option
                 self.update_args("select", post_option)
             else:
                 self.check_resolve_error()

@@ -8,6 +8,7 @@ from . import rmsd_helpers as help
 from nanome.util import Logs
 # from .quaternion import Quaternion
 import numpy as np
+from . import rmsd_selection as selection
 
 class RMSD(nanome.PluginInstance):
     def start(self):
@@ -45,11 +46,11 @@ class RMSD(nanome.PluginInstance):
     def on_complex_list_received(self, complexes):
         Logs.debug("complex received: ", complexes)
         self._menu.change_complex_list(complexes)
-
+ 
     def run_rmsd(self, mobile, target):
         self._mobile = mobile
         self._target = target
-        self.request_workspace(self.on_workspace_received)
+        self.request_workspace(self.on_workspace_received) 
 
     def on_workspace_received(self, workspace):
         complexes = workspace.complexes
@@ -243,6 +244,7 @@ class RMSD(nanome.PluginInstance):
             U_matrix[3][3] = 1
             rot_quat = p_complex.rotation
             rot_matrix = nanome.util.Matrix.from_quaternion(rot_quat)
+
             result_matrix = rot_matrix * U_matrix
             result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
             q_complex.rotation = result_quat
@@ -260,91 +262,30 @@ class RMSD(nanome.PluginInstance):
         #run the alignment
         self._mobile = mobile
         self._target = target
-        if (self.args.select.lower() == "global"):
-            self.global_align(self._mobile , self._target)
-        if (self.args.select.lower() == "local"):
-            self.local_align(self._mobile,self._target)
-
-    # needleman wunsch algorithm
-    def global_align(self, res1, res2, gap_penalty = -1, mismatch_penalty = -1, match_reward = 2):
-        # seq1 = res1.residues
-        # seq2 = res2.residues
-        seq1 = list(map(lambda res: res.type, res1.residues))
-        seq2 = list(map(lambda res: res.type, res2.residues))
-        #create the table
-        m, n = len(seq1), len(seq2)
-        score = np.zeros((m+1, n+1))      
+        self.request_workspace(self.on_select_received) 
     
-        # file the first column and row
-        for i in range(0, m + 1):
-            score[i][0] = gap_penalty * i
-        for j in range(0, n + 1):
-            score[0][j] = gap_penalty * j
-        # fill the table wtih scores
-        for i in range(1, m + 1):
-            for j in range(1, n + 1):
-                if seq1[i-1] == seq2[j-1]:
-                    match = score[i - 1][j - 1] + match_reward
-                else:
-                    match = score[i - 1][j - 1] + mismatch_penalty
-                delete = score[i - 1][j] + gap_penalty
-                insert = score[i][j - 1] + gap_penalty
-                score[i][j] = max(match, delete, insert)
+    def on_select_received(self, workspace):
+        complexes = workspace.complexes
+        for complex in complexes:
+            if complex.index == self._mobile.index:
+                #mobile_complex = complex
+                self._mobile = complex
+            if complex.index == self._target.index:
+                # target_complex = complex
+                self._target = complex
+        
+        if (self.args.select.lower() == "global"):
+            selection.global_align(self._mobile , self._target)
+            # self._mobile,self._target = selection.global_align(self)
+        if (self.args.select.lower() == "local"):
+            Logs.debug(self.args.select,"----local")
+            selection.local_align(self._mobile,self._target)
+            # selection.local_align(self)
 
-        # Traceback and compute the alignment 
-        # align1, align2 = '', ''
-        # start from the bottom right cell
-        i,j = m,n
-        while i > 0 and j > 0: 
-            score_current = score[i][j]
-            score_diagonal = score[i-1][j-1]
-            score_up = score[i][j-1]
-            score_left = score[i-1][j]
-            # two residuses match, only deselect when the selected atoms are not matched
-            if score_current == score_diagonal + mismatch_penalty and seq1[i-1] == seq2[j-1]:
-                # align1 += seq1[i-1]
-                # align2 += seq2[j-1]
-                
-                i -= 1
-                j -= 1
-            # two of the residues do not match, the deselect both
-            elif score_current == score_diagonal + match_reward and seq1[i-1] != seq2[j-1]:
-                for x in res1.atoms:
-                    x.select = False
-                for y in res2.atoms:
-                    y.select = False
-                i -= 1
-                j -= 1
-            # seq1 has an extra residue, deselect it
-            elif score_current == score_left + gap_penalty:
-                # align1 += seq1[i-1]
-                # align2 += '-'
-                for x in res1.atoms:
-                    x.select = False
-                i -= 1
-            # seq2 has an extra residue, deselect it
-            elif score_current == score_up + gap_penalty:
-                # align1 += '-'
-                # align2 += seq2[j-1]
-                for x in res2.atoms:
-                    x.select = False
-                j -= 1
+        self.workspace = workspace
+        self.make_plugin_usable()
+        self.update_workspace(workspace)
 
-        # Finish tracing up to the top left cell
-        # while i > 0:
-        #     align1 += seq1[i-1]
-        #     align2 += '-'
-        #     i -= 1
-        # while j > 0:
-        #     align1 += '-'
-        #     align2 += seq2[j-1]
-        #     j -= 1
-
-        # finalize(align1, align2)
-
-    def local_align(res1,res2):
-        pass
-                
 
 def main():
     plugin = nanome.Plugin("RMSD", "A simple plugin that aligns complexes through RMSD calculation", "Test", False)
