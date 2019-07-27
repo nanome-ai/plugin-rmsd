@@ -30,3 +30,6 @@ def strip_non_backbone(atoms):
 def IsBackbone(atom):
     atomName = atom.name
     return atomName == "N" or atomName == "CA" or atomName == "C" or atomName == "O" or atomName == "OXT" or atomName == "OC"
+
+def strip_alternatives(atoms):
+   return list(filter(lambda a: a._occupancy>.5, atoms))
