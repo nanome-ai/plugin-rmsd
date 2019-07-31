@@ -121,8 +121,8 @@ class RMSD(nanome.PluginInstance):
             p_atoms = help.strip_non_backbone(p_atoms)
             q_atoms = help.strip_non_backbone(q_atoms)
 
-        p_atoms = help.strip_alternatives(p_atoms)
-        q_atoms = help.strip_alternatives(q_atoms)
+        # p_atoms = help.strip_alternatives(p_atoms)
+        # q_atoms = help.strip_alternatives(q_atoms)
 
         p_size = len(p_atoms)
         q_size = len(q_atoms)

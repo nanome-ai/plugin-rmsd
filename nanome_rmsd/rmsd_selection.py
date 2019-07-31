@@ -1,19 +1,23 @@
 import numpy as np 
 from nanome.util import Logs
-
-
+from math import ceil
 
 # needleman wunsch algorithm
 def global_align(res1,res2,gap_penalty = -1, mismatch_penalty = -1, match_reward = 3):
+    res1_new = select_occupancy(res1)
+    res2_new = select_occupancy(res2)
+
+    seq1 = list(map(lambda res: res.type, res1_new.residues))
+    seq2 = list(map(lambda res: res.type, res2_new.residues))
+    res_list1 =list(res1_new.residues)
+    res_list2 = list(res2_new.residues)
     
-    seq1 = list(map(lambda res: res.type, res1.residues))
-    seq2 = list(map(lambda res: res.type, res2.residues))
-    res_list1 =list(res1.residues)
-    res_list2 = list(res2.residues)
-    #Logs.debug("res_list1 is ",res_list1)
+    # Logs.debug("res_list1 is ",res_list1)
+
     Logs.debug("length of reslist1 is ",len(res_list1))
     Logs.debug("length of reslist2 is ",len(res_list2))
-    #create the table
+
+    # create the table
     m, n = len(seq1), len(seq2)
     score = np.zeros((m+1, n+1))      
     
@@ -40,8 +44,6 @@ def global_align(res1,res2,gap_penalty = -1, mismatch_penalty = -1, match_reward
     # start from the bottom right cell
     i,j = m,n
     while i > 0 and j > 0: 
-        #Logs.debug(i," ",j)
-        # Logs.debug("i and j are: ",i," ",j)
         score_current = score[i][j]
         score_diagonal = score[i-1][j-1]
         score_up = score[i][j-1]
@@ -55,6 +57,38 @@ def global_align(res1,res2,gap_penalty = -1, mismatch_penalty = -1, match_reward
             final1 += seq1[i-1]
             final2 += seq2[j-1]
             # Logs.debug(seq1[i-1],' ',seq2[j-1])
+            match1=list(map(lambda a:a.name,res_list1[i-1].atoms))
+            match2=list(map(lambda a:a.name,res_list2[j-1].atoms))
+            if match1 != match2:
+               
+                Logs.debug("The two residues are not same: ")
+                Logs.debug("type 1 is ",res_list1[i-1].type)
+                Logs.debug("type 2 is ",res_list2[j-1].type)
+                Logs.debug("atoms 1:   ",list(map(lambda a:a.name,res_list1[i-1].atoms)))
+                Logs.debug("occupancy: ",list(map(lambda a:a._occupancy,res_list1[i-1].atoms)))
+                Logs.debug("serial:    ",res_list1[i-1].serial)
+
+                Logs.debug("atoms 2:   ",list(map(lambda a:a.name,res_list2[j-1].atoms)))
+                Logs.debug("occupancy  ",list(map(lambda a:a._occupancy,res_list2[j-1].atoms)))
+                Logs.debug("serial:    ",res_list2[j-1].serial)
+                
+                intersection1 = [value for value in match1 if value in match2] 
+                intersection2 = intersection1[:]
+                for x in res_list1[i-1].atoms:
+                    if x.name in intersection1:
+                        intersection1.remove(x.name)
+                    else:
+                        x.selected = False
+
+                for x in res_list2[j-1].atoms:
+                    if x.name in intersection2:
+                        intersection2.remove(x.name)
+                    else:
+                        x.selected = False
+                newlist1 = list(filter(lambda a:a.selected,res_list1[i-1].atoms))
+                newlist2 = list(filter(lambda a:a.selected,res_list2[j-1].atoms))
+                Logs.debug("new list 1", list(map(lambda a:a.name,newlist1)))
+                Logs.debug("new list 2", list(map(lambda a:a.name,newlist2)))
 
             i -= 1
             j -= 1
@@ -107,9 +141,32 @@ def global_align(res1,res2,gap_penalty = -1, mismatch_penalty = -1, match_reward
     Logs.debug("len of align1 is",len(align1))
     Logs.debug("len of align2 is",len(align2))
    
-    #Logs.debug("diff is ",np.diff(final1,final2))
+    # Logs.debug("diff is ",np.diff(final1,final2))
     # finalize(align1, align2)
+    
 
-    return res1,res2
-def local_align(plugin):
+    return res1_new,res2_new
+
+def local_align(mobile,target):
     pass
+
+# takes in a single residue
+def select_occupancy(residue):
+    occ_dict = {}
+    for a in residue.atoms:
+        if a._occupancy < 1:
+            name = a.name
+            if name in occ_dict:
+                occ_dict[name][0].append(a)
+                occ_dict[name][1] += a._occupancy
+            else:
+                occ_dict[name]=[[a],a._occupancy]
+
+    for p in occ_dict:
+        top_n = round(occ_dict[p][1])
+        occ_dict[p][0].sort(key=lambda x: x._occupancy, reverse=True)
+        occ_dict[p][0] = occ_dict[p][0][top_n:]
+        for a in occ_dict[p][0]:
+            a.selected = False
+
+    return residue
