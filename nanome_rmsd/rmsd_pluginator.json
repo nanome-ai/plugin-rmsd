@@ -232,7 +232,7 @@
                                 "padding_w":0.150000005960464,
                                 "content":{  
                                     "display_columns":1,
-                                    "display_rows":3,
+                                    "display_rows":7,
                                     "total_columns":1,
                                     "unusable":false,
                                     "type_name":"List"
@@ -404,7 +404,7 @@
                                 "padding_z":0,
                                 "padding_w":0,
                                 "content":{  
-                                    "selected":false,
+                                    "selected":true,
                                     "unusable":false,
                                     "text_active":true,
                                     "text_value_idle":"Off",
@@ -488,7 +488,7 @@
                                 "padding_z":0,
                                 "padding_w":0,
                                 "content":{  
-                                    "selected":false,
+                                    "selected":true,
                                     "unusable":false,
                                     "text_active":true,
                                     "text_value_idle":"Off",

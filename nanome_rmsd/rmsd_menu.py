@@ -12,7 +12,7 @@ class RMSDMenu():
         self._run_button = None
         self._current_tab = "receptor" #receptor = 0, target = 1
         self._drop_down_dict={"rotation":["None", "Kabsch","Quaternion"],"reorder_method":["None","Hungarian","Brute", "Distance"],\
-        "select":["None","Global","Local"]}
+        "select":["None","Global"]} # select["Local"] in the future
         self._current_reorder = "None"
         self._current_rotation = "None"
         self._current_select = "None"
@@ -82,6 +82,13 @@ class RMSDMenu():
             self.update_score()
             self._plugin.update_content(self.error_message)
             return True
+        if(error_type == "selected_changed"):
+            self.error_message.text_auto_size=False
+            self.error_message.text_size = 0.176
+            self.error_message.text_value = "Selected complexes have changed"
+            self.update_score()
+            self._plugin.update_content(self.error_message)
+            return True
         if(error_type == "clear"):
             self.error_message.text_value = ""
             self.error_message.text_auto_size = True
@@ -124,9 +131,17 @@ class RMSDMenu():
                 self._selected_mobile = button
                 self.receptor_text.text_value ="Receptor: "+ button.complex.name
             self.check_resolve_error(clear_only=True)
+
+            self.select_button.selected = False
+            self.select_button.set_all_text("Select")
+            # tell the plugin and update the menu
+            self._current_select = "None"
+            self.update_args("select", "None")
+
             self._plugin.update_content(self._show_list)
             self._plugin.update_content(self.receptor_text)
             self._plugin.update_content(self.target_text)
+            self._plugin.update_content(self.select_button)
 
         # a button in the target list is pressed
         def target_pressed(button):
@@ -144,9 +159,15 @@ class RMSDMenu():
                 self._selected_target = button
                 self.target_text.text_value ="Target: "+ button.complex.name
             self.check_resolve_error(clear_only=True)
+            self.select_button.selected = False
+            self.select_button.set_all_text("Select")
+            # tell the plugin and update the menu
+            self._current_select = "None"
+            self.update_args("select", "None")
             self._plugin.update_content(self._show_list)
             self._plugin.update_content(self.receptor_text)
             self._plugin.update_content(self.target_text)
+            self._plugin.update_content(self.select_button)
 
         self._mobile_list = []
         self._target_list = []
@@ -284,6 +305,7 @@ class RMSDMenu():
         def select_button_pressed_callback(button):
             
             if self._selected_mobile != None and self._selected_target != None:
+
                 self._plugin.select(self._selected_mobile.complex,self._selected_target.complex)
                 drop_down  = self._drop_down_dict["select"]
                 temp_length=len(drop_down)
@@ -291,15 +313,15 @@ class RMSDMenu():
                 pre_index = drop_down.index(self._current_select)
                 post_index = (pre_index + 1) % temp_length
                 post_option = drop_down[post_index]
-                select_button.selected = post_option != "None"
-                select_button.set_all_text(post_option)
+                self.select_button.selected = post_option != "None"
+                self.select_button.set_all_text(post_option)
                 
                 # tell the plugin and update the menu
                 self._current_select = post_option
                 self.update_args("select", post_option)
             else:
                 self.check_resolve_error()
-            self._plugin.update_content(select_button)
+            self._plugin.update_content(self.select_button)
 
         # Create a prefab that will be used to populate the lists
         self._complex_item_prefab = nanome.ui.LayoutNode()
@@ -363,8 +385,8 @@ class RMSDMenu():
         rotation_button.register_pressed_callback(rotation_button_pressed_callback)
 
         # create the select cycle button
-        select_button = menu.root.find_node("Auto Select",True).get_content()
-        select_button.register_pressed_callback(select_button_pressed_callback)
+        self.select_button = menu.root.find_node("Auto Select",True).get_content()
+        self.select_button.register_pressed_callback(select_button_pressed_callback)
 
         # create the rmsd score
         self.rmsd_score_label = menu.root.find_node("RMSD number",True).get_content()

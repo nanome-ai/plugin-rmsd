@@ -80,8 +80,8 @@ class RMSD(nanome.PluginInstance):
             self.use_reflections_keep_stereo = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). Stereo-chemistry will be kept.
             #exclusion options
             self.no_hydrogen = False
-            self.selected_only = False
-            self.backbone_only = False
+            self.selected_only = True
+            self.backbone_only = True
             self.align = True
 
         @property
@@ -278,16 +278,30 @@ class RMSD(nanome.PluginInstance):
                 self._target = complex
         
         if (self.args.select.lower() == "global"):
-            selection.global_align(self._mobile , self._target)
+            self.selected_before = (list(map(lambda a:a.selected,self._mobile.atoms)),list(map(lambda a:a.selected,self._target.atoms)))
+            selection.global_align(self._mobile , self._target)  
             # self._mobile,self._target = selection.global_align(self)
         if (self.args.select.lower() == "local"):
-            Logs.debug(self.args.select,"----local")
             selection.local_align(self._mobile,self._target)
             # selection.local_align(self)
-
+        if (self.args.select.lower() == "none"):
+            if self.selected_before:
+                self.change_selected(self._mobile,self._target,self.selected_before[0],self.selected_before[1])
         self.workspace = workspace
         self.make_plugin_usable()
         self.update_workspace(workspace)
+    
+    def change_selected(self,mobile,target,mobile_selected,target_selected):
+        if len(list(map(lambda a:a,mobile.atoms)))==len(mobile_selected) and len(list(map(lambda a:a,target.atoms))) == len(target_selected):
+            for i,x in enumerate(mobile.atoms):
+                x.selected = mobile_selected[i]
+            for i,x in enumerate(target.atoms):
+                x.selected = target_selected[i]
+        else:
+            Logs.debug("selected complexes changed")
+            self._menu.change_error("selected_changed")
+
+
 
 
 def main():
