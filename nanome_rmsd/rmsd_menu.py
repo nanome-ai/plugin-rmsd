@@ -217,7 +217,7 @@ class RMSDMenu():
             self._show_list.items=self._mobile_list
         else:
             self._show_list.items=self._target_list
-
+            
         self._plugin.update_menu(self._menu)
 
     # build the menu
@@ -321,7 +321,10 @@ class RMSDMenu():
                 post_index = (pre_index + 1) % temp_length
                 post_option = drop_down[post_index]
                 self.select_button.selected = post_option != "None"
-                self.select_button.set_all_text(post_option)
+                if post_option == "None":
+                    self.select_button.set_all_text("Select")
+                else:
+                    self.select_button.set_all_text(post_option)
                 
                 # tell the plugin and update the menu
                 self._current_select = post_option

@@ -260,8 +260,11 @@ class RMSD(nanome.PluginInstance):
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
             q_complex.position = p_complex.position + p_cent - q_cent
+            self._mobile.locked = True
+            self._target.locked = True
             if(self._menu.error_message.text_value=="Loading..."):
                 self._menu.change_error("clear")
+            
         
         return result_rmsd
 
@@ -300,8 +303,7 @@ class RMSD(nanome.PluginInstance):
         self.make_plugin_usable()
         self.update_workspace(workspace)
         self._menu.change_error("clear")
-        self._mobile._locked = True
-        self._target._locked = True
+        
 
     def change_selected(self,mobile,target,mobile_selected,target_selected):
         if len(list(map(lambda a:a,mobile.atoms)))==len(mobile_selected) and len(list(map(lambda a:a,target.atoms))) == len(target_selected):
