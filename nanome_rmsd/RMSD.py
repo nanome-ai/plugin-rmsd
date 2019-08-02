@@ -36,7 +36,6 @@ class RMSD(nanome.PluginInstance):
         self.request_complex_list(self.on_complex_list_received)
         nanome.util.Logs.debug("Complex list requested")
 
-
     def update_button(self, button):
         self.update_content(button)
 
@@ -48,6 +47,7 @@ class RMSD(nanome.PluginInstance):
         self._menu.change_complex_list(complexes)
  
     def run_rmsd(self, mobile, target):
+        self._menu.change_error("loading")
         self._mobile = mobile
         self._target = target
         self.request_workspace(self.on_workspace_received) 
@@ -104,6 +104,8 @@ class RMSD(nanome.PluginInstance):
             return output
 
     def align(self, p_complex, q_complex):
+
+
         #p is fixed q is mobile
         args = self.args
         p_atoms = list(p_complex.atoms)
@@ -148,7 +150,8 @@ class RMSD(nanome.PluginInstance):
             self._menu.change_error("different_order")
             return False
         else:
-            self._menu.change_error("clear")
+            if(self._menu.error_message.text_value!="Loading..."):
+                self._menu.change_error("clear")
 
         p_coords = help.positions_to_array(p_pos_orig)
         q_coords = help.positions_to_array(q_pos_orig)
@@ -187,7 +190,6 @@ class RMSD(nanome.PluginInstance):
             Logs.debug("The value of reorder is: ",args.reorder)
             return False
 
-
         # Save the resulting RMSD
         result_rmsd = None
 
@@ -200,6 +202,7 @@ class RMSD(nanome.PluginInstance):
                 reorder_method=reorder_method,
                 rotation_method=rotation_method,
                 keep_stereo=args.use_reflections_keep_stereo)
+
         elif args.reorder:
             q_review = reorder_method(p_atom_names, q_atom_names, p_coords, q_coords)
             q_coords = q_coords[q_review]
@@ -257,15 +260,20 @@ class RMSD(nanome.PluginInstance):
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
             q_complex.position = p_complex.position + p_cent - q_cent
+            if(self._menu.error_message.text_value=="Loading..."):
+                self._menu.change_error("clear")
+        
         return result_rmsd
 
     # auto select with global/local alignment
     def select(self,mobile,target):
         # create seq1 and seq2
         #run the alignment
+        self._menu.change_error("loading")
         self._mobile = mobile
         self._target = target
         self.request_workspace(self.on_select_received) 
+
     
     def on_select_received(self, workspace):
         complexes = workspace.complexes
@@ -280,6 +288,7 @@ class RMSD(nanome.PluginInstance):
         if (self.args.select.lower() == "global"):
             self.selected_before = (list(map(lambda a:a.selected,self._mobile.atoms)),list(map(lambda a:a.selected,self._target.atoms)))
             selection.global_align(self._mobile , self._target)  
+
             # self._mobile,self._target = selection.global_align(self)
         if (self.args.select.lower() == "local"):
             selection.local_align(self._mobile,self._target)
@@ -290,7 +299,10 @@ class RMSD(nanome.PluginInstance):
         self.workspace = workspace
         self.make_plugin_usable()
         self.update_workspace(workspace)
-    
+        self._menu.change_error("clear")
+        self._mobile._locked = True
+        self._target._locked = True
+
     def change_selected(self,mobile,target,mobile_selected,target_selected):
         if len(list(map(lambda a:a,mobile.atoms)))==len(mobile_selected) and len(list(map(lambda a:a,target.atoms))) == len(target_selected):
             for i,x in enumerate(mobile.atoms):

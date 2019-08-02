@@ -89,6 +89,13 @@ class RMSDMenu():
             self.update_score()
             self._plugin.update_content(self.error_message)
             return True
+        if(error_type == "loading"):
+            self.error_message.text_auto_size=False
+            self.error_message.text_size = 0.2
+            self.error_message.text_value = "Loading..."
+            self.update_score()
+            self._plugin.update_content(self.error_message)
+            return True
         if(error_type == "clear"):
             self.error_message.text_value = ""
             self.error_message.text_auto_size = True
