@@ -7,7 +7,7 @@ class RMSDMenu():
     def __init__(self, rmsd_plugin):
         self._menu = rmsd_plugin.menu
         self._plugin = rmsd_plugin
-        self._selected_mobile = None # button
+        self._selected_mobile = [] # button
         self._selected_target = None # button
         self._run_button = None
         self._current_tab = "receptor" #receptor = 0, target = 1
@@ -23,7 +23,7 @@ class RMSDMenu():
     # run the rmsd algorithm
     def _run_rmsd(self):
         if self.check_resolve_error():
-            self._plugin.run_rmsd(self._selected_mobile.complex, self._selected_target.complex)
+            self._plugin.run_rmsd([a.complex for a in self._selected_mobile], self._selected_target.complex)
         else:
             self.make_plugin_usable()
 
@@ -33,7 +33,8 @@ class RMSDMenu():
             if self._selected_mobile == None or self._selected_target == None:
                 self.change_error("unselected")
                 return False
-            elif self._selected_mobile.complex.index == self._selected_target.complex.index:
+            #elif self._selected_mobile.complex.index == self._selected_target.complex.index:
+            elif self._selected_target.complex.index in list(map(lambda a:a.complex.index,self._selected_mobile)):
                 self.change_error("select_same")
                 return False
             else:
@@ -124,27 +125,49 @@ class RMSDMenu():
         
         # a button in the receptor list is pressed
         def mobile_pressed(button):
-            if self._selected_mobile != None:
-                self._selected_mobile.selected = False 
-                if self._selected_mobile.complex != button.complex: 
-                    button.selected = True
-                    self._selected_mobile = button
-                    self.receptor_text.text_value ="Receptor: "+ button.complex.name
-                else: 
-                    self._selected_mobile = None
-                    self.receptor_text.text_value = "Receptor: Unselected"
-            else: 
+            # if self._selected_mobile != None:
+            #     self._selected_mobile.selected = False 
+            #     if self._selected_mobile.complex != button.complex: 
+            #         button.selected = True
+            #         self._selected_mobile = button
+            #         self.receptor_text.text_value ="Receptor: "+ button.complex.name
+            #     else: 
+            #         self._selected_mobile = None
+            #         self.receptor_text.text_value = "Receptor: Unselected"
+            # else: 
+            #     button.selected = True
+            #     self._selected_mobile = button
+            #     self.receptor_text.text_value ="Receptor: "+ button.complex.name
+            # self.check_resolve_error(clear_only=True)
+
+            # selecting button
+            if button.complex.index not in [ a.complex.index for a in self._selected_mobile]:
                 button.selected = True
-                self._selected_mobile = button
-                self.receptor_text.text_value ="Receptor: "+ button.complex.name
-            self.check_resolve_error(clear_only=True)
+                self._selected_mobile.append(button)
+                if len(self._selected_mobile) == 1:
+                    self.receptor_text.text_value = "Receptor: "+button.complex.name
+                else:
+                    self.receptor_text.text_value = "Receptor: multiple receptors"
+            # deselecting button
+            else:
+                button.selected = False
+                # self._selected_mobile = [i for i in self._selected_mobile if i.copmplex.index != button.complex.index]
+                for x in self._selected_mobile:
+                    if x.complex.index == button.complex.index:
+                        self._selected_mobile.remove(x)
+                if len(self._selected_mobile) == 1:
+                    self.receptor_text.text_value = "Receptor: "+self._selected_mobile[0].complex.name
+                elif len(self._selected_mobile) == 0:
+                    self.receptor_text.text_value = "Receptor: Unselected"
+                else:
+                    self.receptor_text.text_value = "Receptor: multiple receptors"
+                
 
             self.select_button.selected = False
-            self.select_button.set_all_text("Select")
+            self.select_button.set_all_text("Select")            
             # tell the plugin and update the menu
             self._current_select = "None"
             self.update_args("select", "None")
-
             self._plugin.update_content(self._show_list)
             self._plugin.update_content(self.receptor_text)
             self._plugin.update_content(self.target_text)
@@ -179,8 +202,13 @@ class RMSDMenu():
         self._mobile_list = []
         self._target_list = []
 
-        if self._selected_mobile != None and \
-           self._selected_mobile.complex.index not in [i.index for i in complex_list]:
+        if self._selected_mobile == None:
+            self._selected_mobile = []
+
+        if len(self._selected_mobile) != 0:
+            for x in self._selected_mobile:
+                if x.complex.index not in [i.index for i in complex_list]:
+                    self._selected_mobile.remove()
             self._selected_mobile =None
         if self._selected_target != None and \
            self._selected_target.complex.index not in [i.index for i in complex_list]:
@@ -194,7 +222,7 @@ class RMSDMenu():
             btn.complex = complex
             btn.register_pressed_callback(mobile_pressed)
             self._mobile_list.append(clone)
-            if self._selected_mobile != None and btn.complex.index == self._selected_mobile.complex.index:
+            if self._selected_mobile != None and btn.complex.index in [a.complex.index for a in self._selected_mobile]:
                 btn.selected = True
 
             #clone1 = clone.clone()
@@ -208,7 +236,7 @@ class RMSDMenu():
             if self._selected_target != None and btn.complex.index == self._selected_target.complex.index:
                 btn.selected = True
 
-        if self._selected_mobile == None:
+        if len(self._selected_mobile) == 0:
             self.receptor_text.text_value ="Receptor: Unselected"
         if self._selected_target == None:
             self.target_text.text_value ="Target: Unselected "

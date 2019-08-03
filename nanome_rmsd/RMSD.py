@@ -31,7 +31,7 @@ class RMSD(nanome.PluginInstance):
         self.request_refresh()
 
     def request_refresh(self):
-        self._menu._selected_mobile = None
+        self._menu._selected_mobile = []
         self._menu._selected_target = None
         self.request_complex_list(self.on_complex_list_received)
         nanome.util.Logs.debug("Complex list requested")
@@ -54,9 +54,11 @@ class RMSD(nanome.PluginInstance):
 
     def on_workspace_received(self, workspace):
         complexes = workspace.complexes
+        mobile_index_list = list(map(lambda a: a.index, self._mobile))
+        mobile_complex = []
         for complex in complexes:
-            if complex.index == self._mobile.index:
-                mobile_complex = complex
+            if complex.index in mobile_index_list:
+                mobile_complex.append(complex)
             if complex.index == self._target.index:
                 target_complex = complex
         self.workspace = workspace
@@ -260,7 +262,8 @@ class RMSD(nanome.PluginInstance):
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
             q_complex.position = p_complex.position + p_cent - q_cent
-            self._mobile.locked = True
+            for x in self._mobile:
+                x.locked = True
             self._target.locked = True
             if(self._menu.error_message.text_value=="Loading..."):
                 self._menu.change_error("clear")
