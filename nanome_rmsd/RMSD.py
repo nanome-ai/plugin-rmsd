@@ -64,8 +64,9 @@ class RMSD(nanome.PluginInstance):
         self.workspace = workspace
         result = 0
         for x in mobile_complex:
-            result += self.align(target_complex, mobile_complex)
+            result += self.align(target_complex, x)
         if result :
+            self._menu.update_score(result)
             self.update_workspace(workspace)
         Logs.debug("RMSD done")
         self.make_plugin_usable()
@@ -224,7 +225,6 @@ class RMSD(nanome.PluginInstance):
         else:
             result_rmsd = rotation_method(p_coords, q_coords)
         Logs.debug("result: {0}".format(result_rmsd))
-        self._menu.update_score(result_rmsd)
 
         # Logs.debug result
         if args.update:
@@ -278,30 +278,33 @@ class RMSD(nanome.PluginInstance):
         # create seq1 and seq2
         #run the alignment
         self._menu.change_error("loading")
+        #self._mobile = mobile
         self._mobile = mobile
+        # Logs.debug("mobile list before ",self._mobile)
         self._target = target
         self.request_workspace(self.on_select_received) 
 
     
     def on_select_received(self, workspace):
         complexes = workspace.complexes
+        mobile_index_list = list(map(lambda a: a.index, self._mobile))
+        self._mobile = []
         for complex in complexes:
-            if complex.index in [x.index for x in self._mobile] and complex.index not in [x.index for x in self._mobile]:
-                #mobile_complex = complex
+            if complex.index in mobile_index_list:
                 self._mobile.append(complex)
             if complex.index == self._target.index:
-                # target_complex = complex
                 self._target = complex
         
         if (self.args.select.lower() == "global"):
-            self.selected_before = ([list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],list(map(lambda a:a.selected,self._target.atoms)))
+            self.selected_before = [[list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],
+                                    list(map(lambda a:a.selected,self._target.atoms))]
             for x in self._mobile:
                 selection.global_align(x , self._target)  
+            for x in self._mobile[:-1]:
+                selection.global_align(x , self._target)  
 
-            # self._mobile,self._target = selection.global_align(self)
         if (self.args.select.lower() == "local"):
             selection.local_align(self._mobile,self._target)
-            # selection.local_align(self)
         if (self.args.select.lower() == "none"):
             if self.selected_before:
                 self.change_selected(self._mobile,self._target,self.selected_before[0],self.selected_before[1])
@@ -312,18 +315,16 @@ class RMSD(nanome.PluginInstance):
         
 
     def change_selected(self,mobile,target,mobile_selected,target_selected):
-        if [len(list(map(lambda a:a,x.atoms))) for x in mobile]==len([x for x in mobile_selected])\
+        if [len(list(map(lambda a:a,x.atoms))) for x in mobile]==[len(x) for x in mobile_selected]\
             and len(list(map(lambda a:a,target.atoms))) == len(target_selected):
             for j,y in enumerate(mobile):    
-                for i,x in enumerate(x.atoms):
+                for i,x in enumerate(y.atoms):
                     x.selected = mobile_selected[j][i]
             for i,x in enumerate(target.atoms):
                 x.selected = target_selected[i]
         else:
             Logs.debug("selected complexes changed")
             self._menu.change_error("selected_changed")
-
-
 
 
 def main():

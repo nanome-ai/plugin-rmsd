@@ -44,8 +44,6 @@ class RMSDMenu():
             self.change_error("clear")
             return True
 
-
-
     # show the error message texts, fromRun means if the it is called after Run is pressed
     def change_error(self,error_type):
         if(error_type == "unselected"):
@@ -125,20 +123,6 @@ class RMSDMenu():
         
         # a button in the receptor list is pressed
         def mobile_pressed(button):
-            # if self._selected_mobile != None:
-            #     self._selected_mobile.selected = False 
-            #     if self._selected_mobile.complex != button.complex: 
-            #         button.selected = True
-            #         self._selected_mobile = button
-            #         self.receptor_text.text_value ="Receptor: "+ button.complex.name
-            #     else: 
-            #         self._selected_mobile = None
-            #         self.receptor_text.text_value = "Receptor: Unselected"
-            # else: 
-            #     button.selected = True
-            #     self._selected_mobile = button
-            #     self.receptor_text.text_value ="Receptor: "+ button.complex.name
-            # self.check_resolve_error(clear_only=True)
 
             # selecting button
             if button.complex.index not in [ a.complex.index for a in self._selected_mobile]:
@@ -240,7 +224,6 @@ class RMSDMenu():
             self.receptor_text.text_value ="Receptor: Unselected"
         if self._selected_target == None:
             self.target_text.text_value ="Target: Unselected "
- 
         if self._current_tab == "receptor":
             self._show_list.items=self._mobile_list
         else:
@@ -279,8 +262,6 @@ class RMSDMenu():
             self._plugin.update_content(receptor_tab)
             self._plugin.update_content(target_tab)
             self._plugin.update_content(self._show_list)
-
-            
         
         # no hydrogen = ! no hydrogen
         def no_hydrogen_button_pressed_callback(button):
@@ -337,17 +318,19 @@ class RMSDMenu():
             self.update_args("rotation_method", post_option)
             self._plugin.update_content(rotation_button)
 
-        def select_button_pressed_callback(button):
-            
+        def select_button_pressed_callback(button): 
             if self._selected_mobile != None and self._selected_target != None:
+                
                 self._plugin.select([x.complex for x in self._selected_mobile],self._selected_target.complex)
                 drop_down  = self._drop_down_dict["select"]
                 temp_length=len(drop_down)
                 
                 pre_index = drop_down.index(self._current_select)
                 post_index = (pre_index + 1) % temp_length
+                
                 post_option = drop_down[post_index]
                 self.select_button.selected = post_option != "None"
+                
                 if post_option == "None":
                     self.select_button.set_all_text("Select")
                 else:
