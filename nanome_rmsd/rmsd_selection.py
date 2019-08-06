@@ -4,7 +4,11 @@ from math import ceil
 
 # needleman wunsch algorithm
 def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, match_reward = 3):
-    
+    Logs.debug("complex 1 is: ",complex1)
+    Logs.debug("complex 2 is: ",complex2)
+    Logs.debug("complex 1 residues: ",list(map(lambda a:a.type,complex1.residues)))
+    Logs.debug("complex 2 residues: ",list(map(lambda a:a.type,complex2.residues)))
+
     # selected_res1 = list(map(lambda res: res,complex1.residues))
     # selected_res2 = list(map(lambda res: res,complex2.residues))
     selected_res1 = selected_res(complex1)

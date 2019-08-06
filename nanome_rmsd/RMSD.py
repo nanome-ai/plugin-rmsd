@@ -62,7 +62,9 @@ class RMSD(nanome.PluginInstance):
             if complex.index == self._target.index:
                 target_complex = complex
         self.workspace = workspace
-        result = self.align(target_complex, mobile_complex)
+        result = 0
+        for x in mobile_complex:
+            result += self.align(target_complex, mobile_complex)
         if result :
             self.update_workspace(workspace)
         Logs.debug("RMSD done")
@@ -284,16 +286,17 @@ class RMSD(nanome.PluginInstance):
     def on_select_received(self, workspace):
         complexes = workspace.complexes
         for complex in complexes:
-            if complex.index == self._mobile.index:
+            if complex.index in [x.index for x in self._mobile] and complex.index not in [x.index for x in self._mobile]:
                 #mobile_complex = complex
-                self._mobile = complex
+                self._mobile.append(complex)
             if complex.index == self._target.index:
                 # target_complex = complex
                 self._target = complex
         
         if (self.args.select.lower() == "global"):
-            self.selected_before = (list(map(lambda a:a.selected,self._mobile.atoms)),list(map(lambda a:a.selected,self._target.atoms)))
-            selection.global_align(self._mobile , self._target)  
+            self.selected_before = ([list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],list(map(lambda a:a.selected,self._target.atoms)))
+            for x in self._mobile:
+                selection.global_align(x , self._target)  
 
             # self._mobile,self._target = selection.global_align(self)
         if (self.args.select.lower() == "local"):
@@ -309,9 +312,11 @@ class RMSD(nanome.PluginInstance):
         
 
     def change_selected(self,mobile,target,mobile_selected,target_selected):
-        if len(list(map(lambda a:a,mobile.atoms)))==len(mobile_selected) and len(list(map(lambda a:a,target.atoms))) == len(target_selected):
-            for i,x in enumerate(mobile.atoms):
-                x.selected = mobile_selected[i]
+        if [len(list(map(lambda a:a,x.atoms))) for x in mobile]==len([x for x in mobile_selected])\
+            and len(list(map(lambda a:a,target.atoms))) == len(target_selected):
+            for j,y in enumerate(mobile):    
+                for i,x in enumerate(x.atoms):
+                    x.selected = mobile_selected[j][i]
             for i,x in enumerate(target.atoms):
                 x.selected = target_selected[i]
         else:

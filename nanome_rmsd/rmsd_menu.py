@@ -340,8 +340,7 @@ class RMSDMenu():
         def select_button_pressed_callback(button):
             
             if self._selected_mobile != None and self._selected_target != None:
-
-                self._plugin.select(self._selected_mobile.complex,self._selected_target.complex)
+                self._plugin.select([x.complex for x in self._selected_mobile],self._selected_target.complex)
                 drop_down  = self._drop_down_dict["select"]
                 temp_length=len(drop_down)
                 
