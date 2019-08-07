@@ -243,6 +243,7 @@ class RMSDMenu():
             self.make_plugin_usable(False)
             self._run_rmsd()
 
+
         # show the target list when the receptor tab is pressed
         def receptor_tab_pressed_callback(button):
             self._current_tab="receptor"

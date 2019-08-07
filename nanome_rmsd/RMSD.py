@@ -52,6 +52,7 @@ class RMSD(nanome.PluginInstance):
         self._target = target
         self.request_workspace(self.on_workspace_received) 
 
+
     def on_workspace_received(self, workspace):
         complexes = workspace.complexes
         mobile_index_list = list(map(lambda a: a.index, self._mobile))
@@ -67,11 +68,24 @@ class RMSD(nanome.PluginInstance):
             result += self.align(target_complex, x)
         if result :
             self._menu.update_score(result)
-            self.update_workspace(workspace)
+            
+        
         Logs.debug("RMSD done")
         self.make_plugin_usable()
+        self.update_workspace(workspace)
+        #self.lock_result()
+        
         # self.request_refresh()
     
+    def lock_result(self):
+        for x in self._mobile:
+                x.locked = True
+        self._target.locked = True
+        # self.update_workspace(workspace)
+
+        self.update_structures_shallow([self._target])
+        self.update_structures_shallow(self._mobile)
+
     def update_args(self, arg, option):
         setattr(self.args, arg, option)
 
@@ -264,12 +278,12 @@ class RMSD(nanome.PluginInstance):
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
             q_complex.position = p_complex.position + p_cent - q_cent
-            for x in self._mobile:
-                x.locked = True
-            self._target.locked = True
+           
             if(self._menu.error_message.text_value=="Loading..."):
                 self._menu.change_error("clear")
             
+            p_complex.locked = True
+            q_complex.locked = True
         
         return result_rmsd
 
