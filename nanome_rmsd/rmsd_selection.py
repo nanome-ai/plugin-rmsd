@@ -4,13 +4,7 @@ from math import ceil
 
 # needleman wunsch algorithm
 def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, match_reward = 3):
-    Logs.debug("complex 1 is: ",complex1)
-    Logs.debug("complex 2 is: ",complex2)
-    Logs.debug("complex 1 residues: ",list(map(lambda a:a.type,complex1.residues)))
-    Logs.debug("complex 2 residues: ",list(map(lambda a:a.type,complex2.residues)))
 
-    # selected_res1 = list(map(lambda res: res,complex1.residues))
-    # selected_res2 = list(map(lambda res: res,complex2.residues))
     selected_res1 = selected_res(complex1)
     selected_res2 = selected_res(complex2)
 
@@ -168,6 +162,163 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, matc
 def local_align(mobile,target):
     pass
 
+# This function align multiple sequences. It uses dynamic programming method 
+# and make an n-dimensional scoring matrix
+def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_reward = 3):
+    Logs.debug("complexes are: ",complexes)
+    
+    # for every complex, only select the residues whose atoms are all selected
+    selected_res_list = []
+    for x in complexes:
+        selected_res_list.append(selected_res(x))
+
+    # list of residues type of the complex
+    # seq1 = list(map(lambda res: res.type, selected_res1))
+    # seq2 = list(map(lambda res: res.type, selected_res2))
+    seq_list = []
+    for x in selected_res_list:
+        seq_list.append(list(map(lambda res:res.type,x)))
+
+    # run the "smart occupancy selection method" on the residue lists of both complexes
+    # res_list1 =list(map(lambda a:select_occupancy(a),selected_res1))
+    # res_list2 =list(map(lambda a:select_occupancy(a),selected_res2))
+    res_lists = []
+    for x in selected_res_list:
+        res_lists.append(list(map(lambda a:select_occupancy(a),x)))
+    
+    Logs.debug("length of reslists is ",len(res_lists))
+
+    # m, n = len(seq1), len(seq2)
+    # score = np.zeros((m+1, n+1))      
+    # create the table of global alignment
+    len_list = []
+    table_size = ()
+    for x in seq_list:
+        len_list.append(len(x))
+        table_size = table_size + (len(x)+1,)
+    score = np.zeros(table_size)
+
+    
+    # file the first column and first row of the table
+    # for i in range(0, m + 1):
+    #     score[i][0] = gap_penalty * i
+    # for j in range(0, n + 1):
+    #     score[0][j] = gap_penalty * j
+    
+    # x is the length of each dimensin of the table 
+    # i is the index of the dimension
+    dimensions = range(len(table_size))
+    for i,x in enumerate(table_size):
+        pointer_
+        temp_dim = dimensions[:]
+        temp_dim.remove(i)
+        for y in temp_dim:
+            np.swapaxes(score,0,y)
+        # TODO need to figure out
+
+
+    # fill the table wtih scores
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if seq1[i-1] == seq2[j-1]:
+                match = score[i - 1][j - 1] + match_reward
+            else:
+                match = score[i - 1][j - 1] + mismatch_penalty
+            delete = score[i - 1][j] + gap_penalty
+            insert = score[i][j - 1] + gap_penalty
+            score[i][j] = max(match, delete, insert)
+    Logs.debug("table filled")
+    Logs.debug(score)
+    # Traceback and compute the alignment  
+    align1, align2 = '', ''
+    final1, final2 = '', ''
+    # start from the bottom right cell
+    i,j = m,n
+    while i > 0 and j > 0: 
+        score_current = score[i][j]
+        score_diagonal = score[i-1][j-1]
+        score_up = score[i][j-1]
+        score_left = score[i-1][j]
+        # two residuses match, only deselect when the selected atoms are not matched
+        if score_current == score_diagonal + match_reward and \
+           seq1[i-1] == seq2[j-1] and seq1[i-1] != 'UNK' and seq2[j-1] != 'UNK':
+
+            align1 += seq1[i-1]
+            align2 += seq2[j-1]
+            final1 += seq1[i-1]
+            final2 += seq2[j-1]
+            # Logs.debug(seq1[i-1],' ',seq2[j-1])
+            match1=list(map(lambda a:a.selected,res_list1[i-1].atoms))
+            match2=list(map(lambda a:a.selected,res_list2[j-1].atoms))
+            if match1 != match2:
+                
+                for x in res_list1[i-1].atoms:
+                        x.selected = False
+
+                for x in res_list2[j-1].atoms:
+                        x.selected = False
+
+            i -= 1
+            j -= 1
+
+        # two of the residues do not match, the deselect both
+        elif score_current == score_diagonal + mismatch_penalty and \
+             seq1[i-1] != seq2[j-1] or (seq1[i-1] == 'UNK' and seq2[j-1] == 'UNK'):
+
+            for x in res_list1[i-1].atoms:
+                x.selected = False
+            for y in res_list2[j-1].atoms:
+                y.selected = False
+            i -= 1
+            j -= 1
+            
+        # seq1 has an extra residue, deselect it
+        elif score_current == score_left + gap_penalty:
+            align1 += seq1[i-1]
+            align2 += '---'
+            for x in res_list1[i-1].atoms:
+                x.selected = False
+            i -= 1
+
+        # seq2 has an extra residue, deselect it
+        elif score_current == score_up + gap_penalty:
+            align1 += '---'
+            align2 += seq2[j-1]
+            for x in res_list2[j-1].atoms:
+                x.selected = False
+            j -= 1
+
+    Logs.debug("traceback done1")
+    # Finish tracing up to the top left cell
+    while i > 0:
+        align1 += seq1[i-1]
+        align2 += '---'
+        for x in res_list1[i-1].atoms:
+            x.selected = False
+        i -= 1
+    while j > 0:
+        align1 += '---'
+        align2 += seq2[j-1]
+        for x in res_list2[j-1].atoms:
+            x.selected = False
+        j -= 1
+    Logs.debug("traceback done2")
+    Logs.debug("align1 is ",align1)
+    Logs.debug("align2 is ",align2)
+   
+    Logs.debug("len of align1 is",len(align1))
+    Logs.debug("len of align2 is",len(align2))
+    Logs.debug("final1 is ",final1)
+    Logs.debug("final2 is ",final2)
+    # Logs.debug("diff is ",np.diff(final1,final2))
+    # finalize(align1, align2)
+    
+
+    return complex1,complex2
+
+
+
+
 # takes in a single residue
 def select_occupancy(residue):
     # Logs.debug("residue is ",residue.type)
@@ -193,6 +344,7 @@ def select_occupancy(residue):
 
     return residue
 
+# select the residues whose atoms are all selected.
 def selected_res(complexes):
     residues = list(map(lambda a:a,complexes.residues))
     rt = []
