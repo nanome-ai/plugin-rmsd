@@ -172,12 +172,10 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
     for x in complexes:
         selected_res_list.append(selected_res(x))
 
-    # list of residues type of the complex
-    # seq1 = list(map(lambda res: res.type, selected_res1))
-    # seq2 = list(map(lambda res: res.type, selected_res2))
-    seq_list = []
+    # a list of the lists of residues type of the complex
+    self.seq_list = []
     for x in selected_res_list:
-        seq_list.append(list(map(lambda res:res.type,x)))
+        self.seq_list.append(list(map(lambda res:res.type,x)))
 
     # run the "smart occupancy selection method" on the residue lists of both complexes
     # res_list1 =list(map(lambda a:select_occupancy(a),selected_res1))
@@ -192,11 +190,11 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
     # score = np.zeros((m+1, n+1))      
     # create the table of global alignment
     len_list = []
-    table_size = ()
-    for x in seq_list:
+    self.table_size = ()
+    for x in self.seq_list:
         len_list.append(len(x))
-        table_size = table_size + (len(x)+1,)
-    score = np.zeros(table_size)
+        self.table_size = self.table_size + (len(x)+1,)
+    score = np.zeros(self.table_size)
 
     
     # file the first column and first row of the table
@@ -204,31 +202,28 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
     #     score[i][0] = gap_penalty * i
     # for j in range(0, n + 1):
     #     score[0][j] = gap_penalty * j
-    
-    # x is the length of each dimensin of the table 
-    # i is the index of the dimension
-    dimensions = range(len(table_size))
-    for i,x in enumerate(table_size):
-        pointer_
-        temp_dim = dimensions[:]
-        temp_dim.remove(i)
-        for y in temp_dim:
-            np.swapaxes(score,0,y)
-        # TODO need to figure out
-
+    for i,x in enumerate(self.table_size):
+        score = np.swapaxes(score,i,-1)
+        select_init(score) = range(0,gap_penalty*len(self.table_size[i]),gap_penalty)
+        score = np.swapaxes(score,i,-1)
+    # need refactor TODO https://docs.scipy.org/doc/numpy/user/basics.indexing.html
 
     # fill the table wtih scores
-    for i in range(1, m + 1):
-        for j in range(1, n + 1):
-            if seq1[i-1] == seq2[j-1]:
-                match = score[i - 1][j - 1] + match_reward
-            else:
-                match = score[i - 1][j - 1] + mismatch_penalty
-            delete = score[i - 1][j] + gap_penalty
-            insert = score[i][j - 1] + gap_penalty
-            score[i][j] = max(match, delete, insert)
-    Logs.debug("table filled")
-    Logs.debug(score)
+    # for i in range(1, m + 1):
+    #     for j in range(1, n + 1):
+    #         if seq1[i-1] == seq2[j-1]:
+    #             match = score[i - 1][j - 1] + match_reward
+    #         else:
+    #             match = score[i - 1][j - 1] + mismatch_penalty
+    #         delete = score[i - 1][j] + gap_penalty
+    #         insert = score[i][j - 1] + gap_penalty 
+    #         score[i][j] = max(match, delete, insert)
+    
+    # record the index in each dimension
+    score_index = np.ones(len(self.table_size))
+    fill_score(score, self.table_size, len(self.table_size), score_index)
+    # need refactor TODO https://docs.scipy.org/doc/numpy/user/basics.indexing.html
+
     # Traceback and compute the alignment  
     align1, align2 = '', ''
     final1, final2 = '', ''
@@ -302,18 +297,7 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
         for x in res_list2[j-1].atoms:
             x.selected = False
         j -= 1
-    Logs.debug("traceback done2")
-    Logs.debug("align1 is ",align1)
-    Logs.debug("align2 is ",align2)
-   
-    Logs.debug("len of align1 is",len(align1))
-    Logs.debug("len of align2 is",len(align2))
-    Logs.debug("final1 is ",final1)
-    Logs.debug("final2 is ",final2)
-    # Logs.debug("diff is ",np.diff(final1,final2))
-    # finalize(align1, align2)
-    
-
+  
     return complex1,complex2
 
 
@@ -356,5 +340,24 @@ def selected_res(complexes):
                 selected_bool = False
         if selected_bool:
             rt.append(residue)
-
     return rt
+
+# recursively return the 0th list until the list is an 1d array
+# can be used to fill the first row in each dimension with the initial values
+def select_init(mtx):
+    if mtx.ndim == 1:
+        return mtx
+    else:
+        return select_init(mtx[0])
+
+# fill the nd-matrix "score" with the scores recursively
+# table is self.table_size, dim is the current dimension index
+def fill_score(score, table, dim, loop_indices):
+    if dim == 0:
+        # compare the sequences
+        for x in range(1,len(self.table_size)):
+            if self.seq_list[x][loop_indices[x]] != self.seq_list[x-1][loop_indices[x-1]]:
+                match = score[i - 1][j - 1] + match_reward
+        return
+    for x in range(1,self.table_size[]):
+        fill_score(score,table,dim-1)
