@@ -202,11 +202,18 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
     #     score[i][0] = gap_penalty * i
     # for j in range(0, n + 1):
     #     score[0][j] = gap_penalty * j
+    # ---------------------------------------
+
+    # i is the dimension index, x is the dimension length
     for i,x in enumerate(self.table_size):
-        score = np.swapaxes(score,i,-1)
-        select_init(score) = range(0,gap_penalty*len(self.table_size[i]),gap_penalty)
-        score = np.swapaxes(score,i,-1)
-    # need refactor TODO https://docs.scipy.org/doc/numpy/user/basics.indexing.html
+        # j is the index in one dimension
+        for j in range(0,x):
+            # create a tuple for index
+            temp_index = np.zeros(len(self.table_size))
+            temp_index[i] = j
+            score[temp_index] = gap_penalty * i
+
+  
 
     # fill the table wtih scores
     # for i in range(1, m + 1):
@@ -219,10 +226,13 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
     #         insert = score[i][j - 1] + gap_penalty 
     #         score[i][j] = max(match, delete, insert)
     
-    # record the index in each dimension
+    # list of indices in all dimensions
     score_index = np.ones(len(self.table_size))
-    fill_score(score, self.table_size, len(self.table_size), score_index)
+    reward_penalty = [gap_penalty, mismatch_penalt, match_reward]
+    fill_score(score, self.table_size, len(self.table_size), score_index,reward_penalty)
     # need refactor TODO https://docs.scipy.org/doc/numpy/user/basics.indexing.html
+    # -----------------------------------------------
+
 
     # Traceback and compute the alignment  
     align1, align2 = '', ''
@@ -344,20 +354,49 @@ def selected_res(complexes):
 
 # recursively return the 0th list until the list is an 1d array
 # can be used to fill the first row in each dimension with the initial values
-def select_init(mtx):
-    if mtx.ndim == 1:
-        return mtx
-    else:
-        return select_init(mtx[0])
+# def select_init(mtx):
+#     if mtx.ndim == 1:
+#         return mtx
+#     else:
+#         return select_init(mtx[0])
 
 # fill the nd-matrix "score" with the scores recursively
 # table is self.table_size, dim is the current dimension index
-def fill_score(score, table, dim, loop_indices):
+def fill_score(score, table, dim, loop_indices, reward_penalty):
     if dim == 0:
-        # compare the sequences
+        # compare all the sequences
+        match_bool = True
         for x in range(1,len(self.table_size)):
             if self.seq_list[x][loop_indices[x]] != self.seq_list[x-1][loop_indices[x-1]]:
-                match = score[i - 1][j - 1] + match_reward
+                match_bool = False
+                break
+        match_index_old = list(loop_indices)
+        for x in match_index_old:
+            x = x - 1
+        match_index_old = tuple(match_index_old)
+
+        if match_bool:
+            match = score[match_index_old] + reward_penalty[0]
+        else:
+            match = score[match_index_old] + reward_penalty[1]
+        # delete and instert
+        
         return
-    for x in range(1,self.table_size[]):
-        fill_score(score,table,dim-1)
+    
+    else:
+        for x in range(1,self.table_size[]):
+            loop_indices2 = loop_indices[:]
+            loop_indices2[dim] = loop_indices2 + 1
+            fill_score(score,table,dim-1,loop_indices2, reward_penalty) 
+    
+    
+    # for i in range(1, m + 1):
+    #     for j in range(1, n + 1):
+    #         if seq1[i-1] == seq2[j-1]:
+    #             match = score[i - 1][j - 1] + match_reward
+    #         else:
+    #             match = score[i - 1][j - 1] + mismatch_penalty
+    #         delete = score[i - 1][j] + gap_penalty
+    #         insert = score[i][j - 1] + gap_penalty 
+    #         score[i][j] = max(match, delete, insert)
+    
