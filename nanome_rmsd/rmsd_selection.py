@@ -366,7 +366,7 @@ def fill_score(score, table, dim, loop_indices, reward_penalty):
     if dim == 0:
         # compare all the sequences
         match_bool = True
-        for x in range(1,len(self.table_size)):
+        for x in range(1,len(tablee)):
             if self.seq_list[x][loop_indices[x]] != self.seq_list[x-1][loop_indices[x-1]]:
                 match_bool = False
                 break
@@ -380,16 +380,16 @@ def fill_score(score, table, dim, loop_indices, reward_penalty):
         else:
             match = score[match_index_old] + reward_penalty[1]
         # delete and instert
-        
+        # question: if different number of dimensions don't match, are the gap penalties different?
         return
     
     else:
-        for x in range(1,self.table_size[]):
+        for x in range(1,table[dim]):
             loop_indices2 = loop_indices[:]
             loop_indices2[dim] = loop_indices2 + 1
             fill_score(score,table,dim-1,loop_indices2, reward_penalty) 
     
-    
+     
     # for i in range(1, m + 1):
     #     for j in range(1, n + 1):
     #         if seq1[i-1] == seq2[j-1]:
