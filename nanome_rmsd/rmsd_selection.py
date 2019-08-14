@@ -1,6 +1,7 @@
 import numpy as np 
 from nanome.util import Logs
 from math import ceil
+from itertools import product
 
 # needleman wunsch algorithm
 def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, match_reward = 3):
@@ -173,9 +174,9 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
         selected_res_list.append(selected_res(x))
 
     # a list of the lists of residues type of the complex
-    self.seq_list = []
+    seq_list = []
     for x in selected_res_list:
-        self.seq_list.append(list(map(lambda res:res.type,x)))
+        seq_list.append(list(map(lambda res:res.type,x)))
 
     # run the "smart occupancy selection method" on the residue lists of both complexes
     # res_list1 =list(map(lambda a:select_occupancy(a),selected_res1))
@@ -190,11 +191,11 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
     # score = np.zeros((m+1, n+1))      
     # create the table of global alignment
     len_list = []
-    self.table_size = ()
-    for x in self.seq_list:
+    table_size = ()
+    for x in seq_list:
         len_list.append(len(x))
-        self.table_size = self.table_size + (len(x)+1,)
-    score = np.zeros(self.table_size)
+        table_size = table_size + (len(x)+1,)
+    score = np.zeros(table_size)
 
     
     # file the first column and first row of the table
@@ -205,11 +206,11 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
     # ---------------------------------------
 
     # i is the dimension index, x is the dimension length
-    for i,x in enumerate(self.table_size):
+    for i,x in enumerate(table_size):
         # j is the index in one dimension
         for j in range(0,x):
             # create a tuple for index
-            temp_index = np.zeros(len(self.table_size))
+            temp_index = np.zeros(len(table_size))
             temp_index[i] = j
             score[temp_index] = gap_penalty * i
 
@@ -227,21 +228,28 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
     #         score[i][j] = max(match, delete, insert)
     
     # list of indices in all dimensions
-    score_index = np.ones(len(self.table_size))
-    reward_penalty = [gap_penalty, mismatch_penalt, match_reward]
-    fill_score(score, self.table_size, len(self.table_size), score_index,reward_penalty)
+    score_index = np.ones(len(table_size))
+    reward_penalty = [gap_penalty, mismatch_penalty, match_reward]
+    fill_score(score, table_size, len(table_size), score_index,reward_penalty,seq_list)
     # need refactor TODO https://docs.scipy.org/doc/numpy/user/basics.indexing.html
     # -----------------------------------------------
 
 
     # Traceback and compute the alignment  
-    align1, align2 = '', ''
-    final1, final2 = '', ''
+    aligns = []
+    finals = []
+    for x in range(len(table_size)):
+        aligns.append('')
+        finals.append('')
+        
     # start from the bottom right cell
-    i,j = m,n
-    while i > 0 and j > 0: 
-        score_current = score[i][j]
-        score_diagonal = score[i-1][j-1]
+    trace = [x-1 for x in table_size]
+
+    while all(x > 0 for x in trace): 
+        diag_trace = [x-1 for x in trace]
+        score_current = score[tuple(trace)]
+        score_diagonal = score[tuple(diag_trace)]
+        #gap_scores = 
         score_up = score[i][j-1]
         score_left = score[i-1][j]
         # two residuses match, only deselect when the selected atoms are not matched
@@ -361,33 +369,34 @@ def selected_res(complexes):
 #         return select_init(mtx[0])
 
 # fill the nd-matrix "score" with the scores recursively
-# table is self.table_size, dim is the current dimension index
-def fill_score(score, table, dim, loop_indices, reward_penalty):
+# table is table_size, dim is the current dimension index
+def fill_score(score, table, dim, loop_indices, reward_penalty,seq_list):
     if dim == 0:
         # compare all the sequences
-        match_bool = True
-        for x in range(1,len(tablee)):
-            if self.seq_list[x][loop_indices[x]] != self.seq_list[x-1][loop_indices[x-1]]:
-                match_bool = False
-                break
-        match_index_old = list(loop_indices)
-        for x in match_index_old:
-            x = x - 1
-        match_index_old = tuple(match_index_old)
+        match_list = []
+        for x in range(0,len(table)):
+            match_list.append(seq_list[x][loop_indices[x]])
+        match_index = list(loop_indices)
+        match_index_diag = [x-1 for x in match_index]
+        # match_index_old = tuple(match_index_old)
 
-        if match_bool:
-            match = score[match_index_old] + reward_penalty[0]
+        if all(elem == match_list[0] for elem in match_list):
+            match = score[match_index_diag] + reward_penalty[0]
         else:
-            match = score[match_index_old] + reward_penalty[1]
+            match = score[match_index_idag] + reward_penalty[1]
         # delete and instert
         # question: if different number of dimensions don't match, are the gap penalties different?
+        comb_list = []
+        for x in range(len(match_index)):
+            comb_list.append((match_index[x],match_index_diag[x]))
+        recursive_comb(comb_list,[],0)
         return
     
     else:
         for x in range(1,table[dim]):
             loop_indices2 = loop_indices[:]
             loop_indices2[dim] = loop_indices2 + 1
-            fill_score(score,table,dim-1,loop_indices2, reward_penalty) 
+            fill_score(score,table,dim-1,loop_indices2, reward_penalty,seq_list) 
     
      
     # for i in range(1, m + 1):
@@ -399,4 +408,4 @@ def fill_score(score, table, dim, loop_indices, reward_penalty):
     #         delete = score[i - 1][j] + gap_penalty
     #         insert = score[i][j - 1] + gap_penalty 
     #         score[i][j] = max(match, delete, insert)
-    
+
