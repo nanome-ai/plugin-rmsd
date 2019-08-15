@@ -34,14 +34,9 @@ def IsBackbone(atom):
     return atomName == "N" or atomName == "CA" or atomName == "C" or atomName == "O" or atomName == "OXT" or atomName == "OC"
 
 def strip_alternatives(atoms):
-    Logs.debug("len of atoms is ",len(atoms))
     rt = list(filter(lambda a: a._occupancy >= 0.5, atoms))
-    Logs.debug("len of rt is ", len(rt))
     oc_test = list(filter(lambda a: a._occupancy <1, rt))     
-    Logs.debug(list(map(lambda a: a.name, oc_test)))
-    Logs.debug(list(map(lambda a: a._occupancy, oc_test)))
-    Logs.debug("len of oc_test is ",len(oc_test))
-
+ 
     pairs=set()
     remove_idx=[]
     for i,x in enumerate(rt):

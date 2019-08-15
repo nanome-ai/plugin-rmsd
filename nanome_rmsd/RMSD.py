@@ -289,16 +289,13 @@ class RMSD(nanome.PluginInstance):
 
     # auto select with global/local alignment
     def select(self,mobile,target):
-        # create seq1 and seq2
-        #run the alignment
         self._menu.change_error("loading")
-        #self._mobile = mobile
         self._mobile = mobile
         # Logs.debug("mobile list before ",self._mobile)
         self._target = target
         self.request_workspace(self.on_select_received) 
 
-    
+
     def on_select_received(self, workspace):
         complexes = workspace.complexes
         mobile_index_list = list(map(lambda a: a.index, self._mobile))
