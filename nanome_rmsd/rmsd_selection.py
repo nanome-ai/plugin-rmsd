@@ -284,9 +284,10 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
         elif score_current in gap_scores:
             # find the dimension that's been chosen
             # loop through all the dimensions and if it has gap, "---"
-            for x in seq_list:
-                if 
+            # for x in seq_list:
+            #     if 
             # TODO only use manhattan distance!
+            
             align1 += seq1[i-1]
             align2 += '---'
             for x in res_list1[i-1].atoms:
