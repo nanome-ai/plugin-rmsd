@@ -33,7 +33,8 @@ setup(
 	],
 	package_data={
         "nanome_rmsd": [
-            "*.json"
+            "*.json",
+			"*.png"
         ]
 	},
 )
