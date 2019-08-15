@@ -78,24 +78,6 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, matc
                 Logs.debug("selected:  ",list(map(lambda a:a.selected,res_list2[j-1].atoms)))
                 Logs.debug("serial:    ",res_list2[j-1].serial)
                 
-                # intersection1 = [value for value in match1 if value in match2] 
-                # intersection2 = intersection1[:]
-                # for x in res_list1[i-1].atoms:
-                #     if x.name in intersection1:
-                #         intersection1.remove(x.name)
-                #     else:
-                #         x.selected = False
-
-                # for x in res_list2[j-1].atoms:
-                #     if x.name in intersection2:
-                #         intersection2.remove(x.name)
-                #     else:
-                #         x.selected = False
-                # newlist1 = list(filter(lambda a:a.selected,res_list1[i-1].atoms))
-                # newlist2 = list(filter(lambda a:a.selected,res_list2[j-1].atoms))
-                # Logs.debug("new list 1", list(map(lambda a:a.name,newlist1)))
-                # Logs.debug("new list 2", list(map(lambda a:a.name,newlist2)))
-
                 for x in res_list1[i-1].atoms:
                         x.selected = False
 
@@ -146,17 +128,14 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, matc
         for x in res_list2[j-1].atoms:
             x.selected = False
         j -= 1
+    
     Logs.debug("traceback done2")
     Logs.debug("align1 is ",align1)
     Logs.debug("align2 is ",align2)
-   
     Logs.debug("len of align1 is",len(align1))
     Logs.debug("len of align2 is",len(align2))
     Logs.debug("final1 is ",final1)
     Logs.debug("final2 is ",final2)
-    # Logs.debug("diff is ",np.diff(final1,final2))
-    # finalize(align1, align2)
-    
 
     return complex1,complex2
 
@@ -179,8 +158,6 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
         seq_list.append(list(map(lambda res:res.type,x)))
 
     # run the "smart occupancy selection method" on the residue lists of both complexes
-    # res_list1 =list(map(lambda a:select_occupancy(a),selected_res1))
-    # res_list2 =list(map(lambda a:select_occupancy(a),selected_res2))
     res_lists = []
     for x in selected_res_list:
         res_lists.append(list(map(lambda a:select_occupancy(a),x)))
@@ -262,7 +239,7 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
             matches = []
             for i, x in enumerate(diag_trace):
                 matches.append(list(map(lambda a:a.selected,res_lists[i][x].atoms)))
-            if not all(elem == matches for elem in mathes):    
+            if not all(elem == matches for elem in matches):    
                 for i,y in enumerate(res_lists):
                     for x in y[diag_trace[i]].atoms:
                         x.selected = False
