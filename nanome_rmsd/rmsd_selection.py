@@ -34,7 +34,7 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, matc
     # fill the table wtih scores
     for i in range(1, m + 1):
         for j in range(1, n + 1):
-            if seq1[i-1] == seq2[j-1]:
+            if seq1[i-1] == seq2[ j-1]:
                 match = score[i - 1][j - 1] + match_reward
             else:
                 match = score[i - 1][j - 1] + mismatch_penalty
@@ -231,9 +231,6 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
     score_index = np.ones(len(table_size))
     reward_penalty = [gap_penalty, mismatch_penalty, match_reward]
     fill_score(score, table_size, len(table_size), score_index,reward_penalty,seq_list)
-    # need refactor TODO https://docs.scipy.org/doc/numpy/user/basics.indexing.html
-    # -----------------------------------------------
-
 
     # Traceback and compute the alignment  
     aligns = []
@@ -249,57 +246,53 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
         diag_trace = [x-1 for x in trace]
         score_current = score[tuple(trace)]
         score_diagonal = score[tuple(diag_trace)]
-        #gap_scores = 
-        score_up = score[i][j-1]
-        score_left = score[i-1][j]
+        gap_points = get_gap_points(tuple(score_current)) 
+        gap_scores = [score[x]+reward_penalty[0] for x in gap_points]
+
         # two residuses match, only deselect when the selected atoms are not matched
+        seqs_val = []
+        for i,x in enumerate(diag_trace):
+            seqs_val.append(seq_list[i][x])
         if score_current == score_diagonal + match_reward and \
-           seq1[i-1] == seq2[j-1] and seq1[i-1] != 'UNK' and seq2[j-1] != 'UNK':
+            all(elem == seqs_val[0] for elem in seqs_val) and all(elem != 'UNK' for elem in seqs_val):
 
-            align1 += seq1[i-1]
-            align2 += seq2[j-1]
-            final1 += seq1[i-1]
-            final2 += seq2[j-1]
-            # Logs.debug(seq1[i-1],' ',seq2[j-1])
-            match1=list(map(lambda a:a.selected,res_list1[i-1].atoms))
-            match2=list(map(lambda a:a.selected,res_list2[j-1].atoms))
-            if match1 != match2:
-                
-                for x in res_list1[i-1].atoms:
+            for i, x in enumerate(aligns):
+                x += seqs_val[i]
+                finals[i] += seqs_val[i]
+            matches = []
+            for i, x in enumerate(diag_trace):
+                matches.append(list(map(lambda a:a.selected,res_lists[i][x].atoms)))
+            if not all(elem == matches for elem in mathes):    
+                for i,y in enumerate(res_lists):
+                    for x in y[diag_trace[i]].atoms:
                         x.selected = False
-
-                for x in res_list2[j-1].atoms:
-                        x.selected = False
-
-            i -= 1
-            j -= 1
+            for x in trace:
+                x -= 1
 
         # two of the residues do not match, the deselect both
         elif score_current == score_diagonal + mismatch_penalty and \
-             seq1[i-1] != seq2[j-1] or (seq1[i-1] == 'UNK' and seq2[j-1] == 'UNK'):
+             all(elem != seqs_val[0] for elem in seqs_val[1:]) or ('UNK' in seqs_val):
 
-            for x in res_list1[i-1].atoms:
-                x.selected = False
-            for y in res_list2[j-1].atoms:
-                y.selected = False
-            i -= 1
-            j -= 1
+            for i,y in enumerate(res_lists):
+                for x in y[diag_trace[i]].atoms:
+                    x.selected = False
+                
+            for x in trace:
+                x -= 1
             
         # seq1 has an extra residue, deselect it
-        elif score_current == score_left + gap_penalty:
+        elif score_current in gap_scores:
+            # find the dimension that's been chosen
+            # loop through all the dimensions and if it has gap, "---"
+            for x in seq_list:
+                if 
+            # TODO only use manhattan distance!
             align1 += seq1[i-1]
             align2 += '---'
             for x in res_list1[i-1].atoms:
                 x.selected = False
             i -= 1
 
-        # seq2 has an extra residue, deselect it
-        elif score_current == score_up + gap_penalty:
-            align1 += '---'
-            align2 += seq2[j-1]
-            for x in res_list2[j-1].atoms:
-                x.selected = False
-            j -= 1
 
     Logs.debug("traceback done1")
     # Finish tracing up to the top left cell
@@ -316,9 +309,7 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
             x.selected = False
         j -= 1
   
-    return complex1,complex2
-
-
+    return complexes
 
 
 # takes in a single residue
@@ -360,14 +351,6 @@ def selected_res(complexes):
             rt.append(residue)
     return rt
 
-# recursively return the 0th list until the list is an 1d array
-# can be used to fill the first row in each dimension with the initial values
-# def select_init(mtx):
-#     if mtx.ndim == 1:
-#         return mtx
-#     else:
-#         return select_init(mtx[0])
-
 # fill the nd-matrix "score" with the scores recursively
 # table is table_size, dim is the current dimension index
 def fill_score(score, table, dim, loop_indices, reward_penalty,seq_list):
@@ -376,20 +359,20 @@ def fill_score(score, table, dim, loop_indices, reward_penalty,seq_list):
         match_list = []
         for x in range(0,len(table)):
             match_list.append(seq_list[x][loop_indices[x]])
+
         match_index = list(loop_indices)
         match_index_diag = [x-1 for x in match_index]
-        # match_index_old = tuple(match_index_old)
 
         if all(elem == match_list[0] for elem in match_list):
-            match = score[match_index_diag] + reward_penalty[0]
+            match = score[match_index_diag] + reward_penalty[2]
         else:
-            match = score[match_index_idag] + reward_penalty[1]
-        # delete and instert
+            match = score[match_index_diag] + reward_penalty[1]
+       
         # question: if different number of dimensions don't match, are the gap penalties different?
-        comb_list = []
-        for x in range(len(match_index)):
-            comb_list.append((match_index[x],match_index_diag[x]))
-        recursive_comb(comb_list,[],0)
+        gap_points = get_gap_points(loop_indices)
+        gap_results = [score[x]+reward_penalty[0] for x in gap_points]
+
+        score[loop_indices] = max(match,max(gap_results))
         return
     
     else:
@@ -397,15 +380,22 @@ def fill_score(score, table, dim, loop_indices, reward_penalty,seq_list):
             loop_indices2 = loop_indices[:]
             loop_indices2[dim] = loop_indices2 + 1
             fill_score(score,table,dim-1,loop_indices2, reward_penalty,seq_list) 
-    
-     
-    # for i in range(1, m + 1):
-    #     for j in range(1, n + 1):
-    #         if seq1[i-1] == seq2[j-1]:
-    #             match = score[i - 1][j - 1] + match_reward
-    #         else:
-    #             match = score[i - 1][j - 1] + mismatch_penalty
-    #         delete = score[i - 1][j] + gap_penalty
-    #         insert = score[i][j - 1] + gap_penalty 
-    #         score[i][j] = max(match, delete, insert)
+
+# take in a point and return all the gap points
+# Ex. input：(i,j,k)
+#     output:[(i,j,k-1), (i,j-1,k),(i,j-1,k-1),(i-1,j,k-1),(i-1,j-1,k)]
+def get_gap_points(ijk):
+    for x in ijk:
+        if x == 0:
+            Logs.debug("point on the side or at the origin")
+            return
+    match_index = list(ijk)
+    match_index_diag = [x-1 for x in match_index]
+    comb_list = []
+    for x in range(len(match_index)):
+        comb_list.append([match_index[x],match_index_diag[x]])
+    gap_points = list(*comb_list)
+    gap_points.remove(ijk)
+    gap_points.remove(tuple(match_index_diag))
+    return gap_points
 
