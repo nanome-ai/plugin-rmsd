@@ -7,6 +7,8 @@ from .rmsd_menu import RMSDMenu
 from . import rmsd_helpers as help
 from nanome.util import Logs
 # from .quaternion import Quaternion
+import numpy as np
+from . import rmsd_selection as selection
 
 class RMSD(nanome.PluginInstance):
     def start(self):
@@ -29,11 +31,10 @@ class RMSD(nanome.PluginInstance):
         self.request_refresh()
 
     def request_refresh(self):
-        self._menu._selected_mobile = None
+        self._menu._selected_mobile = []
         self._menu._selected_target = None
         self.request_complex_list(self.on_complex_list_received)
         nanome.util.Logs.debug("Complex list requested")
-
 
     def update_button(self, button):
         self.update_content(button)
@@ -44,27 +45,47 @@ class RMSD(nanome.PluginInstance):
     def on_complex_list_received(self, complexes):
         Logs.debug("complex received: ", complexes)
         self._menu.change_complex_list(complexes)
-
+ 
     def run_rmsd(self, mobile, target):
+        self._menu.change_error("loading")
         self._mobile = mobile
         self._target = target
-        self.request_workspace(self.on_workspace_received)
+        self.request_workspace(self.on_workspace_received) 
+
 
     def on_workspace_received(self, workspace):
         complexes = workspace.complexes
+        mobile_index_list = list(map(lambda a: a.index, self._mobile))
+        mobile_complex = []
         for complex in complexes:
-            if complex.index == self._mobile.index:
-                mobile_complex = complex
+            if complex.index in mobile_index_list:
+                mobile_complex.append(complex)
             if complex.index == self._target.index:
                 target_complex = complex
         self.workspace = workspace
-        result = self.align(target_complex, mobile_complex)
+        result = 0
+        for x in mobile_complex:
+            result += self.align(target_complex, x)
         if result :
-            self.update_workspace(workspace)
+            self._menu.update_score(result)
+            
+        
         Logs.debug("RMSD done")
         self.make_plugin_usable()
+        self.update_workspace(workspace)
+        #self.lock_result()
+        
         # self.request_refresh()
     
+    def lock_result(self):
+        for x in self._mobile:
+                x.locked = True
+        self._target.locked = True
+        # self.update_workspace(workspace)
+
+        self.update_structures_shallow([self._target])
+        self.update_structures_shallow(self._mobile)
+
     def update_args(self, arg, option):
         setattr(self.args, arg, option)
 
@@ -73,12 +94,13 @@ class RMSD(nanome.PluginInstance):
             self.rotation = "kabsch" #alt: "quaternion", "none"
             self.reorder = False
             self.reorder_method = "hungarian" #alt "brute", "distance"
+            self.select = "global"
             self.use_reflections = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). This will affect stereo-chemistry.
             self.use_reflections_keep_stereo = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). Stereo-chemistry will be kept.
             #exclusion options
-            self.no_hydrogen = False
-            self.selected_only = False
-            self.backbone_only = False
+            self.no_hydrogen = True
+            self.selected_only = True
+            self.backbone_only = True
             self.align = True
 
         @property
@@ -101,6 +123,8 @@ class RMSD(nanome.PluginInstance):
             return output
 
     def align(self, p_complex, q_complex):
+
+
         #p is fixed q is mobile
         args = self.args
         p_atoms = list(p_complex.atoms)
@@ -117,6 +141,9 @@ class RMSD(nanome.PluginInstance):
         if args.backbone_only:
             p_atoms = help.strip_non_backbone(p_atoms)
             q_atoms = help.strip_non_backbone(q_atoms)
+
+        # p_atoms = help.strip_alternatives(p_atoms)
+        # q_atoms = help.strip_alternatives(q_atoms)
 
         p_size = len(p_atoms)
         q_size = len(q_atoms)
@@ -142,7 +169,8 @@ class RMSD(nanome.PluginInstance):
             self._menu.change_error("different_order")
             return False
         else:
-            self._menu.change_error("clear")
+            if(self._menu.error_message.text_value!="Loading..."):
+                self._menu.change_error("clear")
 
         p_coords = help.positions_to_array(p_pos_orig)
         q_coords = help.positions_to_array(q_pos_orig)
@@ -181,7 +209,6 @@ class RMSD(nanome.PluginInstance):
             Logs.debug("The value of reorder is: ",args.reorder)
             return False
 
-
         # Save the resulting RMSD
         result_rmsd = None
 
@@ -194,6 +221,7 @@ class RMSD(nanome.PluginInstance):
                 reorder_method=reorder_method,
                 rotation_method=rotation_method,
                 keep_stereo=args.use_reflections_keep_stereo)
+
         elif args.reorder:
             q_review = reorder_method(p_atom_names, q_atom_names, p_coords, q_coords)
             q_coords = q_coords[q_review]
@@ -211,7 +239,6 @@ class RMSD(nanome.PluginInstance):
         else:
             result_rmsd = rotation_method(p_coords, q_coords)
         Logs.debug("result: {0}".format(result_rmsd))
-        self._menu.update_score(result_rmsd)
 
         # Logs.debug result
         if args.update:
@@ -241,6 +268,7 @@ class RMSD(nanome.PluginInstance):
             U_matrix[3][3] = 1
             rot_quat = p_complex.rotation
             rot_matrix = nanome.util.Matrix.from_quaternion(rot_quat)
+
             result_matrix = rot_matrix * U_matrix
             result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
             q_complex.rotation = result_quat
@@ -250,7 +278,64 @@ class RMSD(nanome.PluginInstance):
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
             q_complex.position = p_complex.position + p_cent - q_cent
+           
+            if(self._menu.error_message.text_value=="Loading..."):
+                self._menu.change_error("clear")
+            
+            p_complex.locked = True
+            q_complex.locked = True
+        
         return result_rmsd
+
+    # auto select with global/local alignment
+    def select(self,mobile,target):
+        self._menu.change_error("loading")
+        self._mobile = mobile
+        # Logs.debug("mobile list before ",self._mobile)
+        self._target = target
+        self.request_workspace(self.on_select_received) 
+
+
+    def on_select_received(self, workspace):
+        complexes = workspace.complexes
+        mobile_index_list = list(map(lambda a: a.index, self._mobile))
+        self._mobile = []
+        for complex in complexes:
+            if complex.index in mobile_index_list:
+                self._mobile.append(complex)
+            if complex.index == self._target.index:
+                self._target = complex
+        
+        if (self.args.select.lower() == "global"):
+            self.selected_before = [[list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],
+                                    list(map(lambda a:a.selected,self._target.atoms))]
+            for x in self._mobile:
+                selection.global_align(x , self._target)  
+            for x in self._mobile[:-1]:
+                selection.global_align(x , self._target)  
+
+        if (self.args.select.lower() == "local"):
+            selection.local_align(self._mobile,self._target)
+        if (self.args.select.lower() == "none"):
+            if self.selected_before:
+                self.change_selected(self._mobile,self._target,self.selected_before[0],self.selected_before[1])
+        self.workspace = workspace
+        self.make_plugin_usable()
+        self.update_workspace(workspace)
+        self._menu.change_error("clear")
+        
+
+    def change_selected(self,mobile,target,mobile_selected,target_selected):
+        if [len(list(map(lambda a:a,x.atoms))) for x in mobile]==[len(x) for x in mobile_selected]\
+            and len(list(map(lambda a:a,target.atoms))) == len(target_selected):
+            for j,y in enumerate(mobile):    
+                for i,x in enumerate(y.atoms):
+                    x.selected = mobile_selected[j][i]
+            for i,x in enumerate(target.atoms):
+                x.selected = target_selected[i]
+        else:
+            Logs.debug("selected complexes changed")
+            self._menu.change_error("selected_changed")
 
 
 def main():

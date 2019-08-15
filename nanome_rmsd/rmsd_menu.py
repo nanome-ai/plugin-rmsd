@@ -7,13 +7,15 @@ class RMSDMenu():
     def __init__(self, rmsd_plugin):
         self._menu = rmsd_plugin.menu
         self._plugin = rmsd_plugin
-        self._selected_mobile = None # button
+        self._selected_mobile = [] # button
         self._selected_target = None # button
         self._run_button = None
         self._current_tab = "receptor" #receptor = 0, target = 1
-        self._drop_down_dict={"rotation":["None", "Kabsch","Quaternion"],"reorder_method":["None","Hungarian","Brute", "Distance"]}
+        self._drop_down_dict={"rotation":["None", "Kabsch","Quaternion"],"reorder_method":["None","Hungarian","Brute", "Distance"],\
+        "select":["None","Global"]} # select["Local"] in the future
         self._current_reorder = "None"
         self._current_rotation = "None"
+        self._current_select = "None"
 
     def _request_refresh(self):
         self._plugin.request_refresh()
@@ -21,7 +23,7 @@ class RMSDMenu():
     # run the rmsd algorithm
     def _run_rmsd(self):
         if self.check_resolve_error():
-            self._plugin.run_rmsd(self._selected_mobile.complex, self._selected_target.complex)
+            self._plugin.run_rmsd([a.complex for a in self._selected_mobile], self._selected_target.complex)
         else:
             self.make_plugin_usable()
 
@@ -31,7 +33,8 @@ class RMSDMenu():
             if self._selected_mobile == None or self._selected_target == None:
                 self.change_error("unselected")
                 return False
-            elif self._selected_mobile.complex.index == self._selected_target.complex.index:
+            #elif self._selected_mobile.complex.index == self._selected_target.complex.index:
+            elif self._selected_target.complex.index in list(map(lambda a:a.complex.index,self._selected_mobile)):
                 self.change_error("select_same")
                 return False
             else:
@@ -40,8 +43,6 @@ class RMSDMenu():
         else:
             self.change_error("clear")
             return True
-
-
 
     # show the error message texts, fromRun means if the it is called after Run is pressed
     def change_error(self,error_type):
@@ -80,6 +81,20 @@ class RMSDMenu():
             self.update_score()
             self._plugin.update_content(self.error_message)
             return True
+        if(error_type == "selected_changed"):
+            self.error_message.text_auto_size=False
+            self.error_message.text_size = 0.176
+            self.error_message.text_value = "Selected complexes have changed"
+            self.update_score()
+            self._plugin.update_content(self.error_message)
+            return True
+        if(error_type == "loading"):
+            self.error_message.text_auto_size=False
+            self.error_message.text_size = 0.2
+            self.error_message.text_value = "Loading..."
+            self.update_score()
+            self._plugin.update_content(self.error_message)
+            return True
         if(error_type == "clear"):
             self.error_message.text_value = ""
             self.error_message.text_auto_size = True
@@ -108,23 +123,39 @@ class RMSDMenu():
         
         # a button in the receptor list is pressed
         def mobile_pressed(button):
-            if self._selected_mobile != None:
-                self._selected_mobile.selected = False 
-                if self._selected_mobile.complex != button.complex: 
-                    button.selected = True
-                    self._selected_mobile = button
-                    self.receptor_text.text_value ="Receptor: "+ button.complex.name
-                else: 
-                    self._selected_mobile = None
-                    self.receptor_text.text_value = "Receptor: Unselected"
-            else: 
+
+            # selecting button
+            if button.complex.index not in [ a.complex.index for a in self._selected_mobile]:
                 button.selected = True
-                self._selected_mobile = button
-                self.receptor_text.text_value ="Receptor: "+ button.complex.name
-            self.check_resolve_error(clear_only=True)
+                self._selected_mobile.append(button)
+                if len(self._selected_mobile) == 1:
+                    self.receptor_text.text_value = "Receptor: "+button.complex.name
+                else:
+                    self.receptor_text.text_value = "Receptor: multiple receptors"
+            # deselecting button
+            else:
+                button.selected = False
+                # self._selected_mobile = [i for i in self._selected_mobile if i.copmplex.index != button.complex.index]
+                for x in self._selected_mobile:
+                    if x.complex.index == button.complex.index:
+                        self._selected_mobile.remove(x)
+                if len(self._selected_mobile) == 1:
+                    self.receptor_text.text_value = "Receptor: "+self._selected_mobile[0].complex.name
+                elif len(self._selected_mobile) == 0:
+                    self.receptor_text.text_value = "Receptor: Unselected"
+                else:
+                    self.receptor_text.text_value = "Receptor: multiple receptors"
+                
+
+            self.select_button.selected = False
+            self.select_button.set_all_text("Select")            
+            # tell the plugin and update the menu
+            self._current_select = "None"
+            self.update_args("select", "None")
             self._plugin.update_content(self._show_list)
             self._plugin.update_content(self.receptor_text)
             self._plugin.update_content(self.target_text)
+            self._plugin.update_content(self.select_button)
 
         # a button in the target list is pressed
         def target_pressed(button):
@@ -142,15 +173,26 @@ class RMSDMenu():
                 self._selected_target = button
                 self.target_text.text_value ="Target: "+ button.complex.name
             self.check_resolve_error(clear_only=True)
+            self.select_button.selected = False
+            self.select_button.set_all_text("Select")
+            # tell the plugin and update the menu
+            self._current_select = "None"
+            self.update_args("select", "None")
             self._plugin.update_content(self._show_list)
             self._plugin.update_content(self.receptor_text)
             self._plugin.update_content(self.target_text)
+            self._plugin.update_content(self.select_button)
 
         self._mobile_list = []
         self._target_list = []
 
-        if self._selected_mobile != None and \
-           self._selected_mobile.complex.index not in [i.index for i in complex_list]:
+        if self._selected_mobile == None:
+            self._selected_mobile = []
+
+        if len(self._selected_mobile) != 0:
+            for x in self._selected_mobile:
+                if x.complex.index not in [i.index for i in complex_list]:
+                    self._selected_mobile.remove()
             self._selected_mobile =None
         if self._selected_target != None and \
            self._selected_target.complex.index not in [i.index for i in complex_list]:
@@ -164,7 +206,7 @@ class RMSDMenu():
             btn.complex = complex
             btn.register_pressed_callback(mobile_pressed)
             self._mobile_list.append(clone)
-            if self._selected_mobile != None and btn.complex.index == self._selected_mobile.complex.index:
+            if self._selected_mobile != None and btn.complex.index in [a.complex.index for a in self._selected_mobile]:
                 btn.selected = True
 
             #clone1 = clone.clone()
@@ -178,16 +220,15 @@ class RMSDMenu():
             if self._selected_target != None and btn.complex.index == self._selected_target.complex.index:
                 btn.selected = True
 
-        if self._selected_mobile == None:
+        if len(self._selected_mobile) == 0:
             self.receptor_text.text_value ="Receptor: Unselected"
         if self._selected_target == None:
             self.target_text.text_value ="Target: Unselected "
- 
         if self._current_tab == "receptor":
             self._show_list.items=self._mobile_list
         else:
             self._show_list.items=self._target_list
-
+            
         self._plugin.update_menu(self._menu)
 
     # build the menu
@@ -201,6 +242,7 @@ class RMSDMenu():
         def run_button_pressed_callback(button):
             self.make_plugin_usable(False)
             self._run_rmsd()
+
 
         # show the target list when the receptor tab is pressed
         def receptor_tab_pressed_callback(button):
@@ -221,8 +263,6 @@ class RMSDMenu():
             self._plugin.update_content(receptor_tab)
             self._plugin.update_content(target_tab)
             self._plugin.update_content(self._show_list)
-
-            
         
         # no hydrogen = ! no hydrogen
         def no_hydrogen_button_pressed_callback(button):
@@ -278,7 +318,32 @@ class RMSDMenu():
             self._current_rotation = post_option
             self.update_args("rotation_method", post_option)
             self._plugin.update_content(rotation_button)
-        
+
+        def select_button_pressed_callback(button): 
+            if self._selected_mobile != None and self._selected_target != None:
+                
+                self._plugin.select([x.complex for x in self._selected_mobile],self._selected_target.complex)
+                drop_down  = self._drop_down_dict["select"]
+                temp_length=len(drop_down)
+                
+                pre_index = drop_down.index(self._current_select)
+                post_index = (pre_index + 1) % temp_length
+                
+                post_option = drop_down[post_index]
+                self.select_button.selected = post_option != "None"
+                
+                if post_option == "None":
+                    self.select_button.set_all_text("Select")
+                else:
+                    self.select_button.set_all_text(post_option)
+                
+                # tell the plugin and update the menu
+                self._current_select = post_option
+                self.update_args("select", post_option)
+            else:
+                self.check_resolve_error()
+            self._plugin.update_content(self.select_button)
+
         # Create a prefab that will be used to populate the lists
         self._complex_item_prefab = nanome.ui.LayoutNode()
         self._complex_item_prefab.layout_orientation = nanome.ui.LayoutNode.LayoutTypes.horizontal
@@ -291,12 +356,16 @@ class RMSDMenu():
         menu = nanome.ui.Menu.io.from_json(os.path.join(os.path.dirname(__file__), 'rmsd_pluginator.json'))
         self._plugin.menu = menu
 
+        # add the refresh icon
+        refresh_img = menu.root.find_node("Refresh Image", True)
+        refresh_img.add_new_image(file_path = "./nanome_rmsd/Refresh.png")
+
         # create the Run button
         self._run_button = menu.root.find_node("Run", True).get_content()
         self._run_button.register_pressed_callback(run_button_pressed_callback)
 
         # create the Refresh button
-        refresh_button = menu.root.find_node("Refresh", True).get_content()
+        refresh_button = menu.root.find_node("Refresh Button", True).get_content()
         refresh_button.register_pressed_callback(refresh_button_pressed_callback)
 
         # create the List 
@@ -335,6 +404,10 @@ class RMSDMenu():
         # create the roation "drop down"
         rotation_button = menu.root.find_node("Rotation menu",True).get_content()
         rotation_button.register_pressed_callback(rotation_button_pressed_callback)
+
+        # create the select cycle button
+        self.select_button = menu.root.find_node("Auto Select",True).get_content()
+        self.select_button.register_pressed_callback(select_button_pressed_callback)
 
         # create the rmsd score
         self.rmsd_score_label = menu.root.find_node("RMSD number",True).get_content()
