@@ -358,7 +358,7 @@ class RMSDMenu():
 
         # add the refresh icon
         refresh_img = menu.root.find_node("Refresh Image", True)
-        refresh_img.add_new_image(file_path = "./nanome_rmsd/Refresh.png")
+        refresh_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Refresh.png'))
 
         # create the Run button
         self._run_button = menu.root.find_node("Run", True).get_content()
