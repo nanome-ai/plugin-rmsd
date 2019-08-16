@@ -309,10 +309,11 @@ class RMSD(nanome.PluginInstance):
         if (self.args.select.lower() == "global"):
             self.selected_before = [[list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],
                                     list(map(lambda a:a.selected,self._target.atoms))]
-            for x in self._mobile:
-                selection.global_align(x , self._target)  
-            for x in self._mobile[:-1]:
-                selection.global_align(x , self._target)  
+            # for x in self._mobile:
+            #     selection.global_align(x , self._target)  
+            # for x in self._mobile[:-1]:
+            #     selection.global_align(x , self._target)  
+            selection.multi_global_align(self._mobile+[self._target])
 
         if (self.args.select.lower() == "local"):
             selection.local_align(self._mobile,self._target)

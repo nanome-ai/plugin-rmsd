@@ -174,13 +174,6 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
         table_size = table_size + (len(x)+1,)
     score = np.zeros(table_size)
 
-    
-    # file the first column and first row of the table
-    # for i in range(0, m + 1):
-    #     score[i][0] = gap_penalty * i
-    # for j in range(0, n + 1):
-    #     score[0][j] = gap_penalty * j
-    # ---------------------------------------
 
     # i is the dimension index, x is the dimension length
     for i,x in enumerate(table_size):
@@ -191,19 +184,6 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
             temp_index[i] = j
             score[temp_index] = gap_penalty * i
 
-  
-
-    # fill the table wtih scores
-    # for i in range(1, m + 1):
-    #     for j in range(1, n + 1):
-    #         if seq1[i-1] == seq2[j-1]:
-    #             match = score[i - 1][j - 1] + match_reward
-    #         else:
-    #             match = score[i - 1][j - 1] + mismatch_penalty
-    #         delete = score[i - 1][j] + gap_penalty
-    #         insert = score[i][j - 1] + gap_penalty 
-    #         score[i][j] = max(match, delete, insert)
-    
     # list of indices in all dimensions
     score_index = np.ones(len(table_size))
     reward_penalty = [gap_penalty, mismatch_penalty, match_reward]
@@ -261,31 +241,27 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
         elif score_current in gap_scores:
             # find the dimension that's been chosen
             # loop through all the dimensions and if it has gap, "---"
-            # for x in seq_list:
-            #     if 
-            # TODO only use manhattan distance!
-            
-            align1 += seq1[i-1]
-            align2 += '---'
-            for x in res_list1[i-1].atoms:
-                x.selected = False
-            i -= 1
+            for i,x in enumerate(gap_scores):
+                if score_current == x:
+                    aligns[i] += seq_list[i][diag_trace[i]]
+                    for x in res_lists[i][diag_trace[i]].atoms:
+                        x.selected = False
+                    trace[i] -= 1
+                else:
+                    aligns[i] += '---'
 
 
     Logs.debug("traceback done1")
     # Finish tracing up to the top left cell
-    while i > 0:
-        align1 += seq1[i-1]
-        align2 += '---'
-        for x in res_list1[i-1].atoms:
-            x.selected = False
-        i -= 1
-    while j > 0:
-        align1 += '---'
-        align2 += seq2[j-1]
-        for x in res_list2[j-1].atoms:
-            x.selected = False
-        j -= 1
+    for x in range(len(trace)):
+        while trace[x] > 0:
+            aligns[x] += seq_list[x][trace[x]]
+            for x in res_lists[x][trace[x]].atoms:
+                x.selected = False
+            for z in [y for y in range(len(trace)) if y != x] :
+                aligns[z] += '---'
+            
+            trace[x] -= 1
   
     return complexes
 
@@ -372,8 +348,15 @@ def get_gap_points(ijk):
     comb_list = []
     for x in range(len(match_index)):
         comb_list.append([match_index[x],match_index_diag[x]])
-    gap_points = list(*comb_list)
-    gap_points.remove(ijk)
-    gap_points.remove(tuple(match_index_diag))
+    # gap_points = list(product(*comb_list))
+    # gap_points.remove(ijk)
+    # gap_points.remove(tuple(match_index_diag))
+    
+    # use manhattan distance instead
+    gap_points = []
+    for x in range(len(ijk)):
+        temp = match_index[:]
+        temp[x] = match_index_diag[x]
+        gap_points.append(temp)
     return gap_points
 
