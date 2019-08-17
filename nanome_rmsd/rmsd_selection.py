@@ -156,14 +156,11 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
     seq_list = []
     for x in selected_res_list:
         seq_list.append(list(map(lambda res:res.type,x)))
-
     # run the "smart occupancy selection method" on the residue lists of both complexes
     res_lists = []
     for x in selected_res_list:
         res_lists.append(list(map(lambda a:select_occupancy(a),x)))
     
-    Logs.debug("length of reslists is ",len(res_lists))
-
     # m, n = len(seq1), len(seq2)
     # score = np.zeros((m+1, n+1))      
     # create the table of global alignment
@@ -173,21 +170,23 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
         len_list.append(len(x))
         table_size = table_size + (len(x)+1,)
     score = np.zeros(table_size)
-
-
     # i is the dimension index, x is the dimension length
     for i,x in enumerate(table_size):
         # j is the index in one dimension
-        for j in range(0,x):
+        for j in range(1,x):
             # create a tuple for index
-            temp_index = np.zeros(len(table_size))
+            temp_index = np.zeros(len(table_size), dtype=int)
             temp_index[i] = j
-            score[temp_index] = gap_penalty * i
+            temp_index = tuple(temp_index)
+            score[temp_index] = gap_penalty * j
 
     # list of indices in all dimensions
-    score_index = np.ones(len(table_size))
+    score_index = np.ones(len(table_size),dtype = int)
     reward_penalty = [gap_penalty, mismatch_penalty, match_reward]
-    fill_score(score, table_size, len(table_size), score_index,reward_penalty,seq_list)
+    Logs.debug(score)
+    fill_score(score, table_size, len(table_size)-1, score_index  ,reward_penalty,seq_list)
+    Logs.debug("score table 4nd row is: ",score[3])
+    Logs.debug("scrore talbe size is: ",score.shape)
 
     # Traceback and compute the alignment  
     aligns = []
@@ -308,32 +307,38 @@ def selected_res(complexes):
 # fill the nd-matrix "score" with the scores recursively
 # table is table_size, dim is the current dimension index
 def fill_score(score, table, dim, loop_indices, reward_penalty,seq_list):
-    if dim == 0:
+    if dim < 0:
         # compare all the sequences
         match_list = []
-        for x in range(0,len(table)):
-            match_list.append(seq_list[x][loop_indices[x]])
+        # Logs.debug("loop indices is: ",loop_indices)
+        for x in range(len(table)):
+            # Logs.debug("x is: ",x)
+            # Logs.debug("loop indices is: ",loop_indices[x])
+            # Logs.debug("seq list shape is: ",len(seq_list)," ",len(seq_list[0])," ",len(seq_list[1]))
+            match_list.append(seq_list[-x-1][loop_indices[-x-1]])
 
         match_index = list(loop_indices)
         match_index_diag = [x-1 for x in match_index]
 
         if all(elem == match_list[0] for elem in match_list):
-            match = score[match_index_diag] + reward_penalty[2]
+            match = score[tuple(match_index_diag)] + reward_penalty[2]
         else:
-            match = score[match_index_diag] + reward_penalty[1]
+            match = score[tuple(match_index_diag)] + reward_penalty[1]
        
         # question: if different number of dimensions don't match, are the gap penalties different?
         gap_points = get_gap_points(loop_indices)
-        gap_results = [score[x]+reward_penalty[0] for x in gap_points]
-
+        gap_results = [score[tuple(x)]+reward_penalty[0] for x in gap_points]
         score[loop_indices] = max(match,max(gap_results))
         return
     
     else:
-        for x in range(1,table[dim]):
-            loop_indices2 = loop_indices[:]
-            loop_indices2[dim] = loop_indices2 + 1
-            fill_score(score,table,dim-1,loop_indices2, reward_penalty,seq_list) 
+        for x in range(table[dim]-1):
+            fill_score(score,table,dim-1,loop_indices, reward_penalty,seq_list) 
+            loop_indices[-dim-1] += 1
+            if loop_indices[1]>3:
+                break
+        loop_indices[-dim-1] = 1
+        Logs.debug(score)
 
 # take in a point and return all the gap points
 # Ex. input：(i,j,k)

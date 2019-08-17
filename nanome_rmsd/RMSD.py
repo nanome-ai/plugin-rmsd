@@ -16,6 +16,8 @@ class RMSD(nanome.PluginInstance):
         self.args = RMSD.Args()
         self._menu = RMSDMenu(self)
         self._menu.build_menu()
+        self.selected_before = []
+
 
     def on_run(self):
         menu = self.menu
@@ -318,8 +320,9 @@ class RMSD(nanome.PluginInstance):
         if (self.args.select.lower() == "local"):
             selection.local_align(self._mobile,self._target)
         if (self.args.select.lower() == "none"):
-            if self.selected_before:
+            if len(self.selected_before) != 0:
                 self.change_selected(self._mobile,self._target,self.selected_before[0],self.selected_before[1])
+                self.selected_before=[]
         self.workspace = workspace
         self.make_plugin_usable()
         self.update_workspace(workspace)
