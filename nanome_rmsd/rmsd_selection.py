@@ -132,10 +132,12 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, matc
     Logs.debug("traceback done2")
     Logs.debug("align1 is ",align1)
     Logs.debug("align2 is ",align2)
-    Logs.debug("len of align1 is",len(align1))
-    Logs.debug("len of align2 is",len(align2))
+    Logs.debug("len of align1 is ",len(align1))
+    Logs.debug("len of align2 is ",len(align2))
     Logs.debug("final1 is ",final1)
     Logs.debug("final2 is ",final2)
+    Logs.debug("len of final1 is ", len(final1))
+    Logs.debug("len of final2 is ",len(final2))
 
     return complex1,complex2
 
@@ -161,6 +163,9 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
     for x in selected_res_list:
         res_lists.append(list(map(lambda a:select_occupancy(a),x)))
     
+    for x in res_lists:
+        Logs.debug("length of reslist1 is ",len(x))
+
     # m, n = len(seq1), len(seq2)
     # score = np.zeros((m+1, n+1))      
     # create the table of global alignment
@@ -181,11 +186,11 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
             score[temp_index] = gap_penalty * j
 
     # list of indices in all dimensions
-    score_index = np.ones(len(table_size),dtype = int)
+    score_index = np.zeros(len(table_size),dtype = int)
     reward_penalty = [gap_penalty, mismatch_penalty, match_reward]
     Logs.debug(score)
     fill_score(score, table_size, len(table_size)-1, score_index  ,reward_penalty,seq_list)
-    Logs.debug("score table 4nd row is: ",score[3])
+    Logs.debug(score)
     Logs.debug("scrore talbe size is: ",score.shape)
 
     # Traceback and compute the alignment  
@@ -196,14 +201,17 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
         finals.append('')
         
     # start from the bottom right cell
-    trace = [x-1 for x in table_size]
+    trace = [int(x-1) for x in table_size]
 
     while all(x > 0 for x in trace): 
         diag_trace = [x-1 for x in trace]
         score_current = score[tuple(trace)]
         score_diagonal = score[tuple(diag_trace)]
-        gap_points = get_gap_points(tuple(score_current)) 
-        gap_scores = [score[x]+reward_penalty[0] for x in gap_points]
+        gap_points = get_gap_points(trace) 
+        # Logs.debug("score size", score.shape)
+        # Logs.debug(trace)
+        # Logs.debug([x[::-1] for x in gap_points])
+        gap_scores = [score[tuple(x)]+reward_penalty[0] for x in gap_points]
 
         # two residuses match, only deselect when the selected atoms are not matched
         seqs_val = []
@@ -211,9 +219,8 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
             seqs_val.append(seq_list[i][x])
         if score_current == score_diagonal + match_reward and \
             all(elem == seqs_val[0] for elem in seqs_val) and all(elem != 'UNK' for elem in seqs_val):
-
             for i, x in enumerate(aligns):
-                x += seqs_val[i]
+                aligns[i] += seqs_val[i]
                 finals[i] += seqs_val[i]
             matches = []
             for i, x in enumerate(diag_trace):
@@ -222,19 +229,18 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
                 for i,y in enumerate(res_lists):
                     for x in y[diag_trace[i]].atoms:
                         x.selected = False
-            for x in trace:
-                x -= 1
+            for i in range(len(trace)):
+                trace[i] -= 1
 
         # two of the residues do not match, the deselect both
         elif score_current == score_diagonal + mismatch_penalty and \
              all(elem != seqs_val[0] for elem in seqs_val[1:]) or ('UNK' in seqs_val):
-
             for i,y in enumerate(res_lists):
                 for x in y[diag_trace[i]].atoms:
                     x.selected = False
                 
-            for x in trace:
-                x -= 1
+            for i in range(len(trace)):
+                trace[i] -= 1
             
         # seq1 has an extra residue, deselect it
         elif score_current in gap_scores:
@@ -249,25 +255,33 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
                 else:
                     aligns[i] += '---'
 
+            for i in range(len(trace)):
+                trace[i] -= 1
+
 
     Logs.debug("traceback done1")
     # Finish tracing up to the top left cell
     for x in range(len(trace)):
         while trace[x] > 0:
             aligns[x] += seq_list[x][trace[x]]
-            for x in res_lists[x][trace[x]].atoms:
-                x.selected = False
+            for y in res_lists[x][trace[x]].atoms:
+                y.selected = False
             for z in [y for y in range(len(trace)) if y != x] :
                 aligns[z] += '---'
             
             trace[x] -= 1
-  
+    for x in range(len(aligns)):
+        Logs.debug(aligns[x])
+        Logs.debug("len of align",x+1," is ",len(aligns[x]))
+    for x in range(len(finals)):
+        Logs.debug(finals[x])
+        Logs.debug("len of final",x+1," is ",len(finals[x]))
+
     return complexes
 
 
 # takes in a single residue
 def select_occupancy(residue):
-    # Logs.debug("residue is ",residue.type)
     occ_dict = {}
     for a in residue.atoms:
         if a._occupancy < 1:
@@ -312,10 +326,12 @@ def fill_score(score, table, dim, loop_indices, reward_penalty,seq_list):
         match_list = []
         # Logs.debug("loop indices is: ",loop_indices)
         for x in range(len(table)):
-            # Logs.debug("x is: ",x)
             # Logs.debug("loop indices is: ",loop_indices[x])
             # Logs.debug("seq list shape is: ",len(seq_list)," ",len(seq_list[0])," ",len(seq_list[1]))
-            match_list.append(seq_list[-x-1][loop_indices[-x-1]])
+            # Logs.debug("seq list is ",len(seq_list[-x-1]))
+            # Logs.debug("loop idx is ",loop_indices[-x-1])
+            # Logs.debug("-x-1 is ",-x-1)
+            match_list.append(seq_list[-x-1][loop_indices[-x-1]-1])
 
         match_index = list(loop_indices)
         match_index_diag = [x-1 for x in match_index]
@@ -328,17 +344,15 @@ def fill_score(score, table, dim, loop_indices, reward_penalty,seq_list):
         # question: if different number of dimensions don't match, are the gap penalties different?
         gap_points = get_gap_points(loop_indices)
         gap_results = [score[tuple(x)]+reward_penalty[0] for x in gap_points]
-        score[loop_indices] = max(match,max(gap_results))
+        score[tuple(loop_indices)] = max(match,max(gap_results))
         return
     
     else:
-        for x in range(table[dim]-1):
-            fill_score(score,table,dim-1,loop_indices, reward_penalty,seq_list) 
+        for x in range(table[-dim-1]-1):
             loop_indices[-dim-1] += 1
-            if loop_indices[1]>3:
-                break
-        loop_indices[-dim-1] = 1
-        Logs.debug(score)
+            fill_score(score,table,dim-1,loop_indices, reward_penalty,seq_list) 
+           
+        loop_indices[-dim-1] = 0
 
 # take in a point and return all the gap points
 # Ex. input：(i,j,k)
