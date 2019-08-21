@@ -126,7 +126,6 @@ class RMSD(nanome.PluginInstance):
 
     def align(self, p_complex, q_complex):
 
-
         #p is fixed q is mobile
         args = self.args
         p_atoms = list(p_complex.atoms)
@@ -155,7 +154,8 @@ class RMSD(nanome.PluginInstance):
         p_pos_orig = help.get_positions(p_atoms)
         q_pos_orig = help.get_positions(q_atoms)
         q_atoms = np.asarray(q_atoms)
-
+        Logs.debug("len p atoms: ",p_size)
+        Logs.debug("len q atoms: ",q_size)
         if p_size == 0 or q_size == 0:
             Logs.debug("error: sizes of selected complexes are 0")
             self._menu.change_error("zero_size")
@@ -315,11 +315,11 @@ class RMSD(nanome.PluginInstance):
             #     selection.global_align(x , self._target)  
             # for x in self._mobile[:-1]:
             #     selection.global_align(x , self._target)  
-            selection.multi_global_align(self._mobile+[self._target])
+            selection.multi_global_align(self._mobile+[self._target]) 
 
         if (self.args.select.lower() == "local"):
             selection.local_align(self._mobile,self._target)
-        if (self.args.select.lower() == "none"):
+        if (self.args.select.lower() == "none"): 
             if len(self.selected_before) != 0:
                 self.change_selected(self._mobile,self._target,self.selected_before[0],self.selected_before[1])
                 self.selected_before=[]

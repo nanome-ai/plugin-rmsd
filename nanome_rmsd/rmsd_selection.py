@@ -42,12 +42,13 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, matc
             insert = score[i][j - 1] + gap_penalty
             score[i][j] = max(match, delete, insert)
     Logs.debug("table filled")
-    Logs.debug(score)
+    # Logs.debug(score)
     # Traceback and compute the alignment 
     align1, align2 = '', ''
     final1, final2 = '', ''
     # start from the bottom right cell
     i,j = m,n
+    path=[]
     while i > 0 and j > 0: 
         score_current = score[i][j]
         score_diagonal = score[i-1][j-1]
@@ -56,7 +57,7 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, matc
         # two residuses match, only deselect when the selected atoms are not matched
         if score_current == score_diagonal + match_reward and \
            seq1[i-1] == seq2[j-1] and seq1[i-1] != 'UNK' and seq2[j-1] != 'UNK':
-
+            path.append("match "+seq1[i-1]+" "+str(score_current)+" ["+str(i)+", "+str(j)+"]")
             align1 += seq1[i-1]
             align2 += seq2[j-1]
             final1 += seq1[i-1]
@@ -90,7 +91,7 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, matc
         # two of the residues do not match, the deselect both
         elif score_current == score_diagonal + mismatch_penalty and \
              seq1[i-1] != seq2[j-1] or (seq1[i-1] == 'UNK' and seq2[j-1] == 'UNK'):
-
+            path.append("mismatch "+seq1[i-1]+" "+seq2[j-1]+" "+str(score_current)+" ["+str(i)+", "+str(j)+"]")
             for x in res_list1[i-1].atoms:
                 x.selected = False
             for y in res_list2[j-1].atoms:
@@ -102,14 +103,15 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, matc
         elif score_current == score_left + gap_penalty:
             align1 += seq1[i-1]
             align2 += '---'
+            path.append("gap align1 "+str(score_current)+" ["+str(i)+", "+str(j)+"]")
             for x in res_list1[i-1].atoms:
                 x.selected = False
             i -= 1
-
         # seq2 has an extra residue, deselect it
         elif score_current == score_up + gap_penalty:
             align1 += '---'
             align2 += seq2[j-1]
+            path.append("gap align2 "+str(score_current)+" ["+str(i)+", "+str(j)+"]")
             for x in res_list2[j-1].atoms:
                 x.selected = False
             j -= 1
@@ -138,6 +140,11 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, matc
     Logs.debug("final2 is ",final2)
     Logs.debug("len of final1 is ", len(final1))
     Logs.debug("len of final2 is ",len(final2))
+    f= open("psa.txt","w")
+    for x in path:
+        f.write(x)
+        f.write("\n")
+    f.close()
 
     return complex1,complex2
 
@@ -163,8 +170,8 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
     for x in selected_res_list:
         res_lists.append(list(map(lambda a:select_occupancy(a),x)))
     
-    for x in res_lists:
-        Logs.debug("length of reslist1 is ",len(x))
+    for i,x in enumerate(res_lists):
+        Logs.debug("length of reslist ",i," is ",len(x))
 
     # m, n = len(seq1), len(seq2)
     # score = np.zeros((m+1, n+1))      
@@ -188,11 +195,8 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
     # list of indices in all dimensions
     score_index = np.zeros(len(table_size),dtype = int)
     reward_penalty = [gap_penalty, mismatch_penalty, match_reward]
-    Logs.debug(score)
     fill_score(score, table_size, len(table_size)-1, score_index  ,reward_penalty,seq_list)
-    Logs.debug(score)
-    Logs.debug("scrore talbe size is: ",score.shape)
-
+    Logs.debug("scrore table size is: ",score.shape)
     # Traceback and compute the alignment  
     aligns = []
     finals = []
@@ -202,7 +206,7 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
         
     # start from the bottom right cell
     trace = [int(x-1) for x in table_size]
-
+    path=[]
     while all(x > 0 for x in trace): 
         diag_trace = [x-1 for x in trace]
         score_current = score[tuple(trace)]
@@ -219,22 +223,37 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
             seqs_val.append(seq_list[i][x])
         if score_current == score_diagonal + match_reward and \
             all(elem == seqs_val[0] for elem in seqs_val) and all(elem != 'UNK' for elem in seqs_val):
+            path.append("match "+seqs_val[0]+" "+str(score_current)+" "+str(trace))
             for i, x in enumerate(aligns):
                 aligns[i] += seqs_val[i]
                 finals[i] += seqs_val[i]
             matches = []
             for i, x in enumerate(diag_trace):
                 matches.append(list(map(lambda a:a.selected,res_lists[i][x].atoms)))
-            if not all(elem == matches for elem in matches):    
+            if not all(elem == matches[0] for elem in matches):    
+                # Logs.debug("The two residues are not same: ")
+                # Logs.debug("type 1 is ",res_lists[0][trace[0]-1].type)
+                # Logs.debug("type 2 is ",res_lists[1][trace[1]-1].type)
+                # Logs.debug("atoms 1:   ",list(map(lambda a:a.name,res_lists[0][trace[0]-1].atoms)))
+                # Logs.debug("occupancy: ",list(map(lambda a:a._occupancy,res_lists[0][trace[0]-1].atoms)))
+                # Logs.debug("selected:  ",list(map(lambda a:a.selected,res_lists[0][trace[0]-1].atoms)))
+                # Logs.debug("serial:    ",res_lists[0][trace[0]-1].serial)
+                # Logs.debug("atoms 2:   ",list(map(lambda a:a.name,res_lists[1][trace[1]-1].atoms)))
+                # Logs.debug("occupancy  ",list(map(lambda a:a._occupancy,res_lists[1][trace[1]-1].atoms)))
+                # Logs.debug("selected:  ",list(map(lambda a:a.selected,res_lists[1][trace[1]-1].atoms)))
+                # Logs.debug("serial:    ",res_lists[1][trace[1]-1].serial)
                 for i,y in enumerate(res_lists):
                     for x in y[diag_trace[i]].atoms:
                         x.selected = False
             for i in range(len(trace)):
                 trace[i] -= 1
 
+            
+
         # two of the residues do not match, the deselect both
         elif score_current == score_diagonal + mismatch_penalty and \
-             all(elem != seqs_val[0] for elem in seqs_val[1:]) or ('UNK' in seqs_val):
+             all(elem != seqs_val[0] for elem in seqs_val[1:]) or all(elem=='UNK' for elem in seqs_val):
+            path.append("mismatch "+seqs_val[0]+" "+seqs_val[1]+" "+str(score_current)+" "+str(trace))
             for i,y in enumerate(res_lists):
                 for x in y[diag_trace[i]].atoms:
                     x.selected = False
@@ -246,23 +265,29 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
         elif score_current in gap_scores:
             # find the dimension that's been chosen
             # loop through all the dimensions and if it has gap, "---"
+            temp=trace[:]
+            temp2=0
             for i,x in enumerate(gap_scores):
                 if score_current == x:
                     aligns[i] += seq_list[i][diag_trace[i]]
                     for x in res_lists[i][diag_trace[i]].atoms:
                         x.selected = False
                     trace[i] -= 1
+                    temp2=i
                 else:
                     aligns[i] += '---'
+            path.append("gap align"+str(temp2+1)+" "+str(score_current)+" "+str(temp))
 
-            for i in range(len(trace)):
-                trace[i] -= 1
+            # for i in range(len(trace)):
+            #     trace[i] -= 1
 
 
     Logs.debug("traceback done1")
     # Finish tracing up to the top left cell
     for x in range(len(trace)):
         while trace[x] > 0:
+            Logs.debug("trace[x] is ",trace[x])
+            Logs.debug("len of seqlist[x] is ",len(seq_list[x]))
             aligns[x] += seq_list[x][trace[x]]
             for y in res_lists[x][trace[x]].atoms:
                 y.selected = False
@@ -276,7 +301,11 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
     for x in range(len(finals)):
         Logs.debug(finals[x])
         Logs.debug("len of final",x+1," is ",len(finals[x]))
-
+    f= open("msa.txt","w")
+    for x in path:
+        f.write(x)
+        f.write("\n")
+    f.close()
     return complexes
 
 
