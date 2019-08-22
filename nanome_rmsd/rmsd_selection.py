@@ -151,6 +151,38 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, matc
 def local_align(mobile,target):
     pass
 
+# use the online server of t-coffee to get the multiple sequence alignment result.
+# http://tcoffee.crg.cat/apps/tcoffee/do:regular
+# input: a list of complexes
+# output: the result of the alignment, including the matching, mismatching, and the gaps
+def tcoffee(complexes):
+    letter_code = {"ALA":"A", "ARG":"R", "ASN":"N", "ASP":"D", "ASX":"B", "CYS":"C",
+                   "GLU":"E", "GLN":"Q", "GLX":"Z", "GLY":"G", "HIS":"H", "ILE":"I",
+                   "LEU":"L", "LYS":"K", "MET":"M", "PHE":"F", "PRO":"P", "SER":"S",
+                   "THR":"T", "TRP":"W", "TYR":"Y", "VAL":"V",}
+    # get the sequence of residues in all the complexes in the input
+    three_letter_list={}
+    for x in complexes:
+        three_letter_list[x.name] = list(map(lambda res:res.type,x))
+
+    # deal with all the occupancy and un-full-selected residues things
+
+    # 1. get the one letter symbol of all the complexes, and format them
+    for x in three_letter_list:
+        for j,y in enumerate(x):
+            if y in letter_code:
+                three_letter_list[x][j] = letter_code[y]
+
+    # paste the fasta sequences into the textbox
+
+    # click "submit" button on the webpage. (and follow it to the new webpage?)
+
+    # download the output file from the new webpage
+
+    # parse the result 
+
+    # deselect the non-common parts
+
 # This function align multiple sequences. It uses dynamic programming method 
 # and make an n-dimensional scoring matrix
 def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_reward = 3):
@@ -231,17 +263,7 @@ def multi_global_align(complexes,gap_penalty = -1, mismatch_penalty = -1, match_
             for i, x in enumerate(diag_trace):
                 matches.append(list(map(lambda a:a.selected,res_lists[i][x].atoms)))
             if not all(elem == matches[0] for elem in matches):    
-                # Logs.debug("The two residues are not same: ")
-                # Logs.debug("type 1 is ",res_lists[0][trace[0]-1].type)
-                # Logs.debug("type 2 is ",res_lists[1][trace[1]-1].type)
-                # Logs.debug("atoms 1:   ",list(map(lambda a:a.name,res_lists[0][trace[0]-1].atoms)))
-                # Logs.debug("occupancy: ",list(map(lambda a:a._occupancy,res_lists[0][trace[0]-1].atoms)))
-                # Logs.debug("selected:  ",list(map(lambda a:a.selected,res_lists[0][trace[0]-1].atoms)))
-                # Logs.debug("serial:    ",res_lists[0][trace[0]-1].serial)
-                # Logs.debug("atoms 2:   ",list(map(lambda a:a.name,res_lists[1][trace[1]-1].atoms)))
-                # Logs.debug("occupancy  ",list(map(lambda a:a._occupancy,res_lists[1][trace[1]-1].atoms)))
-                # Logs.debug("selected:  ",list(map(lambda a:a.selected,res_lists[1][trace[1]-1].atoms)))
-                # Logs.debug("serial:    ",res_lists[1][trace[1]-1].serial)
+               
                 for i,y in enumerate(res_lists):
                     for x in y[diag_trace[i]].atoms:
                         x.selected = False
