@@ -75,35 +75,14 @@ class RMSD(nanome.PluginInstance):
             result += self.align(target_complex, x)
         if result :
             self._menu.update_score(result)
-            
-        
+        self.update_mobile(mobile_complex)
+        self.update_target(target_complex)
         Logs.debug("RMSD done")
+        self._menu.lock_image()
         self.make_plugin_usable()
+       
         self.update_workspace(workspace)
-        
-        #self.lock_result()
-        
-        # self.request_refresh()
-    
-    def lock_result(self):
-        for x in self._mobile:
-                x.locked = True
-        self._target.locked = True
-
-        self.update_structures_shallow([self._target])
-        self.update_structures_shallow(self._mobile)
-
-    def unlock_result(self):
-        for x in self._mobile:
-                x.locked = False
-                x.boxed = False
-        self._target.locked = False
-        self._target.boxed = False
-        
-
-        self.update_structures_shallow([self._target])
-        self.update_structures_shallow(self._mobile)
-
+       
     def update_args(self, arg, option):
         setattr(self.args, arg, option)
 

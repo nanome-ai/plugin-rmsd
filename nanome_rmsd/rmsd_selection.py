@@ -152,36 +152,30 @@ def local_align(mobile,target):
     pass
 
 # use the online server of t-coffee to get the multiple sequence alignment result.
+# COMMENTED OUT BECAUSE VINCENT SAID WE CAN'T USE ANOTHER WEBSITE'S FUNCTION YET
 # http://tcoffee.crg.cat/apps/tcoffee/do:regular
 # input: a list of complexes
-# output: the result of the alignment, including the matching, mismatching, and the gaps
-def tcoffee(complexes):
-    letter_code = {"ALA":"A", "ARG":"R", "ASN":"N", "ASP":"D", "ASX":"B", "CYS":"C",
-                   "GLU":"E", "GLN":"Q", "GLX":"Z", "GLY":"G", "HIS":"H", "ILE":"I",
-                   "LEU":"L", "LYS":"K", "MET":"M", "PHE":"F", "PRO":"P", "SER":"S",
-                   "THR":"T", "TRP":"W", "TYR":"Y", "VAL":"V",}
-    # get the sequence of residues in all the complexes in the input
-    three_letter_list={}
-    for x in complexes:
-        three_letter_list[x.name] = list(map(lambda res:res.type,x))
-
-    # deal with all the occupancy and un-full-selected residues things
-
-    # 1. get the one letter symbol of all the complexes, and format them
-    for x in three_letter_list:
-        for j,y in enumerate(x):
-            if y in letter_code:
-                three_letter_list[x][j] = letter_code[y]
-
-    # paste the fasta sequences into the textbox
-
-    # click "submit" button on the webpage. (and follow it to the new webpage?)
-
-    # download the output file from the new webpage
-
-    # parse the result 
-
-    # deselect the non-common parts
+# output: the result of the t-coffee alignment, including the matching, mismatching, and the gaps
+# def tcoffee(complexes):
+#     letter_code = {"ALA":"A", "ARG":"R", "ASN":"N", "ASP":"D", "ASX":"B", "CYS":"C",
+#                    "GLU":"E", "GLN":"Q", "GLX":"Z", "GLY":"G", "HIS":"H", "ILE":"I",
+#                    "LEU":"L", "LYS":"K", "MET":"M", "PHE":"F", "PRO":"P", "SER":"S",
+#                    "THR":"T", "TRP":"W", "TYR":"Y", "VAL":"V",}
+    # # get the sequence of residues in all the complexes in the input
+    # three_letter_list={}
+    # for x in complexes:
+    #     three_letter_list[x.name] = list(map(lambda res:res.type,x))
+    # # deal with all the occupancy and un-full-selected residues things
+    # # 1. get the one letter symbol of all the complexes, and format them
+    # for x in three_letter_list:
+    #     for j,y in enumerate(x):
+    #         if y in letter_code:
+    #             three_letter_list[x][j] = letter_code[y]
+    # # paste the fasta sequences into the textbox
+    # # click "submit" button on the webpage. (and follow it to the new webpage?)
+    # # download the output file from the new webpage
+    # # parse the result 
+    # # deselect the non-common parts
 
 # This function align multiple sequences. It uses dynamic programming method 
 # and make an n-dimensional scoring matrix

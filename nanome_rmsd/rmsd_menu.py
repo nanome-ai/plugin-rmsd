@@ -49,35 +49,35 @@ class RMSDMenu():
         if(error_type == "unselected"):
             self.error_message.text_auto_size=False
             self.error_message.text_size = 0.198
-            self.error_message.text_value = "Error: Select both target and receptor"
+            self.error_message.text_value = "Select both target and receptor"
             self.update_score(None)
             self._plugin.update_content(self.error_message)
             return True
         if(error_type == "select_same"):
             self.error_message.text_auto_size=False
             self.error_message.text_size = 0.22
-            self.error_message.text_value = "Error: Select different complexes"
+            self.error_message.text_value = "Select different complexes"
             self.update_score()
             self._plugin.update_content(self.error_message)
             return True
         if(error_type == "different_size"):
             self.error_message.text_auto_size=False
             self.error_message.text_size = 0.159
-            self.error_message.text_value = "Error: Receptor and target have different sizes"
+            self.error_message.text_value = "Receptor and target have different sizes"
             self.update_score()
             self._plugin.update_content(self.error_message)
             return True
         if(error_type == "different_order"):
             self.error_message.text_auto_size=False
             self.error_message.text_size = 0.159
-            self.error_message.text_value = "Error: Receptor and target have different order"
+            self.error_message.text_value = "Receptor and target have different order"
             self.update_score()
             self._plugin.update_content(self.error_message)
             return True
         if(error_type == "zero_size"):
             self.error_message.text_auto_size=False
             self.error_message.text_size = 0.15
-            self.error_message.text_value = "Error: At least one complex has no atom selected"
+            self.error_message.text_value = "At least one complex has no atom selected"
             self.update_score()
             self._plugin.update_content(self.error_message)
             return True
@@ -235,13 +235,17 @@ class RMSDMenu():
             
         self._plugin.update_menu(self._menu)
 
+    # change the lock image to Lock
+    def lock_image(self):
+        self.lock_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Lock.png'))
+        self._plugin.update_menu(self._menu)
+
     # build the menu
     def build_menu(self):
         # refresh the lists
         def refresh_button_pressed_callback(button):
             self._request_refresh()
             
-
         # press the run button and run the algorithm
         def run_button_pressed_callback(button):
             self.make_plugin_usable(False)
@@ -249,18 +253,25 @@ class RMSDMenu():
 
         # press the lock button and lock/unlock the complexes
         def lock_button_pressed_callback(button):
+            def toggle_lock(complex_list):
+                new_locked = not all(elem.locked for elem in complex_list)
+
+                for x in complex_list:
+                    x.locked = new_locked
+                    # x.boxed = new_locked
+                
+                self.lock_img.add_new_image(os.path.join(os.path.dirname(__file__), ('Lock.png' if new_locked else 'Unlock.png')))
+                self._plugin.update_menu(self._menu)
+                self._plugin.update_structures_shallow(complex_list)
+                
             if self._selected_target != None and len(self._selected_mobile) != 0:
                 complex_list = self._plugin._mobile + [self._plugin._target]
-                if all(elem.locked for elem in complex_list):
-                    self._plugin.unlock_result()
-                    Logs.debug("unlock")
-                else:
-                    # for x in self._selected_mobile + [self._selected_target]:
-                    #     x.complex.locked = True
-                    self._plugin.lock_result()
-                    Logs.debug("lock")
+                complex_indexes = [complex.index for complex in complex_list]
+                self._plugin.request_complexes(complex_indexes, toggle_lock)
 
-
+            else:
+                self.change_error("unselected")
+            
         # show the target list when the receptor tab is pressed
         def receptor_tab_pressed_callback(button):
             self._current_tab="receptor"
@@ -390,8 +401,17 @@ class RMSDMenu():
         lock_button.register_pressed_callback(lock_button_pressed_callback)
 
         # add the lock icon,
-        lock_img = menu.root.find_node("Lock Image",True)
-        lock_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Refresh.png'))
+        self.lock_img = menu.root.find_node("Lock Image",True)
+        mobile_locked = False
+        for x in self._selected_mobile:
+            if x.locked:
+                mobile_locked = True
+
+        if len(self._selected_mobile) != 0 and self._selected_target != None and self._selected_target.locked and mobile_locked:
+            self.lock_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Lock.png'))
+        else:
+            self.lock_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Unlock.png'))
+
 
         # create the List 
         self._show_list = menu.root.find_node("List", True).get_content()
