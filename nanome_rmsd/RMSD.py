@@ -54,6 +54,11 @@ class RMSD(nanome.PluginInstance):
         self._target = target
         self.request_workspace(self.on_workspace_received) 
 
+    def update_mobile(self, mobile):
+        self._mobile = mobile
+
+    def update_target(self, target):
+        self._target = target
 
     def on_workspace_received(self, workspace):
         complexes = workspace.complexes
@@ -75,6 +80,7 @@ class RMSD(nanome.PluginInstance):
         Logs.debug("RMSD done")
         self.make_plugin_usable()
         self.update_workspace(workspace)
+        
         #self.lock_result()
         
         # self.request_refresh()
@@ -83,7 +89,17 @@ class RMSD(nanome.PluginInstance):
         for x in self._mobile:
                 x.locked = True
         self._target.locked = True
-        # self.update_workspace(workspace)
+
+        self.update_structures_shallow([self._target])
+        self.update_structures_shallow(self._mobile)
+
+    def unlock_result(self):
+        for x in self._mobile:
+                x.locked = False
+                x.boxed = False
+        self._target.locked = False
+        self._target.boxed = False
+        
 
         self.update_structures_shallow([self._target])
         self.update_structures_shallow(self._mobile)
@@ -280,7 +296,7 @@ class RMSD(nanome.PluginInstance):
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
             q_complex.position = p_complex.position + p_cent - q_cent
-           
+
             if(self._menu.error_message.text_value=="Loading..."):
                 self._menu.change_error("clear")
             
@@ -289,6 +305,12 @@ class RMSD(nanome.PluginInstance):
         
         return result_rmsd
 
+    # a different alignment method that align the centroid of two complexes first
+    # then change the position and angle of all the atoms so that the 
+    def align2(self, p_complex, q_complex):
+        # 1. get 
+        pass
+
     # auto select with global/local alignment
     def select(self,mobile,target):
         self._menu.change_error("loading")
@@ -296,7 +318,6 @@ class RMSD(nanome.PluginInstance):
         # Logs.debug("mobile list before ",self._mobile)
         self._target = target
         self.request_workspace(self.on_select_received) 
-
 
     def on_select_received(self, workspace):
         complexes = workspace.complexes

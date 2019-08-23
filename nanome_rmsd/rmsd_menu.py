@@ -101,7 +101,6 @@ class RMSDMenu():
             self._plugin.update_content(self.error_message)
 
 
-
     # change the args in the plugin
     def update_args(self,arg,option):
         self._plugin.update_args(arg,option)
@@ -152,6 +151,7 @@ class RMSDMenu():
             # tell the plugin and update the menu
             self._current_select = "None"
             self.update_args("select", "None")
+            self._plugin.update_mobile([x.complex for x in self._selected_mobile])
             self._plugin.update_content(self._show_list)
             self._plugin.update_content(self.receptor_text)
             self._plugin.update_content(self.target_text)
@@ -178,6 +178,10 @@ class RMSDMenu():
             # tell the plugin and update the menu
             self._current_select = "None"
             self.update_args("select", "None")
+            if self._selected_target == None:
+                self._plugin.update_target(None)
+            else:
+                self._plugin.update_target(self._selected_target.complex)
             self._plugin.update_content(self._show_list)
             self._plugin.update_content(self.receptor_text)
             self._plugin.update_content(self.target_text)
@@ -242,6 +246,19 @@ class RMSDMenu():
         def run_button_pressed_callback(button):
             self.make_plugin_usable(False)
             self._run_rmsd()
+
+        # press the lock button and lock/unlock the complexes
+        def lock_button_pressed_callback(button):
+            if self._selected_target != None and len(self._selected_mobile) != 0:
+                complex_list = self._plugin._mobile + [self._plugin._target]
+                if all(elem.locked for elem in complex_list):
+                    self._plugin.unlock_result()
+                    Logs.debug("unlock")
+                else:
+                    # for x in self._selected_mobile + [self._selected_target]:
+                    #     x.complex.locked = True
+                    self._plugin.lock_result()
+                    Logs.debug("lock")
 
 
         # show the target list when the receptor tab is pressed
@@ -367,6 +384,14 @@ class RMSDMenu():
         # create the Refresh button
         refresh_button = menu.root.find_node("Refresh Button", True).get_content()
         refresh_button.register_pressed_callback(refresh_button_pressed_callback)
+
+        # create the lock button
+        lock_button = menu.root.find_node("Lock Button",True).get_content()
+        lock_button.register_pressed_callback(lock_button_pressed_callback)
+
+        # add the lock icon,
+        lock_img = menu.root.find_node("Lock Image",True)
+        lock_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Refresh.png'))
 
         # create the List 
         self._show_list = menu.root.find_node("List", True).get_content()
