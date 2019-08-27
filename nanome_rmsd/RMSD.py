@@ -72,7 +72,7 @@ class RMSD(nanome.PluginInstance):
         self.workspace = workspace
         result = 0
         for x in mobile_complex:
-            result += self.align(target_complex, x)
+            result += self.align2(target_complex, x)
         if result :
             self._menu.update_score(result)
         self.update_mobile(mobile_complex)
@@ -138,9 +138,6 @@ class RMSD(nanome.PluginInstance):
             p_atoms = help.strip_non_backbone(p_atoms)
             q_atoms = help.strip_non_backbone(q_atoms)
 
-        # p_atoms = help.strip_alternatives(p_atoms)
-        # q_atoms = help.strip_alternatives(q_atoms)
-
         p_size = len(p_atoms)
         q_size = len(q_atoms)
 
@@ -149,8 +146,6 @@ class RMSD(nanome.PluginInstance):
         p_pos_orig = help.get_positions(p_atoms)
         q_pos_orig = help.get_positions(q_atoms)
         q_atoms = np.asarray(q_atoms)
-        Logs.debug("len p atoms: ",p_size)
-        Logs.debug("len q atoms: ",q_size)
         if p_size == 0 or q_size == 0:
             Logs.debug("error: sizes of selected complexes are 0")
             self._menu.change_error("zero_size")
@@ -177,6 +172,8 @@ class RMSD(nanome.PluginInstance):
         # http://en.wikipedia.org/wiki/Centroid
         p_cent = centroid(p_coords)
         q_cent = centroid(q_coords)
+        Logs.debug("old p cent ",p_cent)
+        Logs.debug("old q cent ",q_cent)
         p_coords -= p_cent
         q_coords -= q_cent
 
@@ -270,16 +267,19 @@ class RMSD(nanome.PluginInstance):
             result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
             q_complex.rotation = result_quat
             Logs.debug("Finished update")
-
+ 
             #align centroids
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
+            Logs.debug("new p cent ",p_cent)
+            Logs.debug("new q cent ",q_cent)
+
             q_complex.position = p_complex.position + p_cent - q_cent
 
             if(self._menu.error_message.text_value=="Loading..."):
                 self._menu.change_error("clear")
             
-            p_complex.locked = True
+            p_complex.locked = True 
             q_complex.locked = True
         
         return result_rmsd
@@ -287,14 +287,178 @@ class RMSD(nanome.PluginInstance):
     # a different alignment method that align the centroid of two complexes first
     # then change the position and angle of all the atoms so that the 
     def align2(self, p_complex, q_complex):
-        # 1. get 
-        pass
+        #p is fixed q is mobile
+        args = self.args
+        p_atoms = list(p_complex.atoms)
+        q_atoms = list(q_complex.atoms)
+
+        if args.selected_only:
+            p_atoms = help.strip_non_selected(p_atoms)
+            q_atoms = help.strip_non_selected(q_atoms)
+
+        if args.no_hydrogen:
+            p_atoms = help.strip_hydrogens(p_atoms)
+            q_atoms = help.strip_hydrogens(q_atoms)
+
+        if args.backbone_only:
+            p_atoms = help.strip_non_backbone(p_atoms)
+            q_atoms = help.strip_non_backbone(q_atoms)
+
+        p_size = len(p_atoms)
+        q_size = len(q_atoms)
+
+        p_atom_names = get_atom_types(p_atoms)
+        q_atom_names = get_atom_types(q_atoms)
+        p_pos_orig = help.get_positions(p_atoms)
+        q_pos_orig = help.get_positions(q_atoms)
+        q_atoms = np.asarray(q_atoms)
+        if p_size == 0 or q_size == 0:
+            Logs.debug("error: sizes of selected complexes are 0")
+            self._menu.change_error("zero_size")
+            return False
+        if not p_size == q_size:
+            Logs.debug("error: Structures not same size receptor size:", q_size, "target size:", p_size)
+            self._menu.change_error("different_size")
+            return False
+        if np.count_nonzero(p_atom_names != q_atom_names) and not args.reorder:
+            #message should be sent to nanome as notification?
+            msg = "\nerror: Atoms are not in the same order. \n reorder to align the atoms (can be expensive for large structures)."
+            Logs.debug(msg)
+            self._menu.change_error("different_order")
+            return False
+        else:
+            if(self._menu.error_message.text_value!="Loading..."):
+                self._menu.change_error("clear")
+
+        p_coords = help.positions_to_array(p_pos_orig)
+        q_coords = help.positions_to_array(q_pos_orig)
+
+        # Create the centroid of P and Q which is the geometric center of a
+        # N-dimensional region and translate P and Q onto that center. 
+        # http://en.wikipedia.org/wiki/Centroid
+        p_cent = centroid(p_coords)
+        q_cent = centroid(q_coords)
+        Logs.debug("old p cent ",p_cent)
+        Logs.debug("old q cent ",q_cent)
+        p_coords -= p_cent
+        q_coords -= q_cent
+
+        # set rotation method
+        if args.rotation.lower() == "kabsch":
+            rotation_method = kabsch_rmsd
+        elif args.rotation.lower() == "quaternion":
+            rotation_method = quaternion_rmsd
+        elif args.rotation.lower() == "none":
+            rotation_method = None
+        else:
+            Logs.debug("error: Unknown rotation method:", args.rotation)
+            return False
+
+        # set reorder method
+        # when reorder==False, set reorder_method to "None"
+        if not args.reorder:
+            reorder_method = None
+        elif args.reorder_method.lower() == "hungarian":
+            reorder_method = reorder_hungarian
+        elif args.reorder_method.lower() == "brute":
+            reorder_method = reorder_brute
+        elif args.reorder_method.lower() == "distance":
+            reorder_method = reorder_distance
+        else:
+            Logs.debug("error: Unknown reorder method:", args.reorder_method)
+            Logs.debug("The value of reorder is: ",args.reorder)
+            return False
+
+        # Save the resulting RMSD
+        result_rmsd = None
+
+        if args.use_reflections or args.use_reflections_keep_stereo:
+            result_rmsd, q_swap, q_reflection, q_review = check_reflections(
+                p_atom_names,
+                q_atom_names,
+                p_coords,
+                q_coords,
+                reorder_method=reorder_method,
+                rotation_method=rotation_method,
+                keep_stereo=args.use_reflections_keep_stereo)
+
+        elif args.reorder:
+            q_review = reorder_method(p_atom_names, q_atom_names, p_coords, q_coords)
+            q_coords = q_coords[q_review]
+            q_atom_names = q_atom_names[q_review]
+            q_atoms = q_atoms[q_review]
+            if not all(p_atom_names == q_atom_names):
+                Logs.debug("error: Structure not aligned")
+                return False
+
+        #calculate RMSD
+        if result_rmsd:
+            pass
+        elif rotation_method is None:
+            result_rmsd = rmsd(p_coords, q_coords)
+        else:
+            result_rmsd = rotation_method(p_coords, q_coords)
+        Logs.debug("result: {0}".format(result_rmsd))
+
+        # Logs.debug result
+        if args.update:
+            #resetting coords
+            p_coords = help.positions_to_array(p_pos_orig)
+            q_coords = help.positions_to_array(q_pos_orig)
+
+            p_coords -= p_cent
+            q_coords -= q_cent
+
+            #reordering coords  ???
+            if args.reorder:
+                if q_review.shape[0] != len(q_coords):
+                    Logs.debug("error: Reorder length error. Full atom list needed for --Logs.debug")
+                    return False
+                q_coords = q_coords[q_review]
+                q_atoms = q_atoms[q_review]
+
+            # Get rotation matrix
+            U = kabsch(p_coords, q_coords)
+
+            #update rotation
+            U_matrix = nanome.util.Matrix(4,4)
+            for i in range(3):
+                for k in range(3):
+                    U_matrix[i][k] = U[i][k]
+            U_matrix[3][3] = 1
+            rot_quat = p_complex.rotation
+            rot_matrix = nanome.util.Matrix.from_quaternion(rot_quat)
+
+            result_matrix = rot_matrix * U_matrix
+            result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
+            # q_complex.rotation = result_quat
+            q_complex.rotation = p_complex.rotation
+            Logs.debug("Finished update")
+ 
+            #align centroids
+            # p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
+            # q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
+            Logs.debug("new p cent ",p_cent)
+            Logs.debug("new q cent ",q_cent)
+            origin = [0,0,0]
+            origin = help.array_to_position(origin)
+            # q_complex.position = p_complex.position + help.array_to_position(p_cent) - help.array_to_position(q_cent)
+            q_complex.position = origin
+            p_complex.position = origin
+            Logs.debug("p position is ",p_complex.position)
+            Logs.debug("q position is ",q_complex.position)
+            if(self._menu.error_message.text_value=="Loading..."):
+                self._menu.change_error("clear")
+            
+            p_complex.locked = True 
+            q_complex.locked = True
+        
+        return result_rmsd
 
     # auto select with global/local alignment
     def select(self,mobile,target):
         self._menu.change_error("loading")
         self._mobile = mobile
-        # Logs.debug("mobile list before ",self._mobile)
         self._target = target
         self.request_workspace(self.on_select_received) 
 
@@ -315,7 +479,7 @@ class RMSD(nanome.PluginInstance):
                 selection.global_align(x , self._target)  
             for x in self._mobile[:-1]:
                 selection.global_align(x , self._target)  
-            #selection.multi_global_align(self._mobile+[self._target]) 
+            # selection.multi_global_align(self._mobile+[self._target]) 
 
         if (self.args.select.lower() == "local"):
             selection.local_align(self._mobile,self._target)
