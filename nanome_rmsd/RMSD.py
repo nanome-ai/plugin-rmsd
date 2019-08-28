@@ -289,9 +289,10 @@ class RMSD(nanome.PluginInstance):
     def align2(self, p_complex, q_complex):
         #p is fixed q is mobile
         args = self.args
-        p_atoms = list(p_complex.atoms)
-        q_atoms = list(q_complex.atoms)
-
+        p_atoms = list(map(lambda a: a,p_complex.atoms))
+        q_atoms = list(map(lambda a: a,q_complex.atoms))
+        q_coords_all = help.positions_to_array(list(map( lambda a:a.position,q_atoms)))
+        p_coords_all = help.positions_to_array(list(map( lambda a:a.position,p_atoms)))
         if args.selected_only:
             p_atoms = help.strip_non_selected(p_atoms)
             q_atoms = help.strip_non_selected(q_atoms)
@@ -306,11 +307,12 @@ class RMSD(nanome.PluginInstance):
 
         p_size = len(p_atoms)
         q_size = len(q_atoms)
-
+       
         p_atom_names = get_atom_types(p_atoms)
         q_atom_names = get_atom_types(q_atoms)
         p_pos_orig = help.get_positions(p_atoms)
         q_pos_orig = help.get_positions(q_atoms)
+     
         q_atoms = np.asarray(q_atoms)
         if p_size == 0 or q_size == 0:
             Logs.debug("error: sizes of selected complexes are 0")
@@ -436,15 +438,35 @@ class RMSD(nanome.PluginInstance):
             Logs.debug("Finished update")
  
             #align centroids
-            # p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
-            # q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
+            p_coords -= p_cent
+            q_coords -= q_cent
+            for x in q_coords:
+                Logs.debug(x)
+                Logs.debug(nanome.util.Matrix.from_quaternion(result_quat))
+                x = [x] *  nanome.util.Matrix.from_quaternion(result_quat)
+            p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
+            q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
             Logs.debug("new p cent ",p_cent)
             Logs.debug("new q cent ",q_cent)
-            origin = [0,0,0]
-            origin = help.array_to_position(origin)
             # q_complex.position = p_complex.position + help.array_to_position(p_cent) - help.array_to_position(q_cent)
-            q_complex.position = origin
-            p_complex.position = origin
+            q_complex.position = p_complex.position
+            # list(map(lambda a: a.position,q_complex.atoms))[0] = list(map(lambda a: a.position,q_complex.atoms))[0] + help.array_to_position(p_cent) - help.array_to_position(q_cent)
+            Logs.debug("p_cent is ",list(p_cent))
+            q_coords_all += list(p_cent)
+            q_coords_all -= list(q_cent)
+            q_coords += list(p_cent)
+            q_coords -= list(q_cent)
+            p_coords = [help.array_to_position(x) for x in p_coords]
+ 
+
+
+            for i,x in enumerate(list(p_complex.atoms)):
+                x.position = help.array_to_position(p_coords_all[i])
+              
+            for i,x in enumerate(list(q_complex.atoms)):
+                x.position = help.array_to_position(q_coords_all[i])
+            
+            
             Logs.debug("p position is ",p_complex.position)
             Logs.debug("q position is ",q_complex.position)
             if(self._menu.error_message.text_value=="Loading..."):
