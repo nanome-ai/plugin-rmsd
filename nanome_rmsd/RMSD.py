@@ -52,7 +52,8 @@ class RMSD(nanome.PluginInstance):
         self._menu.change_error("loading")
         self._mobile = mobile
         self._target = target
-        self.request_workspace(self.on_workspace_received) 
+        # self.request_workspace(self.on_workspace_received) 
+        self.request_complexes([self._target.index] + [x.index for x in self._mobile],self.on_complexes_received)
 
     def update_mobile(self, mobile):
         self._mobile = mobile
@@ -60,19 +61,22 @@ class RMSD(nanome.PluginInstance):
     def update_target(self, target):
         self._target = target
 
-    def on_workspace_received(self, workspace):
-        complexes = workspace.complexes
+    # def on_workspace_received(self, workspace):
+    def on_complexes_received(self,complexes):
+        # complexes = workspace.complexes
         mobile_index_list = list(map(lambda a: a.index, self._mobile))
         mobile_complex = []
-        for complex in complexes:
-            if complex.index in mobile_index_list:
-                mobile_complex.append(complex)
-            if complex.index == self._target.index:
-                target_complex = complex
-        self.workspace = workspace
+        # for complex in complexes:
+        #     if complex.index in mobile_index_list:
+        #         mobile_complex.append(complex)
+        #     if complex.index == self._target.index:
+        #         target_complex = complex
+        # self.workspace = workspace
+        target_complex = complexes[0]
+        mobile_complex = complexes[1:]
         result = 0
         for x in mobile_complex:
-            result += self.align2(target_complex, x)
+            result += self.align(target_complex, x)
         if result :
             self._menu.update_score(result)
         self.update_mobile(mobile_complex)
@@ -80,8 +84,9 @@ class RMSD(nanome.PluginInstance):
         Logs.debug("RMSD done")
         self._menu.lock_image()
         self.make_plugin_usable()
-       
-        self.update_workspace(workspace)
+        self.update_structures_deep([target_complex])
+        self.update_structures_deep(mobile_complex)
+        # self.update_workspace(workspace)
        
     def update_args(self, arg, option):
         setattr(self.args, arg, option)
