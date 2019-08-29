@@ -407,7 +407,8 @@ class RMSD(nanome.PluginInstance):
             #resetting coords
             p_coords = help.positions_to_array(p_pos_orig)
             q_coords = help.positions_to_array(q_pos_orig)
-
+            p_cent = centroid(p_coords)
+            q_cent = centroid(q_coords)
             p_coords -= p_cent
             q_coords -= q_cent
 
@@ -438,20 +439,15 @@ class RMSD(nanome.PluginInstance):
             Logs.debug("Finished update")
  
             #align centroids
-            p_coords -= p_cent
-            q_coords -= q_cent
-            for x in q_coords:
-                Logs.debug(x)
-                Logs.debug(nanome.util.Matrix.from_quaternion(result_quat))
-                x = [x] *  nanome.util.Matrix.from_quaternion(result_quat)
+            # p_coords -= p_cent
+            # q_coords -= q_cent
+            for i,x in enumerate(q_coords_all):
+                temp = list(nanome.util.Matrix.from_quaternion(result_quat) * nanome.util.Vector3(x[0],x[1],x[2]))
+                q_coords_all[i] = temp
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
-            Logs.debug("new p cent ",p_cent)
-            Logs.debug("new q cent ",q_cent)
             # q_complex.position = p_complex.position + help.array_to_position(p_cent) - help.array_to_position(q_cent)
             q_complex.position = p_complex.position
-            # list(map(lambda a: a.position,q_complex.atoms))[0] = list(map(lambda a: a.position,q_complex.atoms))[0] + help.array_to_position(p_cent) - help.array_to_position(q_cent)
-            Logs.debug("p_cent is ",list(p_cent))
             q_coords_all += list(p_cent)
             q_coords_all -= list(q_cent)
             q_coords += list(p_cent)
