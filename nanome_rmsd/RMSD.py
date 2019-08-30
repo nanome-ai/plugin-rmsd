@@ -52,7 +52,6 @@ class RMSD(nanome.PluginInstance):
         self._menu.change_error("loading")
         self._mobile = mobile
         self._target = target
-        # self.request_workspace(self.on_workspace_received) 
         self.request_complexes([self._target.index] + [x.index for x in self._mobile],self.on_complexes_received)
 
     def update_mobile(self, mobile):
@@ -63,20 +62,12 @@ class RMSD(nanome.PluginInstance):
 
     # def on_workspace_received(self, workspace):
     def on_complexes_received(self,complexes):
-        # complexes = workspace.complexes
         mobile_index_list = list(map(lambda a: a.index, self._mobile))
-        mobile_complex = []
-        # for complex in complexes:
-        #     if complex.index in mobile_index_list:
-        #         mobile_complex.append(complex)
-        #     if complex.index == self._target.index:
-        #         target_complex = complex
-        # self.workspace = workspace
         target_complex = complexes[0]
         mobile_complex = complexes[1:]
         result = 0
         for x in mobile_complex:
-            result += self.align(target_complex, x)
+            result += self.align2(target_complex, x)
         if result :
             self._menu.update_score(result)
         self.update_mobile(mobile_complex)
@@ -294,31 +285,41 @@ class RMSD(nanome.PluginInstance):
     def align2(self, p_complex, q_complex):
         #p is fixed q is mobile
         args = self.args
+        # list of atoms
         p_atoms = list(map(lambda a: a,p_complex.atoms))
         q_atoms = list(map(lambda a: a,q_complex.atoms))
+
+        # the positions of all the atoms in q_complex and p_complex
         q_coords_all = help.positions_to_array(list(map( lambda a:a.position,q_atoms)))
         p_coords_all = help.positions_to_array(list(map( lambda a:a.position,p_atoms)))
+
+        # strip off (deselect) the extra atoms based on user's options
         if args.selected_only:
             p_atoms = help.strip_non_selected(p_atoms)
             q_atoms = help.strip_non_selected(q_atoms)
-
         if args.no_hydrogen:
             p_atoms = help.strip_hydrogens(p_atoms)
             q_atoms = help.strip_hydrogens(q_atoms)
-
         if args.backbone_only:
             p_atoms = help.strip_non_backbone(p_atoms)
             q_atoms = help.strip_non_backbone(q_atoms)
 
+        # number of atoms left in p_complex and q_complex
         p_size = len(p_atoms)
         q_size = len(q_atoms)
        
+        # selected atom types
         p_atom_names = get_atom_types(p_atoms)
         q_atom_names = get_atom_types(q_atoms)
+
+        # selected atom positions
         p_pos_orig = help.get_positions(p_atoms)
         q_pos_orig = help.get_positions(q_atoms)
-     
+
+
         q_atoms = np.asarray(q_atoms)
+
+        # check the errors
         if p_size == 0 or q_size == 0:
             Logs.debug("error: sizes of selected complexes are 0")
             self._menu.change_error("zero_size")
@@ -337,6 +338,7 @@ class RMSD(nanome.PluginInstance):
             if(self._menu.error_message.text_value!="Loading..."):
                 self._menu.change_error("clear")
 
+        # selected atom postions in array type
         p_coords = help.positions_to_array(p_pos_orig)
         q_coords = help.positions_to_array(q_pos_orig)
 
@@ -347,6 +349,8 @@ class RMSD(nanome.PluginInstance):
         q_cent = centroid(q_coords)
         Logs.debug("old p cent ",p_cent)
         Logs.debug("old q cent ",q_cent)
+        
+        # relative position to the centroid
         p_coords -= p_cent
         q_coords -= q_cent
 
@@ -439,13 +443,12 @@ class RMSD(nanome.PluginInstance):
 
             result_matrix = rot_matrix * U_matrix
             result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
-            # q_complex.rotation = result_quat
             q_complex.rotation = p_complex.rotation
             Logs.debug("Finished update")
  
             #align centroids
-            # p_coords -= p_cent
-            # q_coords -= q_cent
+            p_coords -= p_cent
+            q_coords -= q_cent
             for i,x in enumerate(q_coords_all):
                 temp = list(nanome.util.Matrix.from_quaternion(result_quat) * nanome.util.Vector3(x[0],x[1],x[2]))
                 q_coords_all[i] = temp
@@ -457,10 +460,9 @@ class RMSD(nanome.PluginInstance):
             q_coords_all -= list(q_cent)
             q_coords += list(p_cent)
             q_coords -= list(q_cent)
+
             p_coords = [help.array_to_position(x) for x in p_coords]
  
-
-
             for i,x in enumerate(list(p_complex.atoms)):
                 x.position = help.array_to_position(p_coords_all[i])
               
