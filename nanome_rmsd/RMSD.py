@@ -62,7 +62,7 @@ class RMSD(nanome.PluginInstance):
 
     # def on_workspace_received(self, workspace):
     def on_complexes_received(self,complexes):
-        mobile_index_list = list(map(lambda a: a.index, self._mobile))
+        # mobile_index_list = list(map(lambda a: a.index, self._mobile))
         target_complex = complexes[0]
         mobile_complex = complexes[1:]
         result = 0
@@ -168,8 +168,7 @@ class RMSD(nanome.PluginInstance):
         # http://en.wikipedia.org/wiki/Centroid
         p_cent = centroid(p_coords)
         q_cent = centroid(q_coords)
-        Logs.debug("old p cent ",p_cent)
-        Logs.debug("old q cent ",q_cent)
+      
         p_coords -= p_cent
         q_coords -= q_cent
 
@@ -267,8 +266,6 @@ class RMSD(nanome.PluginInstance):
             #align centroids
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
-            Logs.debug("new p cent ",p_cent)
-            Logs.debug("new q cent ",q_cent)
 
             q_complex.position = p_complex.position + p_cent - q_cent
 
@@ -347,13 +344,11 @@ class RMSD(nanome.PluginInstance):
         # http://en.wikipedia.org/wiki/Centroid
         p_cent = centroid(p_coords)
         q_cent = centroid(q_coords)
-        Logs.debug("old p cent ",p_cent)
-        Logs.debug("old q cent ",q_cent)
         
         # relative position to the centroid
         p_coords -= p_cent
         q_coords -= q_cent
-
+        
         # set rotation method
         if args.rotation.lower() == "kabsch":
             rotation_method = kabsch_rmsd
@@ -383,6 +378,7 @@ class RMSD(nanome.PluginInstance):
         # Save the resulting RMSD
         result_rmsd = None
 
+        # reflection check
         if args.use_reflections or args.use_reflections_keep_stereo:
             result_rmsd, q_swap, q_reflection, q_review = check_reflections(
                 p_atom_names,
@@ -393,6 +389,7 @@ class RMSD(nanome.PluginInstance):
                 rotation_method=rotation_method,
                 keep_stereo=args.use_reflections_keep_stereo)
 
+        # reorder check
         elif args.reorder:
             q_review = reorder_method(p_atom_names, q_atom_names, p_coords, q_coords)
             q_coords = q_coords[q_review]
@@ -413,11 +410,13 @@ class RMSD(nanome.PluginInstance):
 
         # Logs.debug result
         if args.update:
-            #resetting coords
+            #resetting coords to their absolute coords in the system of each complex
             p_coords = help.positions_to_array(p_pos_orig)
             q_coords = help.positions_to_array(q_pos_orig)
             p_cent = centroid(p_coords)
             q_cent = centroid(q_coords)
+
+            # relative coords
             p_coords -= p_cent
             q_coords -= q_cent
 
@@ -443,38 +442,37 @@ class RMSD(nanome.PluginInstance):
 
             result_matrix = rot_matrix * U_matrix
             result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
+            # align the rotation of the two coordinate systmes
             q_complex.rotation = p_complex.rotation
             Logs.debug("Finished update")
  
             #align centroids
-            p_coords -= p_cent
-            q_coords -= q_cent
+            # p_coords_all -= p_cent
+            # q_coords_all -= q_cent
             for i,x in enumerate(q_coords_all):
                 temp = list(nanome.util.Matrix.from_quaternion(result_quat) * nanome.util.Vector3(x[0],x[1],x[2]))
                 q_coords_all[i] = temp
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
-            # q_complex.position = p_complex.position + help.array_to_position(p_cent) - help.array_to_position(q_cent)
             q_complex.position = p_complex.position
             q_coords_all += list(p_cent)
             q_coords_all -= list(q_cent)
             q_coords += list(p_cent)
             q_coords -= list(q_cent)
 
-            p_coords = [help.array_to_position(x) for x in p_coords]
+            # p_coords = [help.array_to_position(x) for x in p_coords]
  
-            for i,x in enumerate(list(p_complex.atoms)):
-                x.position = help.array_to_position(p_coords_all[i])
-              
+            # for i,x in enumerate(list(p_complex.atoms)):
+            #     x.position = help.array_to_position(p_coords_all[i])
+            Logs.debug("p cent is: ",centroid(p_coords))
+            Logs.debug("q cent is: ",centroid(q_coords))
+
             for i,x in enumerate(list(q_complex.atoms)):
                 x.position = help.array_to_position(q_coords_all[i])
             
-            
-            Logs.debug("p position is ",p_complex.position)
-            Logs.debug("q position is ",q_complex.position)
             if(self._menu.error_message.text_value=="Loading..."):
                 self._menu.change_error("clear")
-            
+           
             p_complex.locked = True 
             q_complex.locked = True
         
