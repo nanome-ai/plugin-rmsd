@@ -4,8 +4,9 @@ from math import ceil
 from itertools import product
 
 # needleman wunsch algorithm
-def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, match_reward = 3):
-
+def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match_reward = 3, only_score = False):
+    match_count = 0
+    clustalW_score = 0
     selected_res1 = selected_res(complex1)
     selected_res2 = selected_res(complex2)
 
@@ -19,6 +20,7 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, matc
 
     # create the table of global alignment
     m, n = len(seq1), len(seq2)
+    shorter_len = min(m,n)
     score = np.zeros((m+1, n+1))      
     
     # file the first column and first row of the table
@@ -56,32 +58,40 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, matc
         # two residuses match, only deselect when the selected atoms don't match (problem in the pdb file)
         if score_current == score_diagonal + match_reward and \
            seq1[i-1] == seq2[j-1] and seq1[i-1] != 'UNK' and seq2[j-1] != 'UNK':
-            align1 += seq1[i-1]
-            align2 += seq2[j-1]
-            final1 += seq1[i-1]
-            final2 += seq2[j-1]
-            
+            # align1 += seq1[i-1]
+            # align2 += seq2[j-1]
+            # final1 += seq1[i-1]
+            # final2 += seq2[j-1]
+            # clustalW_score += match_reward
             match1=list(map(lambda a:a.selected,res_list1[i-1].atoms))
             match2=list(map(lambda a:a.selected,res_list2[j-1].atoms))
             
-            if match1 != match2:
+            if match1 != match2 and not only_score:
                 
                 for x in res_list1[i-1].atoms:
                         x.selected = False
 
                 for x in res_list2[j-1].atoms:
                         x.selected = False
-
+            else:
+                align1 += seq1[i-1]
+                align2 += seq2[j-1]
+                final1 += seq1[i-1]
+                final2 += seq2[j-1]
+                clustalW_score += match_reward
+                match_count += 1
             i -= 1
             j -= 1
 
         # two of the residues do not match, deselect both
         elif score_current == score_diagonal + mismatch_penalty and \
              seq1[i-1] != seq2[j-1] or (seq1[i-1] == 'UNK' and seq2[j-1] == 'UNK'):
-            for x in res_list1[i-1].atoms:
-                x.selected = False
-            for y in res_list2[j-1].atoms:
-                y.selected = False
+            if not only_score:
+                for x in res_list1[i-1].atoms:
+                    x.selected = False
+                for y in res_list2[j-1].atoms:
+                    y.selected = False
+            clustalW_score += mismatch_penalty
             i -= 1
             j -= 1
             
@@ -89,33 +99,45 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, matc
         elif score_current == score_left + gap_penalty:
             align1 += seq1[i-1]
             align2 += '---'
-            for x in res_list1[i-1].atoms:
-                x.selected = False
+            if not only_score:
+                for x in res_list1[i-1].atoms:
+                    x.selected = False
+            clustalW_score += gap_penalty
             i -= 1
 
         # seq2 has an extra residue, deselect it
         elif score_current == score_up + gap_penalty:
             align1 += '---'
             align2 += seq2[j-1]
-            for x in res_list2[j-1].atoms:
-                x.selected = False
+            if not only_score:
+                for x in res_list2[j-1].atoms:
+                    x.selected = False
+            clustalW_score += gap_penalty
             j -= 1
 
     # Finish tracing up to the top left cell
     while i > 0:
         align1 += seq1[i-1]
         align2 += '---'
-        for x in res_list1[i-1].atoms:
-            x.selected = False
+        if not only_score:
+            for x in res_list1[i-1].atoms:
+                x.selected = False
+        clustalW_score += gap_penalty
         i -= 1
     while j > 0:
         align1 += '---'
         align2 += seq2[j-1]
-        for x in res_list2[j-1].atoms:
-            x.selected = False
+        if not only_score:
+            for x in res_list2[j-1].atoms:
+                x.selected = False
+        clustalW_score += gap_penalty
         j -= 1
     
-    return complex1,complex2
+    # return complex1,complex2
+    # return clustalW_score
+    rt = 1-(match_count/shorter_len)
+    return rt
+
 
 def local_align(mobile,target):
     pass
@@ -133,6 +155,7 @@ def local_align(mobile,target):
     # # get the sequence of residues in all the complexes in the input
     # three_letter_list={}
     # for x in complexes:
+
     #     three_letter_list[x.name] = list(map(lambda res:res.type,x))
     # # deal with all the occupancy and un-full-selected residues things
     # # 1. get the one letter symbol of all the complexes, and format them
