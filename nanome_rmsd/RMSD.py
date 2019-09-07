@@ -1,6 +1,7 @@
 import nanome
 import sys
 import time
+import math
 from .rmsd_calculation import *
 # from rmsd_menu import RMSDMenu
 from .rmsd_menu import RMSDMenu
@@ -697,6 +698,8 @@ class RMSD(nanome.PluginInstance):
                 distance_mtx[i,j] = cell
                 distance_mtx[j,i] = cell
             
+
+            self.min_dist(distance_mtx)
             Logs.debug(distance_mtx)
             
 
@@ -711,8 +714,23 @@ class RMSD(nanome.PluginInstance):
         self.make_plugin_usable()
         self.update_workspace(workspace)
         self._menu.change_error("clear")
-        
-
+    
+    # find the two sequences whose distance is the smallest
+    # called in on_select_received
+    def min_dist(self, matrix):
+        if len(matrix) < 2 or len(matrix[0]) < 2:
+            Logs.debug("distance matrix size is too small")
+            return -1,-1
+        else:
+            min_val = math.inf
+            for x in range(len(matrix)):
+                for y in range(len(matrix[0])):
+                    if x !=y and matrix[x][y] < min_val:
+                        min_val = matrix[x][y]
+                        seq1 = x
+                        se12 = y
+            return x,y
+    
     def change_selected(self,mobile,target,mobile_selected,target_selected):
         if [len(list(map(lambda a:a,x.atoms))) for x in mobile]==[len(x) for x in mobile_selected]\
             and len(list(map(lambda a:a,target.atoms))) == len(target_selected):
