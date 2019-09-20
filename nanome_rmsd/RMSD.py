@@ -69,7 +69,7 @@ class RMSD(nanome.PluginInstance):
         mobile_complex = complexes[1:]
         result = 0
         for x in mobile_complex:
-            result += self.align(target_complex, x)
+            result += self.align3(target_complex, x)
         if result :
             self._menu.update_score(result)
         self.update_mobile(mobile_complex)
@@ -482,6 +482,7 @@ class RMSD(nanome.PluginInstance):
         
         return result_rmsd
 
+    # align by changing atom positions inspired by Ethan   
     def align3(self, p_complex, q_complex):
 
         #p is fixed q is mobile 
@@ -629,19 +630,36 @@ class RMSD(nanome.PluginInstance):
             result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
             # TODO pin the atoms here
 
+            # 思路： 在旋转complex再pin atom的时候，想global_align一样把complex的rotation变成result_quat
+
+            # the two matrix that translate the coordination
+            matrix1 = q_complex.get_complex_to_workspace_matrix()
+            matrix2 = q_complex.get_workspace_to_complex_matrix()
+            # from local position to global position
+            global_pos = map(lambda atom: matrix1 * atom.position,q_complex.atoms)
+                        # = list(map(lambda res:res.type,x))
+            q_complex.rotation = p_complex.rotation
+            for (atom, gPos) in zip(q_complex.atoms, global_pos):
+                atom.position = result_matrix * matrix2 * gPos 
+            
+            p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
+            q_cent = result_quat.rotate_vector(help.array_to_position(q_cent))
+            q_complex.position = p_complex.position + p_cent - q_cent
+           
+                      
             # TODO get the new transpose matrix of result_quat here
-            result_quat_tr = result_quat.transpose()
+            # result_quat_tr = result_quat.transpose()
             # TODO un-pin the atoms 
 
             # rotate the complex back
-            q_complex.rotation = result_quat
-            Logs.debug("Finished update") 
+            # q_complex.rotation = result_quat
+            # Logs.debug("Finished update") 
  
-            #align centroids
-            p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
-            q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
+            # #align centroids
+            # p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
+            # q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
 
-            q_complex.position = p_complex.position + p_cent - q_cent
+            # q_complex.position = p_complex.position + p_cent - q_cent
 
             if(self._menu.error_message.text_value=="Loading..."):
                 self._menu.change_error("clear")
@@ -673,34 +691,65 @@ class RMSD(nanome.PluginInstance):
             self.selected_before = [[list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],
                                     list(map(lambda a:a.selected,self._target.atoms))]
             # 1. DUMMY METHOD
-            # for x in self._mobile:
-            #     selection.global_align(x , self._target)  
-            # for x in self._mobile[:-1]:
-            #     selection.global_align(x , self._target)  
+            for x in self._mobile:
+                selection.global_align(x , self._target)  
+            for x in self._mobile[:-1]:
+                selection.global_align(x , self._target)  
             # ------------------------------------------------
             # 2. SLOW OPTIMAL
             # selection.multi_global_align(self._mobile+[self._target]) 
             # ------------------------------------------------
             # 3. ClustalW
             # first, perform all possible pairwise alignment
-            all_complex = self._mobile + [self._target]
-            all_complex_index = [x.index for x in all_complex]
-            distance_mtx = np.zeros((len(all_complex),len(all_complex)))
-            comb_list = combinations(all_complex,2)
-            Logs.debug("index list : ",all_complex_index)
-            for x in comb_list:
-                cell = selection.global_align(x[0],x[1],only_score = True)
-                Logs.debug("cell is: ",cell)
-                
-                i = all_complex_index.index(x[0].index  )
-                j = all_complex_index.index(x[1].index)
-               
-                distance_mtx[i,j] = cell
-                distance_mtx[j,i] = cell
-            
+            # make a list of all the complexes including target and mobiles
+            # all_complex = self._mobile + [self._target]  
+            # all_complex_index = [x.index for x in all_complex]
+            # complex_count = len(all_complex)
+            # empty distance matrix
 
-            self.min_dist(distance_mtx)
-            Logs.debug(distance_mtx)
+            # combinitions of residues
+            # comb_list = combinations(all_complex,2)
+            # for x in comb_list:
+            #     # calculate the distance between two sequences
+            #     cell = selection.global_align(x[0],x[1],only_score = True)                
+            #     i = all_complex_index.index(x[0].index)
+            #     j = all_complex_index.index(x[1].index)
+            #     distance_mtx[i,j] = cell
+            #     distance_mtx[j,i] = cell
+            
+            # while there are still sequences that can be join together   
+            # while complex_count > 1:
+            #     # empty matrix
+            #     distance_mtx = np.zeros((len(all_complex),len(all_complex)))
+            #     # fill the matrix with distances
+            #     for i,x in enumerate(distance_mtx):
+            #         for j,y in enumerate(x):
+            #             if j > i:
+            #                 distance_mtx[i,j] = selection.global_align(\
+            #                     all_complex[i],all_complex[j],only_score=True)
+            #             elif i > j:
+            #                 distance_mtx[j,i] = distance_mtx[i,j]
+            #     # look for the smallest value in the matrix and return the two complexes
+            #     idx1, idx2 = self.min_dist(distance_mtx)
+            #     seq1 = all_complex[idx1]
+            #     seq2 = all_complex[idx2]
+
+                # structual alignment, deselect the non-common atoms in seq1 & 2
+                # selection.global_align(seq1,seq2)
+
+                # change the list, use seq1 to represent both seq1 and seq2 because
+                # the atoms in their non common parts are already deselected so they
+                # are both seq1join2
+                # all_complex = [x for i,x in enumerate(all_complex) if i != idx2]
+                
+                
+
+                # for each cycle, two sequences are joined to make a new sequence 
+                # and pairwise aligned with other sequences, a new matrix is created.
+                # You can directly deselect the uncommon part because that's how dummy align works
+                # and because in global_align(), it only run on residues whos atoms are selected 
+                
+            # Logs.debug(distance_mtx)
             
 
 
@@ -728,8 +777,9 @@ class RMSD(nanome.PluginInstance):
                     if x !=y and matrix[x][y] < min_val:
                         min_val = matrix[x][y]
                         seq1 = x
-                        se12 = y
-            return x,y
+                        seq2 = y
+
+            return seq1, seq2
     
     def change_selected(self,mobile,target,mobile_selected,target_selected):
         if [len(list(map(lambda a:a,x.atoms))) for x in mobile]==[len(x) for x in mobile_selected]\

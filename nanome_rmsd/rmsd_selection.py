@@ -4,6 +4,7 @@ from math import ceil
 from itertools import product
 
 # needleman wunsch algorithm
+# the param only_score was used for clustalW
 def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match_reward = 3, only_score = False):
     match_count = 0
     clustalW_score = 0
@@ -135,7 +136,11 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match
     
     # return complex1,complex2
     # return clustalW_score
-    rt = 1-(match_count/shorter_len)
+    if shorter_len != 0:
+        rt = 1-(match_count/shorter_len)
+    else:
+        rt = 0
+        Logs.debug("one of the complexes has no atom selected")
     return rt
 
 
