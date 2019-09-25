@@ -69,7 +69,7 @@ class RMSD(nanome.PluginInstance):
         mobile_complex = complexes[1:]
         result = 0
         for x in mobile_complex:
-            result += self.align3(target_complex, x)
+            result += self.align2(target_complex, x)
         if result :
             self._menu.update_score(result)
         self.update_mobile(mobile_complex)
@@ -280,7 +280,7 @@ class RMSD(nanome.PluginInstance):
         return result_rmsd
 
     # align by changing atom positions inspired by Ethan   
-    def align3(self, p_complex, q_complex):
+    def align2(self, p_complex, q_complex):
 
         #p is fixed q is mobile 
         args = self.args
@@ -397,12 +397,18 @@ class RMSD(nanome.PluginInstance):
         # Logs.debug result
         if args.update:
             #resetting coords
-            p_coords = help.positions_to_array(p_pos_orig)
-            q_coords = help.positions_to_array(q_pos_orig)
+            quat = p_complex.rotation
+            p_coords =  help.positions_to_array([quat.rotate_vector(x) for x in p_pos_orig])
 
+            quat = q_complex.rotation
+            q_coords =  help.positions_to_array([quat.rotate_vector(x) for x in q_pos_orig])
+
+            p_cent = centroid(p_coords)
+            q_cent = centroid(q_coords)
+            
             p_coords -= p_cent
             q_coords -= q_cent
-
+           
             #reordering coords  ???
             if args.reorder:
                 if q_review.shape[0] != len(q_coords):
@@ -420,27 +426,42 @@ class RMSD(nanome.PluginInstance):
                 for k in range(3):
                     U_matrix[i][k] = U[i][k]
             U_matrix[3][3] = 1
+
             rot_quat = p_complex.rotation
             rot_matrix = nanome.util.Matrix.from_quaternion(rot_quat)
 
             result_matrix = rot_matrix * U_matrix
             result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
 
-            # 思路： 在旋转complex再pin atom的时候，想global_align一样把complex的rotation变成result_quat
-
-            # the two matrix that translate the coordination
+            Logs.debug("p complex position: ",p_complex.position)
+            Logs.debug("q complex position: ",q_complex.position)
+            Logs.debug("p complex rotation: ",p_complex.rotation)
+            Logs.debug("q complex rotation: ",q_complex.rotation)
+            # from local coord to global coord
             matrix1 = q_complex.get_complex_to_workspace_matrix()
-            matrix2 = q_complex.get_workspace_to_complex_matrix()
-            # from local position to global position
+
+            # save the initial global coord
             global_pos = map(lambda atom: matrix1 * atom.position,q_complex.atoms)
-                        # = list(map(lambda res:res.type,x))
+
+            # rotate the box and the atoms
             q_complex.rotation = p_complex.rotation
+
+            # from global coord to local coord
+            matrix2 = q_complex.get_workspace_to_complex_matrix()
+           
+            # move the atoms back and align the atoms
             for (atom, gPos) in zip(q_complex.atoms, global_pos):
                 atom.position = result_matrix * matrix2 * gPos 
             
+            # move the position of the complexes 
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = result_quat.rotate_vector(help.array_to_position(q_cent))
             q_complex.position = p_complex.position + p_cent - q_cent
+
+            Logs.debug("p complex position2: ",p_complex.position)
+            Logs.debug("q complex position2: ",q_complex.position)
+            Logs.debug("p complex rotation2: ",p_complex.rotation)
+            Logs.debug("q complex rotation2: ",q_complex.rotation)
 
             if(self._menu.error_message.text_value=="Loading..."):
                 self._menu.change_error("clear")

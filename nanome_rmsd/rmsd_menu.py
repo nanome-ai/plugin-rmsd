@@ -23,6 +23,7 @@ class RMSDMenu():
     # run the rmsd algorithm
     def _run_rmsd(self):
         if self.check_resolve_error():
+            self._plugin.update_structures_deep(self._selected_mobile + [self._selected_target])
             self._plugin.run_rmsd([a.complex for a in self._selected_mobile], self._selected_target.complex)
         else:
             self.make_plugin_usable()
