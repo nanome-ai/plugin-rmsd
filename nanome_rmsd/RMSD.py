@@ -69,7 +69,10 @@ class RMSD(nanome.PluginInstance):
         mobile_complex = complexes[1:]
         result = 0
         for x in mobile_complex:
-            result += self.align2(target_complex, x)
+            if self.args.align_box:
+                result += self.align2(target_complex, x)
+            else:
+                result += self.align(target_complex, x)
         if result :
             self._menu.update_score(result)
         self.update_mobile(mobile_complex)
@@ -97,6 +100,7 @@ class RMSD(nanome.PluginInstance):
             self.selected_only = True
             self.backbone_only = True
             self.align = True
+            self.align_box = False
 
         @property
         def update(self):
@@ -115,6 +119,7 @@ class RMSD(nanome.PluginInstance):
             output += tab + "selected_only:" + str(self.selected_only) + ln
             output += tab + "backbone_only:" + str(self.backbone_only) + ln
             output += tab + "align:" + str(self.align) + ln
+            output += tab + "align box:" +str(self.align_box) + ln
             return output
 
     def align(self, p_complex, q_complex):
@@ -396,12 +401,8 @@ class RMSD(nanome.PluginInstance):
 
         # Logs.debug result
         if args.update:
-            #resetting coords
-            quat = p_complex.rotation
-            p_coords =  help.positions_to_array([quat.rotate_vector(x) for x in p_pos_orig])
-
-            quat = q_complex.rotation
-            q_coords =  help.positions_to_array([quat.rotate_vector(x) for x in q_pos_orig])
+            p_coords =  help.positions_to_array(p_pos_orig)
+            q_coords =  help.positions_to_array(q_pos_orig)
 
             p_cent = centroid(p_coords)
             q_cent = centroid(q_coords)
@@ -433,35 +434,26 @@ class RMSD(nanome.PluginInstance):
             result_matrix = rot_matrix * U_matrix
             result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
 
-            Logs.debug("p complex position: ",p_complex.position)
-            Logs.debug("q complex position: ",q_complex.position)
-            Logs.debug("p complex rotation: ",p_complex.rotation)
-            Logs.debug("q complex rotation: ",q_complex.rotation)
-            # from local coord to global coord
-            matrix1 = q_complex.get_complex_to_workspace_matrix()
+            # set q rotation to aligned rotation
+            q_complex.rotation = result_quat
 
-            # save the initial global coord
-            global_pos = map(lambda atom: matrix1 * atom.position,q_complex.atoms)
-
-            # rotate the box and the atoms
-            q_complex.rotation = p_complex.rotation
-
-            # from global coord to local coord
-            matrix2 = q_complex.get_workspace_to_complex_matrix()
-           
-            # move the atoms back and align the atoms
-            for (atom, gPos) in zip(q_complex.atoms, global_pos):
-                atom.position = result_matrix * matrix2 * gPos 
-            
             # move the position of the complexes 
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
-            q_cent = result_quat.rotate_vector(help.array_to_position(q_cent))
+            q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
             q_complex.position = p_complex.position + p_cent - q_cent
+            # maybe it will work here?
 
-            Logs.debug("p complex position2: ",p_complex.position)
-            Logs.debug("q complex position2: ",q_complex.position)
-            Logs.debug("p complex rotation2: ",p_complex.rotation)
-            Logs.debug("q complex rotation2: ",q_complex.rotation)
+            # save the aligned global coord
+            matrix1 = q_complex.get_complex_to_workspace_matrix()
+            global_pos = map(lambda atom: matrix1 * atom.position, q_complex.atoms)
+
+            # set q rotation to p rotation
+            q_complex.rotation = p_complex.rotation
+
+            # restore aligned atom positions from global
+            matrix2 = q_complex.get_workspace_to_complex_matrix()
+            for (atom, gPos) in zip(q_complex.atoms, global_pos):
+                atom.position = matrix2 * gPos 
 
             if(self._menu.error_message.text_value=="Loading..."):
                 self._menu.change_error("clear")

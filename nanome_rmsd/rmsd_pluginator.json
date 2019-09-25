@@ -1,10 +1,10 @@
-{  
+{ 
     "title":"RMSD",
     "version":0,
     "width":0.800000011920929,
     "height":0.550000011920929,
     "is_menu":true,
-    "effective_root":{  
+    "effective_root":{ 
         "name":"Root",
         "enabled":true,
         "layer":0,
@@ -18,8 +18,8 @@
         "padding_z":0,
         "padding_w":0,
         "content":null,
-        "children":[  
-            {  
+        "children":[ 
+            { 
                 "name":"left",
                 "enabled":true,
                 "layer":0,
@@ -33,8 +33,8 @@
                 "padding_z":0,
                 "padding_w":0,
                 "content":null,
-                "children":[  
-                    {  
+                "children":[ 
+                    { 
                         "name":"left_upper",
                         "enabled":true,
                         "layer":0,
@@ -48,8 +48,8 @@
                         "padding_z":0,
                         "padding_w":0,
                         "content":null,
-                        "children":[  
-                            {  
+                        "children":[ 
+                            { 
                                 "name":"Receptor",
                                 "enabled":true,
                                 "layer":0,
@@ -62,7 +62,7 @@
                                 "padding_y":0,
                                 "padding_z":0.5,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "text":"Receptor: Unselected",
                                     "text_vertical_align":1,
                                     "text_horizontal_align":0,
@@ -76,11 +76,11 @@
                                     "text_underlined":false,
                                     "type_name":"Label"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             },
-                            {  
+                            { 
                                 "name":"Target",
                                 "enabled":true,
                                 "layer":0,
@@ -93,7 +93,7 @@
                                 "padding_y":0,
                                 "padding_z":0.100000001490116,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "text":"Target: Unselected",
                                     "text_vertical_align":1,
                                     "text_horizontal_align":0,
@@ -107,11 +107,11 @@
                                     "text_underlined":false,
                                     "type_name":"Label"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             },
-                            {  
+                            { 
                                 "name":"Lock",
                                 "enabled":true,
                                 "layer":0,
@@ -125,8 +125,8 @@
                                 "padding_z":0,
                                 "padding_w":0.100000001490116,
                                 "content":null,
-                                "children":[  
-                                    {  
+                                "children":[ 
+                                    { 
                                         "name":"Lock txt",
                                         "enabled":true,
                                         "layer":0,
@@ -139,7 +139,7 @@
                                         "padding_y":0,
                                         "padding_z":0,
                                         "padding_w":0,
-                                        "content":{  
+                                        "content":{ 
                                             "text":"Lock Complexes",
                                             "text_vertical_align":1,
                                             "text_horizontal_align":0,
@@ -153,11 +153,11 @@
                                             "text_underlined":false,
                                             "type_name":"Label"
                                         },
-                                        "children":[  
+                                        "children":[ 
 
                                         ]
                                     },
-                                    {  
+                                    { 
                                         "name":"Lock Icon",
                                         "enabled":true,
                                         "layer":0,
@@ -171,8 +171,8 @@
                                         "padding_z":0,
                                         "padding_w":0,
                                         "content":null,
-                                        "children":[  
-                                            {  
+                                        "children":[ 
+                                            { 
                                                 "name":"Lock Button",
                                                 "enabled":true,
                                                 "layer":0,
@@ -185,7 +185,7 @@
                                                 "padding_y":0,
                                                 "padding_z":0,
                                                 "padding_w":0,
-                                                "content":{  
+                                                "content":{ 
                                                     "selected":false,
                                                     "unusable":false,
                                                     "text_active":true,
@@ -204,11 +204,11 @@
                                                     "text_horizontal_align":1,
                                                     "type_name":"Button"
                                                 },
-                                                "children":[  
+                                                "children":[ 
 
                                                 ]
                                             },
-                                            {  
+                                            { 
                                                 "name":"Lock Image",
                                                 "enabled":true,
                                                 "layer":1,
@@ -222,7 +222,7 @@
                                                 "padding_z":0.150000005960464,
                                                 "padding_w":0.150000005960464,
                                                 "content":null,
-                                                "children":[  
+                                                "children":[ 
 
                                                 ]
                                             }
@@ -232,7 +232,7 @@
                             }
                         ]
                     },
-                    {  
+                    { 
                         "name":"left_lower",
                         "enabled":true,
                         "layer":0,
@@ -246,8 +246,8 @@
                         "padding_z":0,
                         "padding_w":0,
                         "content":null,
-                        "children":[  
-                            {  
+                        "children":[ 
+                            { 
                                 "name":"tabs",
                                 "enabled":true,
                                 "layer":0,
@@ -261,8 +261,8 @@
                                 "padding_z":0,
                                 "padding_w":0,
                                 "content":null,
-                                "children":[  
-                                    {  
+                                "children":[ 
+                                    { 
                                         "name":"Receptor_tab",
                                         "enabled":true,
                                         "layer":0,
@@ -275,7 +275,7 @@
                                         "padding_y":0,
                                         "padding_z":0,
                                         "padding_w":0,
-                                        "content":{  
+                                        "content":{ 
                                             "selected":true,
                                             "unusable":false,
                                             "text_active":true,
@@ -294,11 +294,11 @@
                                             "text_horizontal_align":1,
                                             "type_name":"Button"
                                         },
-                                        "children":[  
+                                        "children":[ 
 
                                         ]
                                     },
-                                    {  
+                                    { 
                                         "name":"Target_tab",
                                         "enabled":true,
                                         "layer":0,
@@ -311,7 +311,7 @@
                                         "padding_y":0,
                                         "padding_z":0,
                                         "padding_w":0,
-                                        "content":{  
+                                        "content":{ 
                                             "selected":false,
                                             "unusable":false,
                                             "text_active":true,
@@ -330,13 +330,13 @@
                                             "text_horizontal_align":1,
                                             "type_name":"Button"
                                         },
-                                        "children":[  
+                                        "children":[ 
 
                                         ]
                                     }
                                 ]
                             },
-                            {  
+                            { 
                                 "name":"List",
                                 "enabled":true,
                                 "layer":0,
@@ -349,14 +349,14 @@
                                 "padding_y":0,
                                 "padding_z":0.0199999995529652,
                                 "padding_w":0.0750000029802322,
-                                "content":{  
+                                "content":{ 
                                     "display_columns":1,
                                     "display_rows":7,
                                     "total_columns":1,
                                     "unusable":false,
                                     "type_name":"List"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             }
@@ -364,7 +364,7 @@
                     }
                 ]
             },
-            {  
+            { 
                 "name":"right",
                 "enabled":true,
                 "layer":0,
@@ -378,8 +378,8 @@
                 "padding_z":0.0500000007450581,
                 "padding_w":0.0500000007450581,
                 "content":null,
-                "children":[  
-                    {  
+                "children":[ 
+                    { 
                         "name":"Backbone only",
                         "enabled":true,
                         "layer":0,
@@ -393,8 +393,8 @@
                         "padding_z":0.100000001490116,
                         "padding_w":0.100000001490116,
                         "content":null,
-                        "children":[  
-                            {  
+                        "children":[ 
+                            { 
                                 "name":"Backbone only txt",
                                 "enabled":true,
                                 "layer":0,
@@ -407,7 +407,7 @@
                                 "padding_y":0,
                                 "padding_z":0,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "text":"Backbone Only",
                                     "text_vertical_align":1,
                                     "text_horizontal_align":0,
@@ -421,11 +421,11 @@
                                     "text_underlined":false,
                                     "type_name":"Label"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             },
-                            {  
+                            { 
                                 "name":"Backbone only btn",
                                 "enabled":true,
                                 "layer":0,
@@ -438,7 +438,7 @@
                                 "padding_y":0,
                                 "padding_z":0,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "selected":true,
                                     "unusable":false,
                                     "text_active":true,
@@ -457,13 +457,13 @@
                                     "text_horizontal_align":1,
                                     "type_name":"Button"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             }
                         ]
                     },
-                    {  
+                    { 
                         "name":"Selected Only",
                         "enabled":true,
                         "layer":0,
@@ -477,8 +477,8 @@
                         "padding_z":0.100000001490116,
                         "padding_w":0.100000001490116,
                         "content":null,
-                        "children":[  
-                            {  
+                        "children":[ 
+                            { 
                                 "name":"Selected Only txt",
                                 "enabled":true,
                                 "layer":0,
@@ -491,7 +491,7 @@
                                 "padding_y":0,
                                 "padding_z":0,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "text":"Selected Only",
                                     "text_vertical_align":1,
                                     "text_horizontal_align":0,
@@ -505,11 +505,11 @@
                                     "text_underlined":false,
                                     "type_name":"Label"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             },
-                            {  
+                            { 
                                 "name":"Selected Only btn",
                                 "enabled":true,
                                 "layer":0,
@@ -522,7 +522,7 @@
                                 "padding_y":0,
                                 "padding_z":0,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "selected":true,
                                     "unusable":false,
                                     "text_active":true,
@@ -541,13 +541,13 @@
                                     "text_horizontal_align":1,
                                     "type_name":"Button"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             }
                         ]
                     },
-                    {  
+                    { 
                         "name":"No Hydrogen",
                         "enabled":true,
                         "layer":0,
@@ -561,8 +561,8 @@
                         "padding_z":0.100000001490116,
                         "padding_w":0.100000001490116,
                         "content":null,
-                        "children":[  
-                            {  
+                        "children":[ 
+                            { 
                                 "name":"No Hydrogen txt",
                                 "enabled":true,
                                 "layer":0,
@@ -575,7 +575,7 @@
                                 "padding_y":0,
                                 "padding_z":0,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "text":"No Hydrogen",
                                     "text_vertical_align":1,
                                     "text_horizontal_align":0,
@@ -589,11 +589,11 @@
                                     "text_underlined":false,
                                     "type_name":"Label"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             },
-                            {  
+                            { 
                                 "name":"No Hydrogen btn",
                                 "enabled":true,
                                 "layer":0,
@@ -606,7 +606,7 @@
                                 "padding_y":0,
                                 "padding_z":0,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "selected":true,
                                     "unusable":false,
                                     "text_active":true,
@@ -625,13 +625,97 @@
                                     "text_horizontal_align":1,
                                     "type_name":"Button"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             }
                         ]
                     },
-                    {  
+                    { 
+                        "name":"Box",
+                        "enabled":true,
+                        "layer":0,
+                        "layout_orientation":1,
+                        "sizing_type":0,
+                        "sizing_value":0,
+                        "forward_dist":0,
+                        "padding_type":1,
+                        "padding_x":0,
+                        "padding_y":0,
+                        "padding_z":0.100000001490116,
+                        "padding_w":0.100000001490116,
+                        "content":null,
+                        "children":[ 
+                            { 
+                                "name":"Box txt",
+                                "enabled":true,
+                                "layer":0,
+                                "layout_orientation":0,
+                                "sizing_type":0,
+                                "sizing_value":0,
+                                "forward_dist":0.0020000000949949,
+                                "padding_type":0,
+                                "padding_x":0,
+                                "padding_y":0,
+                                "padding_z":0,
+                                "padding_w":0,
+                                "content":{ 
+                                    "text":"Align Reference",
+                                    "text_vertical_align":1,
+                                    "text_horizontal_align":0,
+                                    "text_auto_size":false,
+                                    "text_min_size":0,
+                                    "text_max_size":72,
+                                    "text_size":0.25,
+                                    "text_color":-1,
+                                    "text_bold":true,
+                                    "text_italics":false,
+                                    "text_underlined":false,
+                                    "type_name":"Label"
+                                },
+                                "children":[ 
+
+                                ]
+                            },
+                            { 
+                                "name":"Box btn",
+                                "enabled":true,
+                                "layer":0,
+                                "layout_orientation":0,
+                                "sizing_type":2,
+                                "sizing_value":0.300000011920929,
+                                "forward_dist":0.0020000000949949,
+                                "padding_type":0,
+                                "padding_x":0,
+                                "padding_y":0,
+                                "padding_z":0,
+                                "padding_w":0,
+                                "content":{ 
+                                    "selected":false,
+                                    "unusable":false,
+                                    "text_active":true,
+                                    "text_value_idle":"Off",
+                                    "text_value_selected":"On",
+                                    "text_value_highlighted":"Off",
+                                    "text_value_selected_highlighted":"On",
+                                    "text_value_unusable":"Off",
+                                    "text_auto_size":false,
+                                    "text_min_size":0,
+                                    "text_max_size":72,
+                                    "text_size":0.230000004172325,
+                                    "text_underlined":false,
+                                    "text_bolded":true,
+                                    "text_vertical_align":1,
+                                    "text_horizontal_align":1,
+                                    "type_name":"Button"
+                                },
+                                "children":[ 
+
+                                ]
+                            }
+                        ]
+                    },
+                    { 
                         "name":"Reorder",
                         "enabled":true,
                         "layer":0,
@@ -645,8 +729,8 @@
                         "padding_z":0.100000001490116,
                         "padding_w":0.100000001490116,
                         "content":null,
-                        "children":[  
-                            {  
+                        "children":[ 
+                            { 
                                 "name":"Reorder txt",
                                 "enabled":true,
                                 "layer":0,
@@ -659,7 +743,7 @@
                                 "padding_y":0,
                                 "padding_z":0,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "text":"Reorder",
                                     "text_vertical_align":1,
                                     "text_horizontal_align":0,
@@ -673,11 +757,11 @@
                                     "text_underlined":false,
                                     "type_name":"Label"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             },
-                            {  
+                            { 
                                 "name":"Reorder menu",
                                 "enabled":true,
                                 "layer":0,
@@ -690,7 +774,7 @@
                                 "padding_y":0,
                                 "padding_z":0,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "selected":false,
                                     "unusable":false,
                                     "text_active":true,
@@ -709,13 +793,13 @@
                                     "text_horizontal_align":1,
                                     "type_name":"Button"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             }
                         ]
                     },
-                    {  
+                    { 
                         "name":"Rotation",
                         "enabled":true,
                         "layer":0,
@@ -729,8 +813,8 @@
                         "padding_z":0.100000001490116,
                         "padding_w":0.100000001490116,
                         "content":null,
-                        "children":[  
-                            {  
+                        "children":[ 
+                            { 
                                 "name":"Rotation txt",
                                 "enabled":true,
                                 "layer":0,
@@ -743,7 +827,7 @@
                                 "padding_y":0,
                                 "padding_z":0,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "text":"Rotation",
                                     "text_vertical_align":1,
                                     "text_horizontal_align":0,
@@ -757,11 +841,11 @@
                                     "text_underlined":false,
                                     "type_name":"Label"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             },
-                            {  
+                            { 
                                 "name":"Rotation menu",
                                 "enabled":true,
                                 "layer":0,
@@ -774,7 +858,7 @@
                                 "padding_y":0,
                                 "padding_z":0,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "selected":false,
                                     "unusable":false,
                                     "text_active":true,
@@ -793,13 +877,13 @@
                                     "text_horizontal_align":1,
                                     "type_name":"Button"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             }
                         ]
                     },
-                    {  
+                    { 
                         "name":"RMSD Score",
                         "enabled":true,
                         "layer":0,
@@ -813,8 +897,8 @@
                         "padding_z":0.100000001490116,
                         "padding_w":0.100000001490116,
                         "content":null,
-                        "children":[  
-                            {  
+                        "children":[ 
+                            { 
                                 "name":"RMSD txt",
                                 "enabled":true,
                                 "layer":0,
@@ -827,7 +911,7 @@
                                 "padding_y":0,
                                 "padding_z":0,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "text":"RMSD Score:",
                                     "text_vertical_align":1,
                                     "text_horizontal_align":0,
@@ -841,11 +925,11 @@
                                     "text_underlined":false,
                                     "type_name":"Label"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             },
-                            {  
+                            { 
                                 "name":"RMSD number",
                                 "enabled":true,
                                 "layer":0,
@@ -858,7 +942,7 @@
                                 "padding_y":0,
                                 "padding_z":0,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "text":"--",
                                     "text_vertical_align":1,
                                     "text_horizontal_align":1,
@@ -872,13 +956,13 @@
                                     "text_underlined":false,
                                     "type_name":"Label"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             }
                         ]
                     },
-                    {  
+                    { 
                         "name":"Error Message",
                         "enabled":true,
                         "layer":0,
@@ -891,7 +975,7 @@
                         "padding_y":0,
                         "padding_z":0,
                         "padding_w":0,
-                        "content":{  
+                        "content":{ 
                             "text":"",
                             "text_vertical_align":1,
                             "text_horizontal_align":0,
@@ -905,11 +989,11 @@
                             "text_underlined":false,
                             "type_name":"Label"
                         },
-                        "children":[  
+                        "children":[ 
 
                         ]
                     },
-                    {  
+                    { 
                         "name":"Refresh Run",
                         "enabled":true,
                         "layer":0,
@@ -923,8 +1007,8 @@
                         "padding_z":0.0500000007450581,
                         "padding_w":0,
                         "content":null,
-                        "children":[  
-                            {  
+                        "children":[ 
+                            { 
                                 "name":"Refresh",
                                 "enabled":true,
                                 "layer":0,
@@ -938,8 +1022,8 @@
                                 "padding_z":0.100000001490116,
                                 "padding_w":0.00499999988824129,
                                 "content":null,
-                                "children":[  
-                                    {  
+                                "children":[ 
+                                    { 
                                         "name":"Refresh Button",
                                         "enabled":true,
                                         "layer":0,
@@ -952,7 +1036,7 @@
                                         "padding_y":0,
                                         "padding_z":0,
                                         "padding_w":0,
-                                        "content":{  
+                                        "content":{ 
                                             "selected":false,
                                             "unusable":false,
                                             "text_active":true,
@@ -971,11 +1055,11 @@
                                             "text_horizontal_align":1,
                                             "type_name":"Button"
                                         },
-                                        "children":[  
+                                        "children":[ 
 
                                         ]
                                     },
-                                    {  
+                                    { 
                                         "name":"Refresh Image",
                                         "enabled":true,
                                         "layer":1,
@@ -989,13 +1073,13 @@
                                         "padding_z":0.150000005960464,
                                         "padding_w":0.150000005960464,
                                         "content":null,
-                                        "children":[  
+                                        "children":[ 
 
                                         ]
                                     }
                                 ]
                             },
-                            {  
+                            { 
                                 "name":"Auto Select",
                                 "enabled":true,
                                 "layer":0,
@@ -1008,7 +1092,7 @@
                                 "padding_y":0.025000000372529,
                                 "padding_z":0.100000001490116,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "selected":false,
                                     "unusable":false,
                                     "text_active":true,
@@ -1027,11 +1111,11 @@
                                     "text_horizontal_align":1,
                                     "type_name":"Button"
                                 },
-                                "children":[  
+                                "children":[ 
 
                                 ]
                             },
-                            {  
+                            { 
                                 "name":"Run",
                                 "enabled":true,
                                 "layer":0,
@@ -1044,7 +1128,7 @@
                                 "padding_y":0,
                                 "padding_z":0.100000001490116,
                                 "padding_w":0,
-                                "content":{  
+                                "content":{ 
                                     "selected":false,
                                     "unusable":false,
                                     "text_active":true,
@@ -1063,7 +1147,8 @@
                                     "text_horizontal_align":1,
                                     "type_name":"Button"
                                 },
-                                "children":[  
+                                "children":[ 
+
                                 ]
                             }
                         ]

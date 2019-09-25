@@ -311,6 +311,11 @@ class RMSDMenu():
             self.update_args("selected_only", selected_only_button.selected)
             self._plugin.update_content(selected_only_button)
 
+        # align box = ! align box
+        def align_box_button_pressed_callback(button):
+            align_box_button.selected = not align_box_button.selected
+            self.update_args("align_box",align_box_button.selected)
+            self._plugin.update_content(align_box_button)
         # change Reorder to the next option
         def reorder_button_pressed_callback(button):
             drop_down  = self._drop_down_dict["reorder_method"]
@@ -442,6 +447,10 @@ class RMSDMenu():
         # create the selected only button
         selected_only_button =  menu.root.find_node("Selected Only btn",True).get_content()
         selected_only_button.register_pressed_callback(selected_only_button_pressed_callback)
+
+        # create the align box button
+        align_box_button =  menu.root.find_node("Box btn",True).get_content()
+        align_box_button.register_pressed_callback(align_box_button_pressed_callback)
 
         # create the reorder button
         reorder_button = menu.root.find_node("Reorder menu",True).get_content()
