@@ -133,6 +133,8 @@ class RMSDMenu():
                     self.receptor_text.text_value = "Receptor: "+button.complex.name
                 else:
                     self.receptor_text.text_value = "Receptor: multiple receptors"
+                self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Check.png'))
+
             # deselecting button
             else:
                 button.selected = False
@@ -144,8 +146,12 @@ class RMSDMenu():
                     self.receptor_text.text_value = "Receptor: "+self._selected_mobile[0].complex.name
                 elif len(self._selected_mobile) == 0:
                     self.receptor_text.text_value = "Receptor: Unselected"
+                    self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'None.png'))
+
                 else:
                     self.receptor_text.text_value = "Receptor: multiple receptors"
+                    self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Check.png'))
+
                 
 
             self.select_button.selected = False
@@ -154,10 +160,12 @@ class RMSDMenu():
             self._current_select = "None"
             self.update_args("select", "None")
             self._plugin.update_mobile([x.complex for x in self._selected_mobile])
-            self._plugin.update_content(self._show_list)
-            self._plugin.update_content(self.receptor_text)
-            self._plugin.update_content(self.target_text)
-            self._plugin.update_content(self.select_button)
+            # self._plugin.update_content(self._show_list)
+            # self._plugin.update_content(self.receptor_text)
+            # self._plugin.update_content(self.target_text)
+            # self._plugin.update_content(self.select_button)
+            # self._plugin.update_content(self.receptor_check)
+            self._plugin.update_menu(self._menu)
 
         # a button in the target list is pressed
         def target_pressed(button):
@@ -167,13 +175,20 @@ class RMSDMenu():
                     button.selected = True
                     self._selected_target = button
                     self.target_text.text_value ="Target: "+ button.complex.name
+                    self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Check.png'))
+
                 else: 
                     self._selected_target = None
                     self.target_text.text_value = "Target: Unselected"
+                    self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'None.png'))
+
             else: 
                 button.selected = True
                 self._selected_target = button
                 self.target_text.text_value ="Target: "+ button.complex.name
+                # still setting the image just in case theres a bug
+                self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Check.png'))
+
             self.check_resolve_error(clear_only=True)
             self.select_button.selected = False
             self.select_button.set_all_text("Select")
@@ -184,10 +199,12 @@ class RMSDMenu():
                 self._plugin.update_target(None)
             else:
                 self._plugin.update_target(self._selected_target.complex)
-            self._plugin.update_content(self._show_list)
-            self._plugin.update_content(self.receptor_text)
-            self._plugin.update_content(self.target_text)
-            self._plugin.update_content(self.select_button)
+            # self._plugin.update_content(self._show_list)
+            # self._plugin.update_content(self.receptor_text)
+            # self._plugin.update_content(self.target_text)
+            # self._plugin.update_content(self.select_button)
+            # self._plugin.update_content(self.target_check)
+            self._plugin.update_menu(self._menu)
 
         self._mobile_list = []
         self._target_list = []
@@ -429,6 +446,14 @@ class RMSDMenu():
         # add the refresh icon
         refresh_img = menu.root.find_node("Refresh Image", True)
         refresh_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Refresh.png'))
+
+        # add the receptor check icon
+        self.receptor_check = menu.root.find_node("Receptor Check", True)
+        self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'None.png'))
+
+        # add the target check icon
+        self.target_check = menu.root.find_node("Target Check", True)
+        self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'None.png'))
 
         # create the Run button
         self._run_button = menu.root.find_node("Run", True).get_content()
