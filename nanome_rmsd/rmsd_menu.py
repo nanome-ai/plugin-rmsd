@@ -1,5 +1,6 @@
 import nanome
 from nanome.util import Logs
+from nanome.util import Color
 
 import os
 
@@ -296,26 +297,47 @@ class RMSDMenu():
         # no hydrogen = ! no hydrogen
         def no_hydrogen_button_pressed_callback(button):
             no_hydrogen_button.selected = not no_hydrogen_button.selected
+            if no_hydrogen_button.selected:
+                no_hydrogen_text.text_color = Color.from_int(0x00ecc4ff)
+            else:
+                no_hydrogen_text.text_color = Color.from_int(0xffffffff)     
             self.update_args("no_hydrogen", no_hydrogen_button.selected)
             self._plugin.update_content(no_hydrogen_button)
+            self._plugin.update_content(no_hydrogen_text)
 
         # backbone only = ! backbone only
         def backbone_only_button_pressed_callback(button):
             backbone_only_button.selected = not backbone_only_button.selected
+            if backbone_only_button.selected:
+                backbone_only_text.text_color = Color.from_int(0x00ecc4ff)
+            else:
+                backbone_only_text.text_color = Color.from_int(0xffffffff)     
             self.update_args("backbone_only", backbone_only_button.selected)
             self._plugin.update_content(backbone_only_button)
+            self._plugin.update_content(backbone_only_text)
         
         # selected only = ! selected only
         def selected_only_button_pressed_callback(button):
-            selected_only_button.selected = not selected_only_button.selected            
+            selected_only_button.selected = not selected_only_button.selected 
+            if selected_only_button.selected:
+                selected_only_text.text_color = Color.from_int(0x00ecc4ff)
+            else:
+                selected_only_text.text_color = Color.from_int(0xffffffff)     
             self.update_args("selected_only", selected_only_button.selected)
             self._plugin.update_content(selected_only_button)
+            self._plugin.update_content(selected_only_text)
 
         # align box = ! align box
         def align_box_button_pressed_callback(button):
             align_box_button.selected = not align_box_button.selected
+            if align_box_button.selected:
+                align_box_text.text_color = Color.from_int(0x00ecc4ff)
+            else:
+                align_box_text.text_color = Color.from_int(0xffffffff)     
             self.update_args("align_box",align_box_button.selected)
             self._plugin.update_content(align_box_button)
+            self._plugin.update_content(align_box_text)
+
         # change Reorder to the next option
         def reorder_button_pressed_callback(button):
             drop_down  = self._drop_down_dict["reorder_method"]
@@ -329,11 +351,17 @@ class RMSDMenu():
             reorder_button.selected = post_option != "None"
             reorder_button.set_all_text(post_option)
             
+            if post_option == "None":
+                reorder_text.text_color = Color.from_int(0xffffffff)     
+            else:
+                reorder_text.text_color = Color.from_int(0x00ecc4ff)     
+
             # tell the plugin and update the menu
             self._current_reorder = post_option
             self.update_args("reorder_method", post_option)
             self.update_args("reorder", post_option != "None")
             self._plugin.update_content(reorder_button)
+            self._plugin.update_content(reorder_text)
 
         # change Rotation to the next option
         def rotation_button_pressed_callback(button):
@@ -348,10 +376,18 @@ class RMSDMenu():
             rotation_button.selected = post_option != "None"
             rotation_button.set_all_text(post_option)
             
+            if post_option == "None":
+                rotation_text.text_color = Color.from_int(0xffffffff)     
+            else:
+                rotation_text.text_color = Color.from_int(0x00ecc4ff) 
+
             # tell the plugin and update the menu
             self._current_rotation = post_option
             self.update_args("rotation_method", post_option)
             self._plugin.update_content(rotation_button)
+            self._plugin.update_content(rotation_button)
+            self._plugin.update_content(rotation_text)
+
 
         def select_button_pressed_callback(button): 
             if self._selected_mobile != None and self._selected_target != None:
@@ -435,6 +471,7 @@ class RMSDMenu():
         # create the no hydrogen button
         no_hydrogen_button = menu.root.find_node("No Hydrogen btn",True).get_content()
         no_hydrogen_button.register_pressed_callback(no_hydrogen_button_pressed_callback)
+        no_hydrogen_text = menu.root.find_node("No Hydrogen txt",True).get_content()
 
         # create the use reflection button
         # use_reflections_button = menu.root.find_node("Use Reflection btn",True).get_content()
@@ -443,22 +480,28 @@ class RMSDMenu():
         # create the backbone only button
         backbone_only_button = menu.root.find_node("Backbone only btn",True).get_content()
         backbone_only_button.register_pressed_callback(backbone_only_button_pressed_callback)
+        backbone_only_text = menu.root.find_node("Backbone only txt",True).get_content()
 
         # create the selected only button
         selected_only_button =  menu.root.find_node("Selected Only btn",True).get_content()
         selected_only_button.register_pressed_callback(selected_only_button_pressed_callback)
+        selected_only_text = menu.root.find_node("Selected Only txt",True).get_content()
 
         # create the align box button
         align_box_button =  menu.root.find_node("Box btn",True).get_content()
         align_box_button.register_pressed_callback(align_box_button_pressed_callback)
+        align_box_text = menu.root.find_node("Box txt",True).get_content()
 
         # create the reorder button
         reorder_button = menu.root.find_node("Reorder menu",True).get_content()
         reorder_button.register_pressed_callback(reorder_button_pressed_callback)
+        reorder_text = menu.root.find_node("Reorder txt",True).get_content()
 
         # create the roation "drop down"
         rotation_button = menu.root.find_node("Rotation menu",True).get_content()
         rotation_button.register_pressed_callback(rotation_button_pressed_callback)
+        rotation_text = menu.root.find_node("Rotation txt",True).get_content()
+
 
         # create the select cycle button
         self.select_button = menu.root.find_node("Auto Select",True).get_content()
