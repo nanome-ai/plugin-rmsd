@@ -559,7 +559,7 @@ class RMSD(nanome.PluginInstance):
         self._menu.change_error("clear")
     
     # find the two sequences whose distance is the smallest
-    # called in on_select_received
+    # called in on_select_received, used in the clustalW part
     def min_dist(self, matrix):
         if len(matrix) < 2 or len(matrix[0]) < 2:
             Logs.debug("distance matrix size is too small")
