@@ -149,7 +149,7 @@ class RMSDMenu():
                     self.receptor_text.text_value = "Receptor: "+self._selected_mobile[0].complex.name
                 elif len(self._selected_mobile) == 0:
                     self.receptor_text.text_value = "Receptor: Unselected"
-                    self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'None.png'))
+                    self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'QuestionMark.png'))
 
                 else:
                     self.receptor_text.text_value = "Receptor: multiple receptors"
@@ -183,7 +183,7 @@ class RMSDMenu():
                 else: 
                     self._selected_target = None
                     self.target_text.text_value = "Target: Unselected"
-                    self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'None.png'))
+                    self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'QuestionMark.png'))
 
             else: 
                 button.selected = True
@@ -452,11 +452,11 @@ class RMSDMenu():
 
         # add the receptor check icon
         self.receptor_check = menu.root.find_node("Receptor Check", True)
-        self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'None.png'))
+        self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'QuestionMark.png'))
 
         # add the target check icon
         self.target_check = menu.root.find_node("Target Check", True)
-        self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'None.png'))
+        self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'QuestionMark.png'))
 
         # create the Run button
         self._run_button = menu.root.find_node("Run", True).get_content()
