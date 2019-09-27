@@ -4,6 +4,9 @@ from nanome.util import Color
 
 import os
 
+SELECTED_COLOR = Color.from_int(0x00ecc4ff)
+DESELECTED_COLOR = Color.from_int(0xffffffff)
+
 class RMSDMenu():
     def __init__(self, rmsd_plugin):
         self._menu = rmsd_plugin.menu
@@ -315,9 +318,9 @@ class RMSDMenu():
         def no_hydrogen_button_pressed_callback(button):
             no_hydrogen_button.selected = not no_hydrogen_button.selected
             if no_hydrogen_button.selected:
-                no_hydrogen_text.text_color = Color.from_int(0x00ecc4ff)
+                no_hydrogen_text.text_color = SELECTED_COLOR
             else:
-                no_hydrogen_text.text_color = Color.from_int(0xffffffff)     
+                no_hydrogen_text.text_color = DESELECTED_COLOR     
             self.update_args("no_hydrogen", no_hydrogen_button.selected)
             self._plugin.update_content(no_hydrogen_button)
             self._plugin.update_content(no_hydrogen_text)
@@ -326,9 +329,9 @@ class RMSDMenu():
         def backbone_only_button_pressed_callback(button):
             backbone_only_button.selected = not backbone_only_button.selected
             if backbone_only_button.selected:
-                backbone_only_text.text_color = Color.from_int(0x00ecc4ff)
+                backbone_only_text.text_color = SELECTED_COLOR
             else:
-                backbone_only_text.text_color = Color.from_int(0xffffffff)     
+                backbone_only_text.text_color = DESELECTED_COLOR     
             self.update_args("backbone_only", backbone_only_button.selected)
             self._plugin.update_content(backbone_only_button)
             self._plugin.update_content(backbone_only_text)
@@ -337,9 +340,9 @@ class RMSDMenu():
         def selected_only_button_pressed_callback(button):
             selected_only_button.selected = not selected_only_button.selected 
             if selected_only_button.selected:
-                selected_only_text.text_color = Color.from_int(0x00ecc4ff)
+                selected_only_text.text_color = SELECTED_COLOR
             else:
-                selected_only_text.text_color = Color.from_int(0xffffffff)     
+                selected_only_text.text_color = DESELECTED_COLOR     
             self.update_args("selected_only", selected_only_button.selected)
             self._plugin.update_content(selected_only_button)
             self._plugin.update_content(selected_only_text)
@@ -348,9 +351,9 @@ class RMSDMenu():
         def align_box_button_pressed_callback(button):
             align_box_button.selected = not align_box_button.selected
             if align_box_button.selected:
-                align_box_text.text_color = Color.from_int(0x00ecc4ff)
+                align_box_text.text_color = SELECTED_COLOR
             else:
-                align_box_text.text_color = Color.from_int(0xffffffff)     
+                align_box_text.text_color = DESELECTED_COLOR     
             self.update_args("align_box",align_box_button.selected)
             self._plugin.update_content(align_box_button)
             self._plugin.update_content(align_box_text)
@@ -369,9 +372,9 @@ class RMSDMenu():
             reorder_button.set_all_text(post_option)
             
             if post_option == "None":
-                reorder_text.text_color = Color.from_int(0xffffffff)     
+                reorder_text.text_color = DESELECTED_COLOR     
             else:
-                reorder_text.text_color = Color.from_int(0x00ecc4ff)     
+                reorder_text.text_color = SELECTED_COLOR     
 
             # tell the plugin and update the menu
             self._current_reorder = post_option
@@ -394,9 +397,9 @@ class RMSDMenu():
             rotation_button.set_all_text(post_option)
             
             if post_option == "None":
-                rotation_text.text_color = Color.from_int(0xffffffff)     
+                rotation_text.text_color = DESELECTED_COLOR     
             else:
-                rotation_text.text_color = Color.from_int(0x00ecc4ff) 
+                rotation_text.text_color = SELECTED_COLOR 
 
             # tell the plugin and update the menu
             self._current_rotation = post_option

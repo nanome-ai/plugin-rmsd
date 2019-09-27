@@ -69,10 +69,7 @@ class RMSD(nanome.PluginInstance):
         mobile_complex = complexes[1:]
         result = 0
         for x in mobile_complex:
-            if self.args.align_box:
-                result += self.align2(target_complex, x)
-            else:
-                result += self.align(target_complex, x)
+            result += self.align(target_complex, x)
         if result :
             self._menu.update_score(result)
         self.update_mobile(mobile_complex)
@@ -276,184 +273,20 @@ class RMSD(nanome.PluginInstance):
 
             q_complex.position = p_complex.position + p_cent - q_cent
 
-            if(self._menu.error_message.text_value=="Loading..."):
-                self._menu.change_error("clear")
-            
-            p_complex.locked = True 
-            q_complex.locked = True
-        
-        return result_rmsd
+            if self.args.align_box:
+                # maybe it will work here?
 
-    # align by changing atom positions inspired by Ethan   
-    def align2(self, p_complex, q_complex):
+                # save the aligned global coord
+                matrix1 = q_complex.get_complex_to_workspace_matrix()
+                global_pos = map(lambda atom: matrix1 * atom.position, q_complex.atoms)
 
-        #p is fixed q is mobile 
-        args = self.args
-        p_atoms = list(p_complex.atoms)
-        q_atoms = list(q_complex.atoms)
+                # set q rotation to p rotation
+                q_complex.rotation = p_complex.rotation
 
-        if args.selected_only:
-            p_atoms = help.strip_non_selected(p_atoms)
-            q_atoms = help.strip_non_selected(q_atoms)
-
-        if args.no_hydrogen:
-            p_atoms = help.strip_hydrogens(p_atoms)
-            q_atoms = help.strip_hydrogens(q_atoms)
-
-        if args.backbone_only:
-            p_atoms = help.strip_non_backbone(p_atoms)
-            q_atoms = help.strip_non_backbone(q_atoms)
-
-        p_size = len(p_atoms)
-        q_size = len(q_atoms)
-
-        p_atom_names = get_atom_types(p_atoms)
-        q_atom_names = get_atom_types(q_atoms)
-        p_pos_orig = help.get_positions(p_atoms)
-        q_pos_orig = help.get_positions(q_atoms)
-        q_atoms = np.asarray(q_atoms)
-        if p_size == 0 or q_size == 0:
-            Logs.debug("error: sizes of selected complexes are 0")
-            self._menu.change_error("zero_size")
-            return False
-        if not p_size == q_size:
-            Logs.debug("error: Structures not same size receptor size:", q_size, "target size:", p_size)
-            self._menu.change_error("different_size")
-            return False
-        if np.count_nonzero(p_atom_names != q_atom_names) and not args.reorder:
-            #message should be sent to nanome as notification?
-            msg = "\nerror: Atoms are not in the same order. \n reorder to align the atoms (can be expensive for large structures)."
-            Logs.debug(msg)
-            self._menu.change_error("different_order")
-            return False
-        else:
-            if(self._menu.error_message.text_value!="Loading..."):
-                self._menu.change_error("clear")
-
-        p_coords = help.positions_to_array(p_pos_orig)
-        q_coords = help.positions_to_array(q_pos_orig)
-
-        # Create the centroid of P and Q which is the geometric center of a
-        # N-dimensional region and translate P and Q onto that center. 
-        # http://en.wikipedia.org/wiki/Centroid
-        p_cent = centroid(p_coords)
-        q_cent = centroid(q_coords)
-      
-        p_coords -= p_cent
-        q_coords -= q_cent
-
-        # set rotation method
-        if args.rotation.lower() == "kabsch":
-            rotation_method = kabsch_rmsd
-        elif args.rotation.lower() == "quaternion":
-            rotation_method = quaternion_rmsd
-        elif args.rotation.lower() == "none":
-            rotation_method = None
-        else:
-            Logs.debug("error: Unknown rotation method:", args.rotation)
-            return False
-
-        # set reorder method
-        # when reorder==False, set reorder_method to "None"
-        if not args.reorder:
-            reorder_method = None
-        elif args.reorder_method.lower() == "hungarian":
-            reorder_method = reorder_hungarian
-        elif args.reorder_method.lower() == "brute":
-            reorder_method = reorder_brute
-        elif args.reorder_method.lower() == "distance":
-            reorder_method = reorder_distance
-        else:
-            Logs.debug("error: Unknown reorder method:", args.reorder_method)
-            Logs.debug("The value of reorder is: ",args.reorder)
-            return False
-
-        # Save the resulting RMSD
-        result_rmsd = None
-
-        if args.use_reflections or args.use_reflections_keep_stereo:
-            result_rmsd, q_swap, q_reflection, q_review = check_reflections(
-                p_atom_names,
-                q_atom_names,
-                p_coords,
-                q_coords,
-                reorder_method=reorder_method,
-                rotation_method=rotation_method,
-                keep_stereo=args.use_reflections_keep_stereo)
-
-        elif args.reorder:
-            q_review = reorder_method(p_atom_names, q_atom_names, p_coords, q_coords)
-            q_coords = q_coords[q_review]
-            q_atom_names = q_atom_names[q_review]
-            q_atoms = q_atoms[q_review]
-            if not all(p_atom_names == q_atom_names):
-                Logs.debug("error: Structure not aligned")
-                return False
-
-        #calculate RMSD
-        if result_rmsd:
-            pass
-        elif rotation_method is None:
-            result_rmsd = rmsd(p_coords, q_coords)
-        else:
-            result_rmsd = rotation_method(p_coords, q_coords)
-        Logs.debug("result: {0}".format(result_rmsd))
-
-        # Logs.debug result
-        if args.update:
-            p_coords =  help.positions_to_array(p_pos_orig)
-            q_coords =  help.positions_to_array(q_pos_orig)
-
-            p_cent = centroid(p_coords)
-            q_cent = centroid(q_coords)
-            
-            p_coords -= p_cent
-            q_coords -= q_cent
-           
-            #reordering coords  ???
-            if args.reorder:
-                if q_review.shape[0] != len(q_coords):
-                    Logs.debug("error: Reorder length error. Full atom list needed for --Logs.debug")
-                    return False
-                q_coords = q_coords[q_review]
-                q_atoms = q_atoms[q_review]
-
-            # Get rotation matrix
-            U = kabsch(p_coords, q_coords)
-
-            #update rotation
-            U_matrix = nanome.util.Matrix(4,4)
-            for i in range(3):
-                for k in range(3):
-                    U_matrix[i][k] = U[i][k]
-            U_matrix[3][3] = 1
-
-            rot_quat = p_complex.rotation
-            rot_matrix = nanome.util.Matrix.from_quaternion(rot_quat)
-
-            result_matrix = rot_matrix * U_matrix
-            result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
-
-            # set q rotation to aligned rotation
-            q_complex.rotation = result_quat
-
-            # move the position of the complexes 
-            p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
-            q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
-            q_complex.position = p_complex.position + p_cent - q_cent
-            # maybe it will work here?
-
-            # save the aligned global coord
-            matrix1 = q_complex.get_complex_to_workspace_matrix()
-            global_pos = map(lambda atom: matrix1 * atom.position, q_complex.atoms)
-
-            # set q rotation to p rotation
-            q_complex.rotation = p_complex.rotation
-
-            # restore aligned atom positions from global
-            matrix2 = q_complex.get_workspace_to_complex_matrix()
-            for (atom, gPos) in zip(q_complex.atoms, global_pos):
-                atom.position = matrix2 * gPos 
+                # restore aligned atom positions from global
+                matrix2 = q_complex.get_workspace_to_complex_matrix()
+                for (atom, gPos) in zip(q_complex.atoms, global_pos):
+                    atom.position = matrix2 * gPos 
 
             if(self._menu.error_message.text_value=="Loading..."):
                 self._menu.change_error("clear")
@@ -462,7 +295,6 @@ class RMSD(nanome.PluginInstance):
             q_complex.locked = True
         
         return result_rmsd
-
 
     # auto select with global/local alignment
     def select(self,mobile,target):
