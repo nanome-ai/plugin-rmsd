@@ -136,7 +136,7 @@ class RMSDMenu():
                     self.receptor_text.text_value = "Receptor: "+button.complex.name
                 else:
                     self.receptor_text.text_value = "Receptor: multiple receptors"
-                self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Check.png'))
+                self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'GreenCheck.png'))
 
             # deselecting button
             else:
@@ -153,7 +153,7 @@ class RMSDMenu():
 
                 else:
                     self.receptor_text.text_value = "Receptor: multiple receptors"
-                    self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Check.png'))
+                    self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'GreenCheck.png'))
 
                 
 
