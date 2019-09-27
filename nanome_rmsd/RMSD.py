@@ -1,6 +1,7 @@
 import nanome
 import sys
 import time
+import math
 from .rmsd_calculation import *
 # from rmsd_menu import RMSDMenu
 from .rmsd_menu import RMSDMenu
@@ -9,6 +10,7 @@ from nanome.util import Logs
 # from .quaternion import Quaternion
 import numpy as np
 from . import rmsd_selection as selection
+from itertools import combinations
 
 class RMSD(nanome.PluginInstance):
     def start(self):
@@ -16,6 +18,8 @@ class RMSD(nanome.PluginInstance):
         self.args = RMSD.Args()
         self._menu = RMSDMenu(self)
         self._menu.build_menu()
+        self.selected_before = []
+
 
     def on_run(self):
         menu = self.menu
@@ -50,42 +54,33 @@ class RMSD(nanome.PluginInstance):
         self._menu.change_error("loading")
         self._mobile = mobile
         self._target = target
-        self.request_workspace(self.on_workspace_received) 
+        self.request_complexes([self._target.index] + [x.index for x in self._mobile],self.on_complexes_received)
 
+    def update_mobile(self, mobile):
+        self._mobile = mobile
 
-    def on_workspace_received(self, workspace):
-        complexes = workspace.complexes
-        mobile_index_list = list(map(lambda a: a.index, self._mobile))
-        mobile_complex = []
-        for complex in complexes:
-            if complex.index in mobile_index_list:
-                mobile_complex.append(complex)
-            if complex.index == self._target.index:
-                target_complex = complex
-        self.workspace = workspace
+    def update_target(self, target):
+        self._target = target
+
+    # def on_workspace_received(self, workspace):
+    def on_complexes_received(self,complexes):
+        # mobile_index_list = list(map(lambda a: a.index, self._mobile))
+        target_complex = complexes[0]
+        mobile_complex = complexes[1:]
         result = 0
         for x in mobile_complex:
             result += self.align(target_complex, x)
         if result :
             self._menu.update_score(result)
-            
-        
+        self.update_mobile(mobile_complex)
+        self.update_target(target_complex)
         Logs.debug("RMSD done")
+        self._menu.lock_image()
         self.make_plugin_usable()
-        self.update_workspace(workspace)
-        #self.lock_result()
-        
-        # self.request_refresh()
-    
-    def lock_result(self):
-        for x in self._mobile:
-                x.locked = True
-        self._target.locked = True
+        self.update_structures_deep([target_complex])
+        self.update_structures_deep(mobile_complex)
         # self.update_workspace(workspace)
-
-        self.update_structures_shallow([self._target])
-        self.update_structures_shallow(self._mobile)
-
+       
     def update_args(self, arg, option):
         setattr(self.args, arg, option)
 
@@ -102,6 +97,7 @@ class RMSD(nanome.PluginInstance):
             self.selected_only = True
             self.backbone_only = True
             self.align = True
+            self.align_box = False
 
         @property
         def update(self):
@@ -120,10 +116,10 @@ class RMSD(nanome.PluginInstance):
             output += tab + "selected_only:" + str(self.selected_only) + ln
             output += tab + "backbone_only:" + str(self.backbone_only) + ln
             output += tab + "align:" + str(self.align) + ln
+            output += tab + "align box:" +str(self.align_box) + ln
             return output
 
     def align(self, p_complex, q_complex):
-
 
         #p is fixed q is mobile
         args = self.args
@@ -142,9 +138,6 @@ class RMSD(nanome.PluginInstance):
             p_atoms = help.strip_non_backbone(p_atoms)
             q_atoms = help.strip_non_backbone(q_atoms)
 
-        # p_atoms = help.strip_alternatives(p_atoms)
-        # q_atoms = help.strip_alternatives(q_atoms)
-
         p_size = len(p_atoms)
         q_size = len(q_atoms)
 
@@ -153,7 +146,6 @@ class RMSD(nanome.PluginInstance):
         p_pos_orig = help.get_positions(p_atoms)
         q_pos_orig = help.get_positions(q_atoms)
         q_atoms = np.asarray(q_atoms)
-
         if p_size == 0 or q_size == 0:
             Logs.debug("error: sizes of selected complexes are 0")
             self._menu.change_error("zero_size")
@@ -180,6 +172,7 @@ class RMSD(nanome.PluginInstance):
         # http://en.wikipedia.org/wiki/Centroid
         p_cent = centroid(p_coords)
         q_cent = centroid(q_coords)
+      
         p_coords -= p_cent
         q_coords -= q_cent
 
@@ -273,16 +266,32 @@ class RMSD(nanome.PluginInstance):
             result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
             q_complex.rotation = result_quat
             Logs.debug("Finished update")
-
+ 
             #align centroids
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
+
             q_complex.position = p_complex.position + p_cent - q_cent
-           
+
+            if self.args.align_box:
+                # maybe it will work here?
+
+                # save the aligned global coord
+                matrix1 = q_complex.get_complex_to_workspace_matrix()
+                global_pos = map(lambda atom: matrix1 * atom.position, q_complex.atoms)
+
+                # set q rotation to p rotation
+                q_complex.rotation = p_complex.rotation
+
+                # restore aligned atom positions from global
+                matrix2 = q_complex.get_workspace_to_complex_matrix()
+                for (atom, gPos) in zip(q_complex.atoms, global_pos):
+                    atom.position = matrix2 * gPos 
+
             if(self._menu.error_message.text_value=="Loading..."):
                 self._menu.change_error("clear")
             
-            p_complex.locked = True
+            p_complex.locked = True 
             q_complex.locked = True
         
         return result_rmsd
@@ -291,10 +300,8 @@ class RMSD(nanome.PluginInstance):
     def select(self,mobile,target):
         self._menu.change_error("loading")
         self._mobile = mobile
-        # Logs.debug("mobile list before ",self._mobile)
         self._target = target
         self.request_workspace(self.on_select_received) 
-
 
     def on_select_received(self, workspace):
         complexes = workspace.complexes
@@ -309,22 +316,97 @@ class RMSD(nanome.PluginInstance):
         if (self.args.select.lower() == "global"):
             self.selected_before = [[list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],
                                     list(map(lambda a:a.selected,self._target.atoms))]
+            # 1. DUMMY METHOD
             for x in self._mobile:
                 selection.global_align(x , self._target)  
             for x in self._mobile[:-1]:
                 selection.global_align(x , self._target)  
+            # ------------------------------------------------
+            # 2. SLOW OPTIMAL
+            # selection.multi_global_align(self._mobile+[self._target]) 
+            # ------------------------------------------------
+            # 3. ClustalW
+            # first, perform all possible pairwise alignment
+            # make a list of all the complexes including target and mobiles
+            # all_complex = self._mobile + [self._target]  
+            # all_complex_index = [x.index for x in all_complex]
+            # complex_count = len(all_complex)
+            # empty distance matrix
+
+            # combinitions of residues
+            # comb_list = combinations(all_complex,2)
+            # for x in comb_list:
+            #     # calculate the distance between two sequences
+            #     cell = selection.global_align(x[0],x[1],only_score = True)                
+            #     i = all_complex_index.index(x[0].index)
+            #     j = all_complex_index.index(x[1].index)
+            #     distance_mtx[i,j] = cell
+            #     distance_mtx[j,i] = cell
+            
+            # while there are still sequences that can be join together   
+            # while complex_count > 1:
+            #     # empty matrix
+            #     distance_mtx = np.zeros((len(all_complex),len(all_complex)))
+            #     # fill the matrix with distances
+            #     for i,x in enumerate(distance_mtx):
+            #         for j,y in enumerate(x):
+            #             if j > i:
+            #                 distance_mtx[i,j] = selection.global_align(\
+            #                     all_complex[i],all_complex[j],only_score=True)
+            #             elif i > j:
+            #                 distance_mtx[j,i] = distance_mtx[i,j]
+            #     # look for the smallest value in the matrix and return the two complexes
+            #     idx1, idx2 = self.min_dist(distance_mtx)
+            #     seq1 = all_complex[idx1]
+            #     seq2 = all_complex[idx2]
+
+                # structual alignment, deselect the non-common atoms in seq1 & 2
+                # selection.global_align(seq1,seq2)
+
+                # change the list, use seq1 to represent both seq1 and seq2 because
+                # the atoms in their non common parts are already deselected so they
+                # are both seq1join2
+                # all_complex = [x for i,x in enumerate(all_complex) if i != idx2]
+                
+                
+
+                # for each cycle, two sequences are joined to make a new sequence 
+                # and pairwise aligned with other sequences, a new matrix is created.
+                # You can directly deselect the uncommon part because that's how dummy align works
+                # and because in global_align(), it only run on residues whos atoms are selected 
+                
+            # Logs.debug(distance_mtx)
+            
+
 
         if (self.args.select.lower() == "local"):
             selection.local_align(self._mobile,self._target)
-        if (self.args.select.lower() == "none"):
-            if self.selected_before:
+        if (self.args.select.lower() == "none"): 
+            if len(self.selected_before) != 0:
                 self.change_selected(self._mobile,self._target,self.selected_before[0],self.selected_before[1])
+                self.selected_before=[]
         self.workspace = workspace
         self.make_plugin_usable()
         self.update_workspace(workspace)
         self._menu.change_error("clear")
-        
+    
+    # find the two sequences whose distance is the smallest
+    # called in on_select_received, used in the clustalW part
+    def min_dist(self, matrix):
+        if len(matrix) < 2 or len(matrix[0]) < 2:
+            Logs.debug("distance matrix size is too small")
+            return -1,-1
+        else:
+            min_val = math.inf
+            for x in range(len(matrix)):
+                for y in range(len(matrix[0])):
+                    if x !=y and matrix[x][y] < min_val:
+                        min_val = matrix[x][y]
+                        seq1 = x
+                        seq2 = y
 
+            return seq1, seq2
+    
     def change_selected(self,mobile,target,mobile_selected,target_selected):
         if [len(list(map(lambda a:a,x.atoms))) for x in mobile]==[len(x) for x in mobile_selected]\
             and len(list(map(lambda a:a,target.atoms))) == len(target_selected):

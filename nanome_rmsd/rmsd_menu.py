@@ -1,7 +1,11 @@
 import nanome
 from nanome.util import Logs
+from nanome.util import Color
 
 import os
+
+SELECTED_COLOR = Color.from_int(0x00ecc4ff)
+DESELECTED_COLOR = Color.from_int(0xffffffff)
 
 class RMSDMenu():
     def __init__(self, rmsd_plugin):
@@ -23,6 +27,7 @@ class RMSDMenu():
     # run the rmsd algorithm
     def _run_rmsd(self):
         if self.check_resolve_error():
+            self._plugin.update_structures_deep(self._selected_mobile + [self._selected_target])
             self._plugin.run_rmsd([a.complex for a in self._selected_mobile], self._selected_target.complex)
         else:
             self.make_plugin_usable()
@@ -49,35 +54,35 @@ class RMSDMenu():
         if(error_type == "unselected"):
             self.error_message.text_auto_size=False
             self.error_message.text_size = 0.198
-            self.error_message.text_value = "Error: Select both target and receptor"
+            self.error_message.text_value = "Select both target and receptor"
             self.update_score(None)
             self._plugin.update_content(self.error_message)
             return True
         if(error_type == "select_same"):
             self.error_message.text_auto_size=False
             self.error_message.text_size = 0.22
-            self.error_message.text_value = "Error: Select different complexes"
+            self.error_message.text_value = "Select different complexes"
             self.update_score()
             self._plugin.update_content(self.error_message)
             return True
         if(error_type == "different_size"):
             self.error_message.text_auto_size=False
             self.error_message.text_size = 0.159
-            self.error_message.text_value = "Error: Receptor and target have different sizes"
+            self.error_message.text_value = "Receptor and target have different sizes"
             self.update_score()
             self._plugin.update_content(self.error_message)
             return True
         if(error_type == "different_order"):
             self.error_message.text_auto_size=False
             self.error_message.text_size = 0.159
-            self.error_message.text_value = "Error: Receptor and target have different order"
+            self.error_message.text_value = "Receptor and target have different order"
             self.update_score()
             self._plugin.update_content(self.error_message)
             return True
         if(error_type == "zero_size"):
             self.error_message.text_auto_size=False
             self.error_message.text_size = 0.15
-            self.error_message.text_value = "Error: At least one complex has no atom selected"
+            self.error_message.text_value = "At least one complex has no atom selected"
             self.update_score()
             self._plugin.update_content(self.error_message)
             return True
@@ -99,7 +104,6 @@ class RMSDMenu():
             self.error_message.text_value = ""
             self.error_message.text_auto_size = True
             self._plugin.update_content(self.error_message)
-
 
 
     # change the args in the plugin
@@ -132,6 +136,8 @@ class RMSDMenu():
                     self.receptor_text.text_value = "Receptor: "+button.complex.name
                 else:
                     self.receptor_text.text_value = "Receptor: multiple receptors"
+                self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Check.png'))
+
             # deselecting button
             else:
                 button.selected = False
@@ -143,8 +149,12 @@ class RMSDMenu():
                     self.receptor_text.text_value = "Receptor: "+self._selected_mobile[0].complex.name
                 elif len(self._selected_mobile) == 0:
                     self.receptor_text.text_value = "Receptor: Unselected"
+                    self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'None.png'))
+
                 else:
                     self.receptor_text.text_value = "Receptor: multiple receptors"
+                    self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Check.png'))
+
                 
 
             self.select_button.selected = False
@@ -152,10 +162,13 @@ class RMSDMenu():
             # tell the plugin and update the menu
             self._current_select = "None"
             self.update_args("select", "None")
-            self._plugin.update_content(self._show_list)
-            self._plugin.update_content(self.receptor_text)
-            self._plugin.update_content(self.target_text)
-            self._plugin.update_content(self.select_button)
+            self._plugin.update_mobile([x.complex for x in self._selected_mobile])
+            # self._plugin.update_content(self._show_list)
+            # self._plugin.update_content(self.receptor_text)
+            # self._plugin.update_content(self.target_text)
+            # self._plugin.update_content(self.select_button)
+            # self._plugin.update_content(self.receptor_check)
+            self._plugin.update_menu(self._menu)
 
         # a button in the target list is pressed
         def target_pressed(button):
@@ -165,23 +178,36 @@ class RMSDMenu():
                     button.selected = True
                     self._selected_target = button
                     self.target_text.text_value ="Target: "+ button.complex.name
+                    self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Check.png'))
+
                 else: 
                     self._selected_target = None
                     self.target_text.text_value = "Target: Unselected"
+                    self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'None.png'))
+
             else: 
                 button.selected = True
                 self._selected_target = button
                 self.target_text.text_value ="Target: "+ button.complex.name
+                # still setting the image just in case theres a bug
+                self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Check.png'))
+
             self.check_resolve_error(clear_only=True)
             self.select_button.selected = False
             self.select_button.set_all_text("Select")
             # tell the plugin and update the menu
             self._current_select = "None"
             self.update_args("select", "None")
-            self._plugin.update_content(self._show_list)
-            self._plugin.update_content(self.receptor_text)
-            self._plugin.update_content(self.target_text)
-            self._plugin.update_content(self.select_button)
+            if self._selected_target == None:
+                self._plugin.update_target(None)
+            else:
+                self._plugin.update_target(self._selected_target.complex)
+            # self._plugin.update_content(self._show_list)
+            # self._plugin.update_content(self.receptor_text)
+            # self._plugin.update_content(self.target_text)
+            # self._plugin.update_content(self.select_button)
+            # self._plugin.update_content(self.target_check)
+            self._plugin.update_menu(self._menu)
 
         self._mobile_list = []
         self._target_list = []
@@ -231,19 +257,43 @@ class RMSDMenu():
             
         self._plugin.update_menu(self._menu)
 
+    # change the lock image to Lock
+    def lock_image(self):
+        self.lock_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Lock.png'))
+        self._plugin.update_menu(self._menu)
+
     # build the menu
     def build_menu(self):
         # refresh the lists
         def refresh_button_pressed_callback(button):
             self._request_refresh()
             
-
         # press the run button and run the algorithm
         def run_button_pressed_callback(button):
             self.make_plugin_usable(False)
             self._run_rmsd()
 
+        # press the lock button and lock/unlock the complexes
+        def lock_button_pressed_callback(button):
+            def toggle_lock(complex_list):
+                new_locked = not all(elem.locked for elem in complex_list)
 
+                for x in complex_list:
+                    x.locked = new_locked
+                    # x.boxed = new_locked
+                
+                self.lock_img.add_new_image(os.path.join(os.path.dirname(__file__), ('Lock.png' if new_locked else 'Unlock.png')))
+                self._plugin.update_menu(self._menu)
+                self._plugin.update_structures_shallow(complex_list)
+                
+            if self._selected_target != None and len(self._selected_mobile) != 0:
+                complex_list = self._plugin._mobile + [self._plugin._target]
+                complex_indexes = [complex.index for complex in complex_list]
+                self._plugin.request_complexes(complex_indexes, toggle_lock)
+
+            else:
+                self.change_error("unselected")
+            
         # show the target list when the receptor tab is pressed
         def receptor_tab_pressed_callback(button):
             self._current_tab="receptor"
@@ -267,20 +317,46 @@ class RMSDMenu():
         # no hydrogen = ! no hydrogen
         def no_hydrogen_button_pressed_callback(button):
             no_hydrogen_button.selected = not no_hydrogen_button.selected
+            if no_hydrogen_button.selected:
+                no_hydrogen_text.text_color = SELECTED_COLOR
+            else:
+                no_hydrogen_text.text_color = DESELECTED_COLOR     
             self.update_args("no_hydrogen", no_hydrogen_button.selected)
             self._plugin.update_content(no_hydrogen_button)
+            self._plugin.update_content(no_hydrogen_text)
 
         # backbone only = ! backbone only
         def backbone_only_button_pressed_callback(button):
             backbone_only_button.selected = not backbone_only_button.selected
+            if backbone_only_button.selected:
+                backbone_only_text.text_color = SELECTED_COLOR
+            else:
+                backbone_only_text.text_color = DESELECTED_COLOR     
             self.update_args("backbone_only", backbone_only_button.selected)
             self._plugin.update_content(backbone_only_button)
+            self._plugin.update_content(backbone_only_text)
         
         # selected only = ! selected only
         def selected_only_button_pressed_callback(button):
-            selected_only_button.selected = not selected_only_button.selected            
+            selected_only_button.selected = not selected_only_button.selected 
+            if selected_only_button.selected:
+                selected_only_text.text_color = SELECTED_COLOR
+            else:
+                selected_only_text.text_color = DESELECTED_COLOR     
             self.update_args("selected_only", selected_only_button.selected)
             self._plugin.update_content(selected_only_button)
+            self._plugin.update_content(selected_only_text)
+
+        # align box = ! align box
+        def align_box_button_pressed_callback(button):
+            align_box_button.selected = not align_box_button.selected
+            if align_box_button.selected:
+                align_box_text.text_color = SELECTED_COLOR
+            else:
+                align_box_text.text_color = DESELECTED_COLOR     
+            self.update_args("align_box",align_box_button.selected)
+            self._plugin.update_content(align_box_button)
+            self._plugin.update_content(align_box_text)
 
         # change Reorder to the next option
         def reorder_button_pressed_callback(button):
@@ -295,11 +371,17 @@ class RMSDMenu():
             reorder_button.selected = post_option != "None"
             reorder_button.set_all_text(post_option)
             
+            if post_option == "None":
+                reorder_text.text_color = DESELECTED_COLOR     
+            else:
+                reorder_text.text_color = SELECTED_COLOR     
+
             # tell the plugin and update the menu
             self._current_reorder = post_option
             self.update_args("reorder_method", post_option)
             self.update_args("reorder", post_option != "None")
             self._plugin.update_content(reorder_button)
+            self._plugin.update_content(reorder_text)
 
         # change Rotation to the next option
         def rotation_button_pressed_callback(button):
@@ -314,10 +396,18 @@ class RMSDMenu():
             rotation_button.selected = post_option != "None"
             rotation_button.set_all_text(post_option)
             
+            if post_option == "None":
+                rotation_text.text_color = DESELECTED_COLOR     
+            else:
+                rotation_text.text_color = SELECTED_COLOR 
+
             # tell the plugin and update the menu
             self._current_rotation = post_option
             self.update_args("rotation_method", post_option)
             self._plugin.update_content(rotation_button)
+            self._plugin.update_content(rotation_button)
+            self._plugin.update_content(rotation_text)
+
 
         def select_button_pressed_callback(button): 
             if self._selected_mobile != None and self._selected_target != None:
@@ -360,6 +450,14 @@ class RMSDMenu():
         refresh_img = menu.root.find_node("Refresh Image", True)
         refresh_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Refresh.png'))
 
+        # add the receptor check icon
+        self.receptor_check = menu.root.find_node("Receptor Check", True)
+        self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'None.png'))
+
+        # add the target check icon
+        self.target_check = menu.root.find_node("Target Check", True)
+        self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'None.png'))
+
         # create the Run button
         self._run_button = menu.root.find_node("Run", True).get_content()
         self._run_button.register_pressed_callback(run_button_pressed_callback)
@@ -367,6 +465,23 @@ class RMSDMenu():
         # create the Refresh button
         refresh_button = menu.root.find_node("Refresh Button", True).get_content()
         refresh_button.register_pressed_callback(refresh_button_pressed_callback)
+
+        # create the lock button
+        lock_button = menu.root.find_node("Lock Button",True).get_content()
+        lock_button.register_pressed_callback(lock_button_pressed_callback)
+
+        # add the lock icon,
+        self.lock_img = menu.root.find_node("Lock Image",True)
+        mobile_locked = False
+        for x in self._selected_mobile:
+            if x.locked:
+                mobile_locked = True
+
+        if len(self._selected_mobile) != 0 and self._selected_target != None and self._selected_target.locked and mobile_locked:
+            self.lock_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Lock.png'))
+        else:
+            self.lock_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Unlock.png'))
+
 
         # create the List 
         self._show_list = menu.root.find_node("List", True).get_content()
@@ -384,6 +499,7 @@ class RMSDMenu():
         # create the no hydrogen button
         no_hydrogen_button = menu.root.find_node("No Hydrogen btn",True).get_content()
         no_hydrogen_button.register_pressed_callback(no_hydrogen_button_pressed_callback)
+        no_hydrogen_text = menu.root.find_node("No Hydrogen txt",True).get_content()
 
         # create the use reflection button
         # use_reflections_button = menu.root.find_node("Use Reflection btn",True).get_content()
@@ -392,18 +508,28 @@ class RMSDMenu():
         # create the backbone only button
         backbone_only_button = menu.root.find_node("Backbone only btn",True).get_content()
         backbone_only_button.register_pressed_callback(backbone_only_button_pressed_callback)
+        backbone_only_text = menu.root.find_node("Backbone only txt",True).get_content()
 
         # create the selected only button
         selected_only_button =  menu.root.find_node("Selected Only btn",True).get_content()
         selected_only_button.register_pressed_callback(selected_only_button_pressed_callback)
+        selected_only_text = menu.root.find_node("Selected Only txt",True).get_content()
+
+        # create the align box button
+        align_box_button =  menu.root.find_node("Box btn",True).get_content()
+        align_box_button.register_pressed_callback(align_box_button_pressed_callback)
+        align_box_text = menu.root.find_node("Box txt",True).get_content()
 
         # create the reorder button
         reorder_button = menu.root.find_node("Reorder menu",True).get_content()
         reorder_button.register_pressed_callback(reorder_button_pressed_callback)
+        reorder_text = menu.root.find_node("Reorder txt",True).get_content()
 
         # create the roation "drop down"
         rotation_button = menu.root.find_node("Rotation menu",True).get_content()
         rotation_button.register_pressed_callback(rotation_button_pressed_callback)
+        rotation_text = menu.root.find_node("Rotation txt",True).get_content()
+
 
         # create the select cycle button
         self.select_button = menu.root.find_node("Auto Select",True).get_content()
