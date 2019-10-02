@@ -178,7 +178,7 @@ class RMSDMenu():
                     button.selected = True
                     self._selected_target = button
                     self.target_text.text_value ="Target: "+ button.complex.name
-                    self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Check.png'))
+                    self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'GreenCheck.png'))
 
                 else: 
                     self._selected_target = None
@@ -190,7 +190,7 @@ class RMSDMenu():
                 self._selected_target = button
                 self.target_text.text_value ="Target: "+ button.complex.name
                 # still setting the image just in case theres a bug
-                self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Check.png'))
+                self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'GreenCheck.png'))
 
             self.check_resolve_error(clear_only=True)
             self.select_button.selected = False
