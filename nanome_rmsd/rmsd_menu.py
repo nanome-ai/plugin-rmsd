@@ -6,6 +6,11 @@ import os
 
 SELECTED_COLOR = Color.from_int(0x00ecc4ff)
 DESELECTED_COLOR = Color.from_int(0xffffffff)
+CHECKICON =  "GreenCheck.png"
+LOCKICON = "Lock.png"
+UNLOCKICON = "Unlock.png"
+REFRESHICON = "Refresh.png"
+QUESTIONMARKICON = "QuestionMark.png"
 
 class RMSDMenu():
     def __init__(self, rmsd_plugin):
@@ -136,7 +141,7 @@ class RMSDMenu():
                     self.receptor_text.text_value = "Receptor: "+button.complex.name
                 else:
                     self.receptor_text.text_value = "Receptor: multiple receptors"
-                self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'GreenCheck.png'))
+                self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
 
             # deselecting button
             else:
@@ -149,11 +154,11 @@ class RMSDMenu():
                     self.receptor_text.text_value = "Receptor: "+self._selected_mobile[0].complex.name
                 elif len(self._selected_mobile) == 0:
                     self.receptor_text.text_value = "Receptor: Unselected"
-                    self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'QuestionMark.png'))
+                    self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__),QUESTIONMARKICON))
 
                 else:
                     self.receptor_text.text_value = "Receptor: multiple receptors"
-                    self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'GreenCheck.png'))
+                    self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
 
                 
 
@@ -178,19 +183,19 @@ class RMSDMenu():
                     button.selected = True
                     self._selected_target = button
                     self.target_text.text_value ="Target: "+ button.complex.name
-                    self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'GreenCheck.png'))
+                    self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
 
                 else: 
                     self._selected_target = None
                     self.target_text.text_value = "Target: Unselected"
-                    self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'QuestionMark.png'))
+                    self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), QUESTIONMARKICON))
 
             else: 
                 button.selected = True
                 self._selected_target = button
                 self.target_text.text_value ="Target: "+ button.complex.name
                 # still setting the image just in case theres a bug
-                self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'GreenCheck.png'))
+                self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
 
             self.check_resolve_error(clear_only=True)
             self.select_button.selected = False
@@ -259,7 +264,7 @@ class RMSDMenu():
 
     # change the lock image to Lock
     def lock_image(self):
-        self.lock_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Lock.png'))
+        self.lock_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), LOCKICON))
         self._plugin.update_menu(self._menu)
 
     # build the menu
@@ -282,7 +287,7 @@ class RMSDMenu():
                     x.locked = new_locked
                     # x.boxed = new_locked
                 
-                self.lock_img.add_new_image(os.path.join(os.path.dirname(__file__), ('Lock.png' if new_locked else 'Unlock.png')))
+                self.lock_img.add_new_image(os.path.join(os.path.dirname(__file__), (LOCKICON if new_locked else UNLOCKICON)))
                 self._plugin.update_menu(self._menu)
                 self._plugin.update_structures_shallow(complex_list)
                 
@@ -448,15 +453,15 @@ class RMSDMenu():
 
         # add the refresh icon
         refresh_img = menu.root.find_node("Refresh Image", True)
-        refresh_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Refresh.png'))
+        refresh_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), REFRESHICON))
 
         # add the receptor check icon
         self.receptor_check = menu.root.find_node("Receptor Check", True)
-        self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'QuestionMark.png'))
+        self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), QUESTIONMARKICON))
 
         # add the target check icon
         self.target_check = menu.root.find_node("Target Check", True)
-        self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'QuestionMark.png'))
+        self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), QUESTIONMARKICON))
 
         # create the Run button
         self._run_button = menu.root.find_node("Run", True).get_content()
@@ -478,9 +483,9 @@ class RMSDMenu():
                 mobile_locked = True
 
         if len(self._selected_mobile) != 0 and self._selected_target != None and self._selected_target.locked and mobile_locked:
-            self.lock_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Lock.png'))
+            self.lock_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), LOCKICON))
         else:
-            self.lock_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), 'Unlock.png'))
+            self.lock_img.add_new_image(file_path = os.path.join(os.path.dirname(__file__), UNLOCKICON))
 
 
         # create the List 
