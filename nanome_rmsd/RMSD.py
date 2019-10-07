@@ -68,7 +68,7 @@ class RMSD(nanome.PluginInstance):
         self._target = target
 
     def select_all_atoms(self, complex_index):
-        complex_list = [self._target] + [x for x in self._mobile]
+        complex_list = list(self._mobile).append(self._target)
         complex_index_list = [x.index for x in complex_list if x != None]
         self.compare_index = complex_index
         self.request_complexes(complex_index_list,self.on_select_atoms_received)
