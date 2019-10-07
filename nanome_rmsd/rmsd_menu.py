@@ -144,8 +144,7 @@ class RMSDMenu():
                     self.receptor_text.text_value = "Receptor: multiple receptors"
                 self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
                 # select all the atoms if a complex has no atom selected
-                mobile_atoms = list(button.complex.atoms)
-                if all( atom.slected == False for atom in mobile_atoms ):
+                if all( atom.slected == False for atom in button.complex.atoms ):
                     self._plugin.select_all_atoms(button.complex.index)
 
 
@@ -190,8 +189,7 @@ class RMSDMenu():
                     self._plugin.update_target(self._selected_target.complex)
                     self.target_text.text_value ="Target: "+ button.complex.name
                     self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
-                    target_atoms = list(button.complex.atoms)
-                    if all( atom.selected == False for atom in target_atoms ):
+                    if all( atom.selected == False for atom in button.complex.atoms ):
                         self._plugin.select_all_atoms(button.complex.index)
 
 
@@ -204,8 +202,7 @@ class RMSDMenu():
                 button.selected = True
                 self._selected_target = button
                 self._plugin.update_target(self._selected_target.complex)
-                target_atoms = list(button.complex.atoms)
-                if all( atom.slected == False for atom in target_atoms ):
+                if all( atom.selected == False for atom in button.complex.atoms ):
                     self._plugin.select_all_atoms(button.complex.index)
                 self.target_text.text_value ="Target: "+ button.complex.name
                 # still setting the image just in case theres a bug

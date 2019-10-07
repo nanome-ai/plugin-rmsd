@@ -21,6 +21,9 @@ class RMSD(nanome.PluginInstance):
         self.selected_before = []
         self._mobile = []
         self._target = None
+        # passed from rmsd_menu.py to compare the index 
+        # and autoselect entry menu complex
+        self.compare_index = None
 
 
     def on_run(self):
