@@ -19,6 +19,11 @@ class RMSD(nanome.PluginInstance):
         self._menu = RMSDMenu(self)
         self._menu.build_menu()
         self.selected_before = []
+        self._mobile = []
+        self._target = None
+        # passed from rmsd_menu.py to compare the index 
+        # and autoselect entry menu complex
+        self.compare_index = None
 
 
     def on_run(self):
@@ -61,6 +66,21 @@ class RMSD(nanome.PluginInstance):
 
     def update_target(self, target):
         self._target = target
+
+    def select_all_atoms(self, complex_index):
+        complex_list = list(self._mobile)
+        complex_list.append(self._target)
+        complex_index_list = [x.index for x in complex_list if x != None]
+        self.compare_index = complex_index
+        self.request_complexes(complex_index_list,self.on_select_atoms_received)
+
+    def on_select_atoms_received(self, complexes):
+        for x in complexes:
+            if x != None and x.index == self.compare_index:
+                for y in x.atoms:
+                    y.selected = True
+                self.update_structures_deep([x])
+
 
     # def on_workspace_received(self, workspace):
     def on_complexes_received(self,complexes):

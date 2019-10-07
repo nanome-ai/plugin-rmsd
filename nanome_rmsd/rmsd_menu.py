@@ -137,11 +137,16 @@ class RMSDMenu():
             if button.complex.index not in [ a.complex.index for a in self._selected_mobile]:
                 button.selected = True
                 self._selected_mobile.append(button)
+                self._plugin.update_mobile([x.complex for x in self._selected_mobile])
                 if len(self._selected_mobile) == 1:
                     self.receptor_text.text_value = "Receptor: "+button.complex.name
                 else:
                     self.receptor_text.text_value = "Receptor: multiple receptors"
                 self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
+                # select all the atoms if a complex has no atom selected
+                if all( atom.selected == False for atom in button.complex.atoms ):
+                    self._plugin.select_all_atoms(button.complex.index)
+
 
             # deselecting button
             else:
@@ -160,7 +165,6 @@ class RMSDMenu():
                     self.receptor_text.text_value = "Receptor: multiple receptors"
                     self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
 
-                
 
             self.select_button.selected = False
             self.select_button.set_all_text("Select")            
@@ -182,8 +186,12 @@ class RMSDMenu():
                 if self._selected_target.complex != button.complex: 
                     button.selected = True
                     self._selected_target = button
+                    self._plugin.update_target(self._selected_target.complex)
                     self.target_text.text_value ="Target: "+ button.complex.name
                     self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
+                    if all( atom.selected == False for atom in button.complex.atoms ):
+                        self._plugin.select_all_atoms(button.complex.index)
+
 
                 else: 
                     self._selected_target = None
@@ -193,6 +201,9 @@ class RMSDMenu():
             else: 
                 button.selected = True
                 self._selected_target = button
+                self._plugin.update_target(self._selected_target.complex)
+                if all( atom.selected == False for atom in button.complex.atoms ):
+                    self._plugin.select_all_atoms(button.complex.index)
                 self.target_text.text_value ="Target: "+ button.complex.name
                 # still setting the image just in case theres a bug
                 self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
