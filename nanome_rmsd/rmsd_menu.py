@@ -144,7 +144,7 @@ class RMSDMenu():
                     self.receptor_text.text_value = "Receptor: multiple receptors"
                 self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
                 # select all the atoms if a complex has no atom selected
-                if all( atom.slected == False for atom in button.complex.atoms ):
+                if all( atom.selected == False for atom in button.complex.atoms ):
                     self._plugin.select_all_atoms(button.complex.index)
 
 
