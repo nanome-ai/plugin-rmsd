@@ -262,7 +262,7 @@ class RMSD(nanome.PluginInstance):
             p_coords -= p_cent
             q_coords -= q_cent
 
-            #reordering coords  ???
+            #reordering coords  ?
             if args.reorder:
                 if q_review.shape[0] != len(q_coords):
                     Logs.debug("error: Reorder length error. Full atom list needed for --Logs.debug")
@@ -397,7 +397,8 @@ class RMSD(nanome.PluginInstance):
                 
             # Logs.debug(distance_mtx)
             
-
+            
+            self.make_plugin_usable()
 
         if (self.args.select.lower() == "local"):
             selection.local_align(self._mobile,self._target)
@@ -406,9 +407,9 @@ class RMSD(nanome.PluginInstance):
                 self.change_selected(self._mobile,self._target,self.selected_before[0],self.selected_before[1])
                 self.selected_before=[]
         self.workspace = workspace
-        self.make_plugin_usable()
         self.update_workspace(workspace)
         self._menu.change_error("clear")
+        
     
     # find the two sequences whose distance is the smallest
     # called in on_select_received, used in the clustalW part
@@ -435,6 +436,7 @@ class RMSD(nanome.PluginInstance):
                     x.selected = mobile_selected[j][i]
             for i,x in enumerate(target.atoms):
                 x.selected = target_selected[i]
+            self._menu.make_plugin_usable(state = False)
         else:
             Logs.debug("selected complexes changed")
             self._menu.change_error("selected_changed")
