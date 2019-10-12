@@ -94,7 +94,6 @@ class RMSD(nanome.PluginInstance):
 
         for x in mobile_complex:
             result += self.align(target_complex, x)
-            Logs.debug("Loading2.. ", percentage_count)
             percentage_count += 1/total_percentage
             self._menu.change_loading_percentage(percentage_count)
         if result :
