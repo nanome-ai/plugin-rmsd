@@ -58,7 +58,6 @@ class RMSDMenu():
     def change_loading_percentage(self,percentage):
         self.loadingBar.percentage = percentage
         self._plugin.update_content(self.loadingBar)
-        Logs.debug("loading ",percentage)
 
     # show the error message texts, fromRun means if the it is called after Run is pressed
     def change_error(self,error_type):
