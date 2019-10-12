@@ -56,7 +56,7 @@ class RMSD(nanome.PluginInstance):
         self._menu.change_complex_list(complexes)
  
     def run_rmsd(self, mobile, target):
-        self._menu.change_error("loading")
+        # self._menu.change_error("loading")
         self._mobile = mobile
         self._target = target
         self.request_complexes([self._target.index] + [x.index for x in self._mobile],self.on_complexes_received)
@@ -88,18 +88,27 @@ class RMSD(nanome.PluginInstance):
         target_complex = complexes[0]
         mobile_complex = complexes[1:]
         result = 0
+
+        total_percentage = len(self._mobile)
+        percentage_count = 0
+
         for x in mobile_complex:
             result += self.align(target_complex, x)
+            Logs.debug("Loading2.. ", percentage_count)
+            percentage_count += 1/total_percentage
+            self._menu.change_loading_percentage(percentage_count)
         if result :
             self._menu.update_score(result)
         self.update_mobile(mobile_complex)
         self.update_target(target_complex)
         Logs.debug("RMSD done")
         self._menu.lock_image()
-        self.make_plugin_usable()
+        # self.make_plugin_usable()
+        self._menu.hide_loading_bar()
         self.update_structures_deep([target_complex])
         self.update_structures_deep(mobile_complex)
         # self.update_workspace(workspace)
+        self._menu.loadingBar.percentage = 0
        
     def update_args(self, arg, option):
         setattr(self.args, arg, option)
@@ -318,7 +327,7 @@ class RMSD(nanome.PluginInstance):
 
     # auto select with global/local alignment
     def select(self,mobile,target):
-        self._menu.change_error("loading")
+        # self._menu.change_error("loading")
         self._mobile = mobile
         self._target = target
         self.request_workspace(self.on_select_received) 
@@ -337,10 +346,20 @@ class RMSD(nanome.PluginInstance):
             self.selected_before = [[list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],
                                     list(map(lambda a:a.selected,self._target.atoms))]
             # 1. DUMMY METHOD
+            total_percentage = len(self._mobile) * 2 - 1
+            percentage_count = 0
             for x in self._mobile:
                 selection.global_align(x , self._target)  
+                Logs.debug("Loading.. ", percentage_count)
+                percentage_count += 1/total_percentage
+                self._menu.change_loading_percentage(percentage_count)
+
             for x in self._mobile[:-1]:
-                selection.global_align(x , self._target)  
+                selection.global_align(x , self._target) 
+                Logs.debug("Loading.. " , percentage_count)
+                percentage_count += 1/total_percentage
+                self._menu.change_loading_percentage(percentage_count )
+
             # ------------------------------------------------
             # 2. SLOW OPTIMAL
             # selection.multi_global_align(self._mobile+[self._target]) 
@@ -398,7 +417,7 @@ class RMSD(nanome.PluginInstance):
             # Logs.debug(distance_mtx)
             
             
-            self.make_plugin_usable()
+            # self.make_plugin_usable()
 
         if (self.args.select.lower() == "local"):
             selection.local_align(self._mobile,self._target)
@@ -408,6 +427,8 @@ class RMSD(nanome.PluginInstance):
                 self.selected_before=[]
         self.workspace = workspace
         self.update_workspace(workspace)
+        self._menu.hide_loading_bar() 
+        self._menu.loadingBar.percentage = 0
         self._menu.change_error("clear")
         
     
@@ -431,19 +452,21 @@ class RMSD(nanome.PluginInstance):
     def change_selected(self,mobile,target,mobile_selected,target_selected):
         if [len(list(map(lambda a:a,x.atoms))) for x in mobile]==[len(x) for x in mobile_selected]\
             and len(list(map(lambda a:a,target.atoms))) == len(target_selected):
+            self._menu.show_loading_bar()
             for j,y in enumerate(mobile):    
                 for i,x in enumerate(y.atoms):
                     x.selected = mobile_selected[j][i]
             for i,x in enumerate(target.atoms):
                 x.selected = target_selected[i]
-            self._menu.make_plugin_usable(state = False)
+            # self._menu.make_plugin_usable(state = False)
+            self._menu.hide_loading_bar()
         else:
             Logs.debug("selected complexes changed")
             self._menu.change_error("selected_changed")
 
 
 def main():
-    plugin = nanome.Plugin("RMSD", "A simple plugin that aligns complexes through RMSD calculation", "Test", False)
+    plugin = nanome.Plugin("RMSD", "A super complicated plugin that aligns complexes through RMSD calculation", "Test", False)
     plugin.set_plugin_class(RMSD)
     plugin.run('127.0.0.1', 8888)
 
