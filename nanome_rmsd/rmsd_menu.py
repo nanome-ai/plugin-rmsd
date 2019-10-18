@@ -35,7 +35,6 @@ class RMSDMenu():
             self._plugin.update_structures_deep(self._selected_mobile + [self._selected_target])
             self._plugin.run_rmsd([a.complex for a in self._selected_mobile], self._selected_target.complex)
         else:
-            # self.make_plugin_usable()
             self.hide_loading_bar()
 
     # check the "unselect" and "select_same" error and call change_error

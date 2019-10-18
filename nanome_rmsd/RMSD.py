@@ -56,7 +56,6 @@ class RMSD(nanome.PluginInstance):
         self._menu.change_complex_list(complexes)
  
     def run_rmsd(self, mobile, target):
-        # self._menu.change_error("loading")
         self._mobile = mobile
         self._target = target
         self.request_complexes([self._target.index] + [x.index for x in self._mobile],self.on_complexes_received)
@@ -102,11 +101,9 @@ class RMSD(nanome.PluginInstance):
         self.update_target(target_complex)
         Logs.debug("RMSD done")
         self._menu.lock_image()
-        # self.make_plugin_usable()
         self._menu.hide_loading_bar()
         self.update_structures_deep([target_complex])
         self.update_structures_deep(mobile_complex)
-        # self.update_workspace(workspace)
         self._menu.loadingBar.percentage = 0
        
     def update_args(self, arg, option):
@@ -326,7 +323,6 @@ class RMSD(nanome.PluginInstance):
 
     # auto select with global/local alignment
     def select(self,mobile,target):
-        # self._menu.change_error("loading")
         self._mobile = mobile
         self._target = target
         self.request_workspace(self.on_select_received) 
@@ -413,9 +409,7 @@ class RMSD(nanome.PluginInstance):
                 
             # Logs.debug(distance_mtx)
             
-            
-            # self.make_plugin_usable()
-
+        
         if (self.args.select.lower() == "local"):
             selection.local_align(self._mobile,self._target)
         if (self.args.select.lower() == "none"): 
@@ -463,7 +457,7 @@ class RMSD(nanome.PluginInstance):
 
 
 def main():
-    plugin = nanome.Plugin("RMSD", "A super complicated plugin that aligns complexes through RMSD calculation", "Test", False)
+    plugin = nanome.Plugin("RMSD", "Aligns complexes using RMSD calculations.", "Test", False)
     plugin.set_plugin_class(RMSD)
     plugin.run('127.0.0.1', 8888)
 
