@@ -35,7 +35,7 @@ class RMSDMenu():
             self._plugin.update_structures_deep(self._selected_mobile + [self._selected_target])
             self._plugin.run_rmsd([a.complex for a in self._selected_mobile], self._selected_target.complex)
         else:
-            self.make_plugin_usable()
+            self.hide_loading_bar()
 
     # check the "unselect" and "select_same" error and call change_error
     def check_resolve_error(self,clear_only=False):
@@ -53,6 +53,10 @@ class RMSDMenu():
         else:
             self.change_error("clear")
             return True
+
+    def change_loading_percentage(self,percentage):
+        self.loadingBar.percentage = percentage
+        self._plugin.update_content(self.loadingBar)
 
     # show the error message texts, fromRun means if the it is called after Run is pressed
     def change_error(self,error_type):
@@ -126,6 +130,16 @@ class RMSDMenu():
     def make_plugin_usable(self, state = True):
         self._run_button.unusable = not state
         self._plugin.update_button(self._run_button)
+
+    def show_loading_bar(self):
+        self.ln_select_run.enabled = False
+        self.ln_loading_bar.enabled = True
+        self._plugin.update_menu(self._menu)
+
+    def hide_loading_bar(self):
+        self.ln_select_run.enabled = True
+        self.ln_loading_bar.enabled = False
+        self._plugin.update_menu(self._menu)
 
     # change the complex list
     def change_complex_list(self, complex_list):
@@ -286,7 +300,8 @@ class RMSDMenu():
             
         # press the run button and run the algorithm
         def run_button_pressed_callback(button):
-            self.make_plugin_usable(False)
+            self.show_loading_bar()
+            # self.make_plugin_usable(False)
             self._run_rmsd()
 
         # press the lock button and lock/unlock the complexes
@@ -427,7 +442,7 @@ class RMSDMenu():
 
         def select_button_pressed_callback(button): 
             if self._selected_mobile != None and self._selected_target != None:
-                
+                self.show_loading_bar()
                 self._plugin.select([x.complex for x in self._selected_mobile],self._selected_target.complex)
                 drop_down  = self._drop_down_dict["select"]
                 temp_length=len(drop_down)
@@ -446,6 +461,7 @@ class RMSDMenu():
                 # tell the plugin and update the menu
                 self._current_select = post_option
                 self.update_args("select", post_option)
+
             else:
                 self.check_resolve_error()
             self._plugin.update_content(self.select_button)
@@ -473,6 +489,9 @@ class RMSDMenu():
         # add the target check icon
         self.target_check = menu.root.find_node("Target Check", True)
         self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), QUESTIONMARKICON))
+
+        # create the layout node that contains select and run and refresh
+        self.ln_select_run = menu.root.find_node("Refresh Run",True)
 
         # create the Run button
         self._run_button = menu.root.find_node("Run", True).get_content()
@@ -550,6 +569,11 @@ class RMSDMenu():
         # create the select cycle button
         self.select_button = menu.root.find_node("Auto Select",True).get_content()
         self.select_button.register_pressed_callback(select_button_pressed_callback)
+
+        self.ln_loading_bar = menu.root.find_node("Loading Bar",True)
+        self.ln_loading_bar.forward_dist = .003
+        self.loadingBar = self.ln_loading_bar.add_new_loading_bar()
+        self.loadingBar.description = "      Loading...          "
 
         # create the rmsd score
         self.rmsd_score_label = menu.root.find_node("RMSD number",True).get_content()
