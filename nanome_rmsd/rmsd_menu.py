@@ -180,8 +180,8 @@ class RMSDMenu():
                     self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
 
 
-            self.select_button.selected = False
-            self.select_button.set_all_text("Select")            
+            # self.select_button.selected = False
+            # self.select_button.set_all_text("Select")            
             # tell the plugin and update the menu
             self._current_select = "None"
             self.update_args("select", "None")
@@ -223,8 +223,8 @@ class RMSDMenu():
                 self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
 
             self.check_resolve_error(clear_only=True)
-            self.select_button.selected = False
-            self.select_button.set_all_text("Select")
+            # self.select_button.selected = False
+            # self.select_button.set_all_text("Select")
             # tell the plugin and update the menu
             self._current_select = "None"
             self.update_args("select", "None")
@@ -300,9 +300,32 @@ class RMSDMenu():
             
         # press the run button and run the algorithm
         def run_button_pressed_callback(button):
-            self.show_loading_bar()
-            # self.make_plugin_usable(False)
-            self._run_rmsd()
+            # self.show_loading_bar()
+            if self._selected_mobile != None and self._selected_target != None:
+                self.show_loading_bar()
+                self._plugin.select([x.complex for x in self._selected_mobile],self._selected_target.complex)
+                drop_down  = self._drop_down_dict["select"]
+                temp_length=len(drop_down)
+                
+                pre_index = drop_down.index(self._current_select)
+                post_index = (pre_index + 1) % temp_length
+                
+                post_option = drop_down[post_index]
+                # self.select_button.selected = post_option != "None"
+                
+                # if post_option == "None":
+                #     self.select_button.set_all_text("Select")
+                # else:
+                #     self.select_button.set_all_text(post_option)
+                
+                # tell the plugin and update the menu
+                self._current_select = post_option
+                self.update_args("select", post_option)
+            else:
+                self.check_resolve_error()
+            # self._plugin.update_content(self.select_button)
+            # self._run_rmsd()
+
 
         # press the lock button and lock/unlock the complexes
         def lock_button_pressed_callback(button):
@@ -344,7 +367,18 @@ class RMSDMenu():
             self._plugin.update_content(receptor_tab)
             self._plugin.update_content(target_tab)
             self._plugin.update_content(self._show_list)
-        
+
+        # align sequence = ! align sequence
+        def align_sequence_button_pressed_callback(button):
+            align_sequence_button.selected = not align_sequence_button.selected
+            if align_sequence_button.selected:
+                align_sequence_text.text_color = SELECTED_COLOR
+            else:
+                align_sequence_text.text_color = DESELECTED_COLOR
+            self.update_args("align_sequence", align_sequence_button.selected)
+            self._plugin.update_content(align_sequence_button)
+            self._plugin.update_content(align_sequence_text)
+
         # no hydrogen = ! no hydrogen
         def no_hydrogen_button_pressed_callback(button):
             no_hydrogen_button.selected = not no_hydrogen_button.selected
@@ -440,31 +474,31 @@ class RMSDMenu():
             self._plugin.update_content(rotation_text)
 
 
-        def select_button_pressed_callback(button): 
-            if self._selected_mobile != None and self._selected_target != None:
-                self.show_loading_bar()
-                self._plugin.select([x.complex for x in self._selected_mobile],self._selected_target.complex)
-                drop_down  = self._drop_down_dict["select"]
-                temp_length=len(drop_down)
+        # def select_button_pressed_callback(button): 
+        #     if self._selected_mobile != None and self._selected_target != None:
+        #         self.show_loading_bar()
+        #         self._plugin.select([x.complex for x in self._selected_mobile],self._selected_target.complex)
+        #         drop_down  = self._drop_down_dict["select"]
+        #         temp_length=len(drop_down)
                 
-                pre_index = drop_down.index(self._current_select)
-                post_index = (pre_index + 1) % temp_length
+        #         pre_index = drop_down.index(self._current_select)
+        #         post_index = (pre_index + 1) % temp_length
                 
-                post_option = drop_down[post_index]
-                self.select_button.selected = post_option != "None"
+        #         post_option = drop_down[post_index]
+        #         self.select_button.selected = post_option != "None"
                 
-                if post_option == "None":
-                    self.select_button.set_all_text("Select")
-                else:
-                    self.select_button.set_all_text(post_option)
+        #         if post_option == "None":
+        #             self.select_button.set_all_text("Select")
+        #         else:
+        #             self.select_button.set_all_text(post_option)
                 
-                # tell the plugin and update the menu
-                self._current_select = post_option
-                self.update_args("select", post_option)
+        #         # tell the plugin and update the menu
+        #         self._current_select = post_option
+        #         self.update_args("select", post_option)
 
-            else:
-                self.check_resolve_error()
-            self._plugin.update_content(self.select_button)
+        #     else:
+        #         self.check_resolve_error()
+        #     self._plugin.update_content(self.select_button)
 
         # Create a prefab that will be used to populate the lists
         self._complex_item_prefab = nanome.ui.LayoutNode()
@@ -531,6 +565,11 @@ class RMSDMenu():
         target_tab = menu.root.find_node("Target_tab",True).get_content()
         target_tab.register_pressed_callback(target_tab_pressed_callback)
 
+        # create the align seqeuence button
+        align_sequence_button = menu._root.find_node("Align sequence btn",True).get_content()
+        align_sequence_button.register_pressed_callback(align_sequence_button_pressed_callback)
+        align_sequence_text = menu.root.find_node("Align sequence txt",True).get_content()
+
         # create the no hydrogen button
         no_hydrogen_button = menu.root.find_node("No Hydrogen btn",True).get_content()
         no_hydrogen_button.register_pressed_callback(no_hydrogen_button_pressed_callback)
@@ -544,6 +583,7 @@ class RMSDMenu():
         backbone_only_button = menu.root.find_node("Backbone only btn",True).get_content()
         backbone_only_button.register_pressed_callback(backbone_only_button_pressed_callback)
         backbone_only_text = menu.root.find_node("Backbone only txt",True).get_content()
+
 
         # create the selected only button
         selected_only_button =  menu.root.find_node("Selected Only btn",True).get_content()
@@ -567,8 +607,8 @@ class RMSDMenu():
 
 
         # create the select cycle button
-        self.select_button = menu.root.find_node("Auto Select",True).get_content()
-        self.select_button.register_pressed_callback(select_button_pressed_callback)
+        # self.select_button = menu.root.find_node("Auto Select",True).get_content()
+        # self.select_button.register_pressed_callback(select_button_pressed_callback)
 
         self.ln_loading_bar = menu.root.find_node("Loading Bar",True)
         self.ln_loading_bar.forward_dist = .003

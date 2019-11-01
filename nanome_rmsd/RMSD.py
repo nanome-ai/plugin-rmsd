@@ -58,7 +58,7 @@ class RMSD(nanome.PluginInstance):
     def run_rmsd(self, mobile, target):
         self._mobile = mobile
         self._target = target
-        self.request_complexes([self._target.index] + [x.index for x in self._mobile],self.on_complexes_received)
+        self.request_complexes([self._target.index] + [x.index for x in self._mobile], self.on_complexes_received)
 
     def update_mobile(self, mobile):
         self._mobile = mobile
@@ -90,11 +90,10 @@ class RMSD(nanome.PluginInstance):
 
         total_percentage = len(self._mobile)
         percentage_count = 0
-
         for x in mobile_complex:
             result += self.align(target_complex, x)
-            percentage_count += 1/total_percentage
-            self._menu.change_loading_percentage(percentage_count)
+            percentage_count += 1
+            self._menu.change_loading_percentage(percentage_count/(total_percentage*2))
         if result :
             self._menu.update_score(result)
         self.update_mobile(mobile_complex)
@@ -123,6 +122,7 @@ class RMSD(nanome.PluginInstance):
             self.backbone_only = True
             self.align = True
             self.align_box = False
+            self.align_sequence = True
 
         @property
         def update(self):
@@ -337,7 +337,7 @@ class RMSD(nanome.PluginInstance):
             if complex.index == self._target.index:
                 self._target = complex
         
-        if (self.args.select.lower() == "global"):
+        if (self.args.select.lower() == "global" and self.args.align_sequence == True):
             self.selected_before = [[list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],
                                     list(map(lambda a:a.selected,self._target.atoms))]
             # 1. DUMMY METHOD
@@ -345,13 +345,14 @@ class RMSD(nanome.PluginInstance):
             percentage_count = 0
             for x in self._mobile:
                 selection.global_align(x , self._target)  
-                percentage_count += 1/total_percentage
+                percentage_count += 1/(total_percentage*2)
                 self._menu.change_loading_percentage(percentage_count)
 
             for x in self._mobile[:-1]:
                 selection.global_align(x , self._target) 
-                percentage_count += 1/total_percentage
+                percentage_count += 1/(total_percentage*2)
                 self._menu.change_loading_percentage(percentage_count )
+            
 
             # ------------------------------------------------
             # 2. SLOW OPTIMAL
@@ -418,9 +419,13 @@ class RMSD(nanome.PluginInstance):
                 self.selected_before=[]
         self.workspace = workspace
         self.update_workspace(workspace)
+        self._menu._run_rmsd()
+
         self._menu.hide_loading_bar() 
         self._menu.loadingBar.percentage = 0
         self._menu.change_error("clear")
+        
+
         
     
     # find the two sequences whose distance is the smallest
