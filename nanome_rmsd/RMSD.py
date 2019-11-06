@@ -338,8 +338,8 @@ class RMSD(nanome.PluginInstance):
                 self._target = complex
         
         if (self.args.select.lower() == "global" and self.args.align_sequence == True):
-            self.selected_before = [[list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],
-                                    list(map(lambda a:a.selected,self._target.atoms))]
+            # self.selected_before = [[list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],
+            #                         list(map(lambda a:a.selected,self._target.atoms))]
             # 1. DUMMY METHOD
             total_percentage = len(self._mobile) * 2 - 1
             percentage_count = 0
@@ -413,10 +413,10 @@ class RMSD(nanome.PluginInstance):
         
         if (self.args.select.lower() == "local"):
             selection.local_align(self._mobile,self._target)
-        if (self.args.select.lower() == "none"): 
-            if len(self.selected_before) != 0:
-                self.change_selected(self._mobile,self._target,self.selected_before[0],self.selected_before[1])
-                self.selected_before=[]
+        # if (self.args.select.lower() == "none"): 
+        #     if len(self.selected_before) != 0:
+        #         self.change_selected(self._mobile,self._target,self.selected_before[0],self.selected_before[1])
+        #         self.selected_before=[]
         self.workspace = workspace
         self.update_workspace(workspace)
         self._menu._run_rmsd()
