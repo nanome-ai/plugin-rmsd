@@ -336,8 +336,11 @@ class RMSD(nanome.PluginInstance):
                 self._mobile.append(complex)
             if complex.index == self._target.index:
                 self._target = complex
-        
+        Logs.debug("self.args.align_sequence is ",self.args.align_sequence)
+        Logs.debug("self.args.select is ",self.args.select)
+
         if (self.args.select.lower() == "global" and self.args.align_sequence == True):
+            Logs.debug("Check dif size problem")
             # self.selected_before = [[list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],
             #                         list(map(lambda a:a.selected,self._target.atoms))]
             # 1. DUMMY METHOD

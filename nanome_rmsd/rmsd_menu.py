@@ -184,7 +184,7 @@ class RMSDMenu():
             # self.select_button.set_all_text("Select")            
             # tell the plugin and update the menu
             self._current_select = "None"
-            self.update_args("select", "None")
+            # self.update_args("select", "None")
             self._plugin.update_mobile([x.complex for x in self._selected_mobile])
             # self._plugin.update_content(self._show_list)
             # self._plugin.update_content(self.receptor_text)
@@ -227,7 +227,7 @@ class RMSDMenu():
             # self.select_button.set_all_text("Select")
             # tell the plugin and update the menu
             self._current_select = "None"
-            self.update_args("select", "None")
+            # self.update_args("select", "None")
             if self._selected_target == None:
                 self._plugin.update_target(None)
             else:
@@ -304,13 +304,13 @@ class RMSDMenu():
             if self._selected_mobile != None and self._selected_target != None:
                 self.show_loading_bar()
                 self._plugin.select([x.complex for x in self._selected_mobile],self._selected_target.complex)
-                drop_down  = self._drop_down_dict["select"]
-                temp_length=len(drop_down)
+                # drop_down  = self._drop_down_dict["select"]
+                # temp_length=len(drop_down)
                 
-                pre_index = drop_down.index(self._current_select)
-                post_index = (pre_index + 1) % temp_length
+                # pre_index = drop_down.index(self._current_select)
+                # post_index = (pre_index + 1) % temp_length
                 
-                post_option = drop_down[post_index]
+                # post_option = drop_down[post_index]
                 # self.select_button.selected = post_option != "None"
                 
                 # if post_option == "None":
@@ -319,8 +319,8 @@ class RMSDMenu():
                 #     self.select_button.set_all_text(post_option)
                 
                 # tell the plugin and update the menu
-                self._current_select = post_option
-                self.update_args("select", post_option)
+                # self._current_select = post_option
+                # self.update_args("select", post_option)
             else:
                 self.check_resolve_error()
             # self._plugin.update_content(self.select_button)
@@ -376,6 +376,8 @@ class RMSDMenu():
             else:
                 align_sequence_text.text_color = DESELECTED_COLOR
             self.update_args("align_sequence", align_sequence_button.selected)
+            Logs.debug("align_sequence in menu.py updated to ",align_sequence_button.selected)
+            self._current_select = "global" if align_sequence_button.selected else "none"
             self._plugin.update_content(align_sequence_button)
             self._plugin.update_content(align_sequence_text)
 
