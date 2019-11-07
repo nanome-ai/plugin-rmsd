@@ -1,4 +1,8 @@
-# Nanome - RMSD
+# Nanome - RMSD Plugin
+
+This python plugin allows for users to select multiple molecules, run an RMSD calculation, and auto-align the structures.
+
+Plugin supported on Windows, Linux, and Mac for Nanome v1.14
 
 ### Installation
 
