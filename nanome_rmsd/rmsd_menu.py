@@ -158,8 +158,8 @@ class RMSDMenu():
                     self.receptor_text.text_value = "Receptor: multiple receptors"
                 self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
                 # select all the atoms if a complex has no atom selected
-                if all( atom.selected == False for atom in button.complex.atoms ):
-                    self._plugin.select_all_atoms(button.complex.index)
+                # if all( atom.selected == False for atom in button.complex.atoms ):
+                #     self._plugin.select_all_atoms(button.complex.index)
 
 
             # deselecting button
@@ -186,11 +186,6 @@ class RMSDMenu():
             self._current_select = "None"
             # self.update_args("select", "None")
             self._plugin.update_mobile([x.complex for x in self._selected_mobile])
-            # self._plugin.update_content(self._show_list)
-            # self._plugin.update_content(self.receptor_text)
-            # self._plugin.update_content(self.target_text)
-            # self._plugin.update_content(self.select_button)
-            # self._plugin.update_content(self.receptor_check)
             self._plugin.update_menu(self._menu)
 
         # a button in the target list is pressed
@@ -203,8 +198,8 @@ class RMSDMenu():
                     self._plugin.update_target(self._selected_target.complex)
                     self.target_text.text_value ="Target: "+ button.complex.name
                     self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
-                    if all( atom.selected == False for atom in button.complex.atoms ):
-                        self._plugin.select_all_atoms(button.complex.index)
+                    # if all( atom.selected == False for atom in button.complex.atoms ):
+                    #     self._plugin.select_all_atoms(button.complex.index)
 
 
                 else: 
@@ -216,8 +211,8 @@ class RMSDMenu():
                 button.selected = True
                 self._selected_target = button
                 self._plugin.update_target(self._selected_target.complex)
-                if all( atom.selected == False for atom in button.complex.atoms ):
-                    self._plugin.select_all_atoms(button.complex.index)
+                # if all( atom.selected == False for atom in button.complex.atoms ):
+                #     self._plugin.select_all_atoms(button.complex.index)
                 self.target_text.text_value ="Target: "+ button.complex.name
                 # still setting the image just in case theres a bug
                 self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
@@ -232,11 +227,7 @@ class RMSDMenu():
                 self._plugin.update_target(None)
             else:
                 self._plugin.update_target(self._selected_target.complex)
-            # self._plugin.update_content(self._show_list)
-            # self._plugin.update_content(self.receptor_text)
-            # self._plugin.update_content(self.target_text)
-            # self._plugin.update_content(self.select_button)
-            # self._plugin.update_content(self.target_check)
+           
             self._plugin.update_menu(self._menu)
 
         self._mobile_list = []
@@ -306,18 +297,14 @@ class RMSDMenu():
                 self._plugin.select([x.complex for x in self._selected_mobile],self._selected_target.complex)
                 # drop_down  = self._drop_down_dict["select"]
                 # temp_length=len(drop_down)
-                
                 # pre_index = drop_down.index(self._current_select)
                 # post_index = (pre_index + 1) % temp_length
-                
                 # post_option = drop_down[post_index]
                 # self.select_button.selected = post_option != "None"
-                
                 # if post_option == "None":
                 #     self.select_button.set_all_text("Select")
                 # else:
                 #     self.select_button.set_all_text(post_option)
-                
                 # tell the plugin and update the menu
                 # self._current_select = post_option
                 # self.update_args("select", post_option)
@@ -376,7 +363,6 @@ class RMSDMenu():
             else:
                 align_sequence_text.text_color = DESELECTED_COLOR
             self.update_args("align_sequence", align_sequence_button.selected)
-            Logs.debug("align_sequence in menu.py updated to ",align_sequence_button.selected)
             self._current_select = "global" if align_sequence_button.selected else "none"
             self._plugin.update_content(align_sequence_button)
             self._plugin.update_content(align_sequence_text)
