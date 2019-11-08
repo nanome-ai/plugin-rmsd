@@ -179,9 +179,6 @@ class RMSDMenu():
                     self.receptor_text.text_value = "Receptor: multiple receptors"
                     self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
 
-
-            # self.select_button.selected = False
-            # self.select_button.set_all_text("Select")            
             # tell the plugin and update the menu
             self._current_select = "None"
             # self.update_args("select", "None")
@@ -218,9 +215,6 @@ class RMSDMenu():
                 self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
 
             self.check_resolve_error(clear_only=True)
-            # self.select_button.selected = False
-            # self.select_button.set_all_text("Select")
-            # tell the plugin and update the menu
             self._current_select = "None"
             # self.update_args("select", "None")
             if self._selected_target == None:
@@ -299,8 +293,6 @@ class RMSDMenu():
             else:
                 self.check_resolve_error()
         
-
-
         # press the lock button and lock/unlock the complexes
         def lock_button_pressed_callback(button):
             def toggle_lock(complex_list):
@@ -449,32 +441,6 @@ class RMSDMenu():
             self._plugin.update_content(rotation_text)
 
 
-        # def select_button_pressed_callback(button): 
-        #     if self._selected_mobile != None and self._selected_target != None:
-        #         self.show_loading_bar()
-        #         self._plugin.select([x.complex for x in self._selected_mobile],self._selected_target.complex)
-        #         drop_down  = self._drop_down_dict["select"]
-        #         temp_length=len(drop_down)
-                
-        #         pre_index = drop_down.index(self._current_select)
-        #         post_index = (pre_index + 1) % temp_length
-                
-        #         post_option = drop_down[post_index]
-        #         self.select_button.selected = post_option != "None"
-                
-        #         if post_option == "None":
-        #             self.select_button.set_all_text("Select")
-        #         else:
-        #             self.select_button.set_all_text(post_option)
-                
-        #         # tell the plugin and update the menu
-        #         self._current_select = post_option
-        #         self.update_args("select", post_option)
-
-        #     else:
-        #         self.check_resolve_error()
-        #     self._plugin.update_content(self.select_button)
-
         # Create a prefab that will be used to populate the lists
         self._complex_item_prefab = nanome.ui.LayoutNode()
         self._complex_item_prefab.layout_orientation = nanome.ui.LayoutNode.LayoutTypes.horizontal
@@ -580,10 +546,6 @@ class RMSDMenu():
         rotation_button.register_pressed_callback(rotation_button_pressed_callback)
         rotation_text = menu.root.find_node("Rotation txt",True).get_content()
 
-
-        # create the select cycle button
-        # self.select_button = menu.root.find_node("Auto Select",True).get_content()
-        # self.select_button.register_pressed_callback(select_button_pressed_callback)
 
         self.ln_loading_bar = menu.root.find_node("Loading Bar",True)
         self.ln_loading_bar.forward_dist = .003

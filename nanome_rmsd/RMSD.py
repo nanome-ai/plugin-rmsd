@@ -447,20 +447,20 @@ class RMSD(nanome.PluginInstance):
 
             return seq1, seq2
     
-    def change_selected(self,mobile,target,mobile_selected,target_selected):
-        if [len(list(map(lambda a:a,x.atoms))) for x in mobile]==[len(x) for x in mobile_selected]\
-            and len(list(map(lambda a:a,target.atoms))) == len(target_selected):
-            self._menu.show_loading_bar()
-            for j,y in enumerate(mobile):    
-                for i,x in enumerate(y.atoms):
-                    x.selected = mobile_selected[j][i]
-            for i,x in enumerate(target.atoms):
-                x.selected = target_selected[i]
-            # self._menu.make_plugin_usable(state = False)
-            self._menu.hide_loading_bar()
-        else:
-            Logs.debug("selected complexes changed")
-            self._menu.change_error("selected_changed")
+    # def change_selected(self,mobile,target,mobile_selected,target_selected):
+    #     if [len(list(map(lambda a:a,x.atoms))) for x in mobile]==[len(x) for x in mobile_selected]\
+    #         and len(list(map(lambda a:a,target.atoms))) == len(target_selected):
+    #         self._menu.show_loading_bar()
+    #         for j,y in enumerate(mobile):    
+    #             for i,x in enumerate(y.atoms):
+    #                 x.selected = mobile_selected[j][i]
+    #         for i,x in enumerate(target.atoms):
+    #             x.selected = target_selected[i]
+    #         # self._menu.make_plugin_usable(state = False)
+    #         self._menu.hide_loading_bar()
+    #     else:
+    #         Logs.debug("selected complexes changed")
+    #         self._menu.change_error("selected_changed")
 
 
 def main():
