@@ -295,23 +295,10 @@ class RMSDMenu():
             if self._selected_mobile != None and self._selected_target != None:
                 self.show_loading_bar()
                 self._plugin.select([x.complex for x in self._selected_mobile],self._selected_target.complex)
-                # drop_down  = self._drop_down_dict["select"]
-                # temp_length=len(drop_down)
-                # pre_index = drop_down.index(self._current_select)
-                # post_index = (pre_index + 1) % temp_length
-                # post_option = drop_down[post_index]
-                # self.select_button.selected = post_option != "None"
-                # if post_option == "None":
-                #     self.select_button.set_all_text("Select")
-                # else:
-                #     self.select_button.set_all_text(post_option)
-                # tell the plugin and update the menu
-                # self._current_select = post_option
-                # self.update_args("select", post_option)
+               
             else:
                 self.check_resolve_error()
-            # self._plugin.update_content(self.select_button)
-            # self._run_rmsd()
+        
 
 
         # press the lock button and lock/unlock the complexes
