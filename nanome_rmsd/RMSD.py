@@ -83,7 +83,6 @@ class RMSD(nanome.PluginInstance):
 
     # def on_workspace_received(self, workspace):
     def on_complexes_received(self,complexes):
-        # mobile_index_list = list(map(lambda a: a.index, self._mobile))
         target_complex = complexes[0]
         mobile_complex = complexes[1:]
         result = 0
@@ -353,71 +352,11 @@ class RMSD(nanome.PluginInstance):
                 selection.global_align(x , self._target) 
                 percentage_count += 1/(total_percentage*2)
                 self._menu.change_loading_percentage(percentage_count )
-            
-
-            # ------------------------------------------------
-            # 2. SLOW OPTIMAL
-            # selection.multi_global_align(self._mobile+[self._target]) 
-            # ------------------------------------------------
-            # 3. ClustalW
-            # first, perform all possible pairwise alignment
-            # make a list of all the complexes including target and mobiles
-            # all_complex = self._mobile + [self._target]  
-            # all_complex_index = [x.index for x in all_complex]
-            # complex_count = len(all_complex)
-            # empty distance matrix
-
-            # combinitions of residues
-            # comb_list = combinations(all_complex,2)
-            # for x in comb_list:
-            #     # calculate the distance between two sequences
-            #     cell = selection.global_align(x[0],x[1],only_score = True)                
-            #     i = all_complex_index.index(x[0].index)
-            #     j = all_complex_index.index(x[1].index)
-            #     distance_mtx[i,j] = cell
-            #     distance_mtx[j,i] = cell
-            
-            # while there are still sequences that can be join together   
-            # while complex_count > 1:
-            #     # empty matrix
-            #     distance_mtx = np.zeros((len(all_complex),len(all_complex)))
-            #     # fill the matrix with distances
-            #     for i,x in enumerate(distance_mtx):
-            #         for j,y in enumerate(x):
-            #             if j > i:
-            #                 distance_mtx[i,j] = selection.global_align(\
-            #                     all_complex[i],all_complex[j],only_score=True)
-            #             elif i > j:
-            #                 distance_mtx[j,i] = distance_mtx[i,j]
-            #     # look for the smallest value in the matrix and return the two complexes
-            #     idx1, idx2 = self.min_dist(distance_mtx)
-            #     seq1 = all_complex[idx1]
-            #     seq2 = all_complex[idx2]
-
-                # structual alignment, deselect the non-common atoms in seq1 & 2
-                # selection.global_align(seq1,seq2)
-
-                # change the list, use seq1 to represent both seq1 and seq2 because
-                # the atoms in their non common parts are already deselected so they
-                # are both seq1join2
-                # all_complex = [x for i,x in enumerate(all_complex) if i != idx2]
-                
-                
-
-                # for each cycle, two sequences are joined to make a new sequence 
-                # and pairwise aligned with other sequences, a new matrix is created.
-                # You can directly deselect the uncommon part because that's how dummy align works
-                # and because in global_align(), it only run on residues whos atoms are selected 
-                
-            # Logs.debug(distance_mtx)
-            
+        
         
         if (self.args.select.lower() == "local"):
             selection.local_align(self._mobile,self._target)
-        # if (self.args.select.lower() == "none"): 
-        #     if len(self.selected_before) != 0:
-        #         self.change_selected(self._mobile,self._target,self.selected_before[0],self.selected_before[1])
-        #         self.selected_before=[]
+
         self.workspace = workspace
         self.update_workspace(workspace)
         if self._menu.check_resolve_error():
@@ -426,8 +365,6 @@ class RMSD(nanome.PluginInstance):
         self._menu.hide_loading_bar() 
         self._menu.loadingBar.percentage = 0
         # self._menu.change_error("clear")
-        
-
         
     
     # find the two sequences whose distance is the smallest
@@ -446,21 +383,7 @@ class RMSD(nanome.PluginInstance):
                         seq2 = y
 
             return seq1, seq2
-    
-    # def change_selected(self,mobile,target,mobile_selected,target_selected):
-    #     if [len(list(map(lambda a:a,x.atoms))) for x in mobile]==[len(x) for x in mobile_selected]\
-    #         and len(list(map(lambda a:a,target.atoms))) == len(target_selected):
-    #         self._menu.show_loading_bar()
-    #         for j,y in enumerate(mobile):    
-    #             for i,x in enumerate(y.atoms):
-    #                 x.selected = mobile_selected[j][i]
-    #         for i,x in enumerate(target.atoms):
-    #             x.selected = target_selected[i]
-    #         # self._menu.make_plugin_usable(state = False)
-    #         self._menu.hide_loading_bar()
-    #     else:
-    #         Logs.debug("selected complexes changed")
-    #         self._menu.change_error("selected_changed")
+ 
 
 
 def main():

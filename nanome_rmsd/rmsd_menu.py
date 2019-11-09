@@ -157,10 +157,7 @@ class RMSDMenu():
                 else:
                     self.receptor_text.text_value = "Receptor: multiple receptors"
                 self.receptor_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
-                # select all the atoms if a complex has no atom selected
-                # if all( atom.selected == False for atom in button.complex.atoms ):
-                #     self._plugin.select_all_atoms(button.complex.index)
-
+               
 
             # deselecting button
             else:
@@ -195,9 +192,7 @@ class RMSDMenu():
                     self._plugin.update_target(self._selected_target.complex)
                     self.target_text.text_value ="Target: "+ button.complex.name
                     self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
-                    # if all( atom.selected == False for atom in button.complex.atoms ):
-                    #     self._plugin.select_all_atoms(button.complex.index)
-
+                  
 
                 else: 
                     self._selected_target = None
@@ -208,8 +203,7 @@ class RMSDMenu():
                 button.selected = True
                 self._selected_target = button
                 self._plugin.update_target(self._selected_target.complex)
-                # if all( atom.selected == False for atom in button.complex.atoms ):
-                #     self._plugin.select_all_atoms(button.complex.index)
+             
                 self.target_text.text_value ="Target: "+ button.complex.name
                 # still setting the image just in case theres a bug
                 self.target_check.add_new_image(file_path = os.path.join(os.path.dirname(__file__), CHECKICON))
