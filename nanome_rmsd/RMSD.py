@@ -344,12 +344,12 @@ class RMSD(nanome.PluginInstance):
             total_percentage = len(self._mobile) * 2 - 1
             percentage_count = 0
             for x in self._mobile:
-                selection.global_align(x , self._target)  
+                selection.local_align(x , self._target)  
                 percentage_count += 1/(total_percentage*2)
                 self._menu.change_loading_percentage(percentage_count)
 
             for x in self._mobile[:-1]:
-                selection.global_align(x , self._target) 
+                selection.local_align(x , self._target) 
                 percentage_count += 1/(total_percentage*2)
                 self._menu.change_loading_percentage(percentage_count )
         
