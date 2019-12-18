@@ -237,7 +237,7 @@ class RMSDMenu():
             clone = self._complex_item_prefab.clone()
             ln_btn = clone.get_children()[0]
             btn = ln_btn.get_content()
-            btn.set_all_text(complex.name)
+            btn.text.set_all(complex.name)
             btn.complex = complex
             btn.register_pressed_callback(mobile_pressed)
             self._mobile_list.append(clone)
@@ -248,7 +248,7 @@ class RMSDMenu():
             clone1 = self._complex_item_prefab.clone()
             ln_btn = clone1.get_children()[0]
             btn = ln_btn.get_content()
-            btn.set_all_text(complex.name)
+            btn.text.set_all(complex.name)
             btn.complex = complex
             btn.register_pressed_callback(target_pressed)
             self._target_list.append(clone1)
@@ -395,7 +395,7 @@ class RMSDMenu():
             post_option = drop_down[post_index]
 
             reorder_button.selected = post_option != "None"
-            reorder_button.set_all_text(post_option)
+            reorder_button.text.set_all(post_option)
             
             if post_option == "None":
                 reorder_text.text_color = DESELECTED_COLOR     
@@ -420,7 +420,7 @@ class RMSDMenu():
             post_option = drop_down[post_index]
 
             rotation_button.selected = post_option != "None"
-            rotation_button.set_all_text(post_option)
+            rotation_button.text.set_all(post_option)
             
             if post_option == "None":
                 rotation_text.text_color = DESELECTED_COLOR     
