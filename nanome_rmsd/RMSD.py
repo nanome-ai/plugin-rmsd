@@ -344,6 +344,19 @@ class RMSD(nanome.PluginInstance):
             total_percentage = len(self._mobile) * 2 - 1
             percentage_count = 0
             for x in self._mobile:
+                selection.global_align(x , self._target)  
+                percentage_count += 1/(total_percentage*2)
+                self._menu.change_loading_percentage(percentage_count)
+
+            for x in self._mobile:
+                selection.global_align(x , self._target) 
+                percentage_count += 1/(total_percentage*2)
+                self._menu.change_loading_percentage(percentage_count )
+
+        elif (self.args.select.lower() == "local" and self.args.align_sequence == True):
+            total_percentage = len(self._mobile) * 2 - 1
+            percentage_count = 0
+            for x in self._mobile:
                 selection.local_align(x , self._target)  
                 percentage_count += 1/(total_percentage*2)
                 self._menu.change_loading_percentage(percentage_count)
@@ -352,10 +365,6 @@ class RMSD(nanome.PluginInstance):
                 selection.local_align(x , self._target) 
                 percentage_count += 1/(total_percentage*2)
                 self._menu.change_loading_percentage(percentage_count )
-        
-        
-        if (self.args.select.lower() == "local"):
-            selection.local_align(self._mobile,self._target)
 
         self.workspace = workspace
         self.update_workspace(workspace)
@@ -387,7 +396,7 @@ class RMSD(nanome.PluginInstance):
 
 
 def main():
-    plugin = nanome.Plugin("RMSD", "Aligns complexes using RMSD calculations.", "Test", False)
+    plugin = nanome.Plugin("RMSD", "Aligns complexes using RMSD calculations.(test)", "Test", False)
     plugin.set_plugin_class(RMSD)
     plugin.run('127.0.0.1', 8888)
 

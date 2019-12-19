@@ -237,7 +237,7 @@ class RMSDMenu():
             clone = self._complex_item_prefab.clone()
             ln_btn = clone.get_children()[0]
             btn = ln_btn.get_content()
-            btn.text.set_all(complex.name)
+            btn.text.value.set_all(complex.name)
             btn.complex = complex
             btn.register_pressed_callback(mobile_pressed)
             self._mobile_list.append(clone)
@@ -248,7 +248,7 @@ class RMSDMenu():
             clone1 = self._complex_item_prefab.clone()
             ln_btn = clone1.get_children()[0]
             btn = ln_btn.get_content()
-            btn.text.set_all(complex.name)
+            btn.text.value.set_all(complex.name)
             btn.complex = complex
             btn.register_pressed_callback(target_pressed)
             self._target_list.append(clone1)
@@ -384,18 +384,29 @@ class RMSDMenu():
             self._plugin.update_content(align_box_button)
             self._plugin.update_content(align_box_text)
 
+        # global <=> local
+        def global_local_button_pressed_callback(button):
+            if self._plugin.args.select == "global":
+                self.update_args("select","local")
+                global_local_button.text.value.set_all("Local")
+            else:
+                self.update_args("select","global")
+                global_local_button.text.value.set_all("Global")
+            self._plugin.update_content(global_local_button)
+            self._plugin.update_content(global_local_text)
+
         # change Reorder to the next option
         def reorder_button_pressed_callback(button):
             drop_down  = self._drop_down_dict["reorder_method"]
             temp_length=len(drop_down)
             
-            pre_index = drop_down.index(self._current_reorder)
+            pre_index = drop_down.index(self._current_reorder) 
             post_index = (pre_index + 1) % temp_length
 
             post_option = drop_down[post_index]
 
             reorder_button.selected = post_option != "None"
-            reorder_button.text.set_all(post_option)
+            reorder_button.text.value.set_all(post_option)
             
             if post_option == "None":
                 reorder_text.text_color = DESELECTED_COLOR     
@@ -420,7 +431,7 @@ class RMSDMenu():
             post_option = drop_down[post_index]
 
             rotation_button.selected = post_option != "None"
-            rotation_button.text.set_all(post_option)
+            rotation_button.text.value.set_all(post_option)
             
             if post_option == "None":
                 rotation_text.text_color = DESELECTED_COLOR     
@@ -524,6 +535,12 @@ class RMSDMenu():
         selected_only_button =  menu.root.find_node("Selected Only btn",True).get_content()
         selected_only_button.register_pressed_callback(selected_only_button_pressed_callback)
         selected_only_text = menu.root.find_node("Selected Only txt",True).get_content()
+
+        # create the global/local button
+        global_local_button =  menu.root.find_node("Global Local menu",True).get_content()
+        global_local_button.register_pressed_callback(global_local_button_pressed_callback)
+        global_local_text = menu.root.find_node("Global Local txt",True).get_content()
+
 
         # create the align box button
         align_box_button =  menu.root.find_node("Box btn",True).get_content()
