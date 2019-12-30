@@ -144,7 +144,7 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match
     return rt
 
 
-def local_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, match_reward = 5, only_score = False):
+def local_align(complex1,complex2,gap_penalty = -2, mismatch_penalty = -1, match_reward = 5, only_score = False):
     match_count = 0
     clustalW_score = 0
     selected_res1 = selected_res(complex1)
@@ -303,10 +303,7 @@ def local_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = -1, match
         j -= 1
     Logs.debug("final1 is ",final1)
     Logs.debug("final2 is ",final2)
-    Logs.debug("final1 len is ",len(final1))
-    Logs.debug("final2 lne is ",len(final2))
-
-
+    
     # return complex1,complex2
     # return clustalW_score
     if shorter_len != 0:
