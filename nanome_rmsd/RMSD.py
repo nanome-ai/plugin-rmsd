@@ -337,7 +337,7 @@ class RMSD(nanome.PluginInstance):
                 self._target = complex
        
 
-        if (self.args.select.lower() == "global" and self.args.align_sequence == True):
+        if (self.args.select.lower() == "global" and self.args.align_sequence):
             # self.selected_before = [[list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],
             #                         list(map(lambda a:a.selected,self._target.atoms))]
             # 1. DUMMY METHOD
@@ -353,7 +353,7 @@ class RMSD(nanome.PluginInstance):
                 percentage_count += 1/(total_percentage*2)
                 self._menu.change_loading_percentage(percentage_count )
 
-        elif (self.args.select.lower() == "local" and self.args.align_sequence == True):
+        elif (self.args.select.lower() == "local" and self.args.align_sequence):
             total_percentage = len(self._mobile) * 2 - 1
             percentage_count = 0
             for x in self._mobile:
@@ -396,7 +396,7 @@ class RMSD(nanome.PluginInstance):
 
 
 def main():
-    plugin = nanome.Plugin("RMSD", "Aligns complexes using RMSD calculations.(test)", "Test", False)
+    plugin = nanome.Plugin("RMSD", "Aligns complexes using RMSD calculations.", "Test", False)
     plugin.set_plugin_class(RMSD)
     plugin.run('127.0.0.1', 8888)
 
