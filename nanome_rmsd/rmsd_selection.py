@@ -144,7 +144,7 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match
     return rt
 
 
-def local_align(complex1,complex2,gap_penalty = -2, mismatch_penalty = -1, match_reward = 5, only_score = False):
+def local_align(complex1,complex2,gap_penalty = -2, mismatch_penalty = -1, match_reward = 3, only_score = False):
     match_count = 0
     clustalW_score = 0
     selected_res1 = selected_res(complex1)
