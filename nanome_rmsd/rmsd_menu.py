@@ -237,7 +237,7 @@ class RMSDMenu():
             clone = self._complex_item_prefab.clone()
             ln_btn = clone.get_children()[0]
             btn = ln_btn.get_content()
-            btn.set_all_text(complex.name)
+            btn.text.value.set_all(complex.name)
             btn.complex = complex
             btn.register_pressed_callback(mobile_pressed)
             self._mobile_list.append(clone)
@@ -248,7 +248,7 @@ class RMSDMenu():
             clone1 = self._complex_item_prefab.clone()
             ln_btn = clone1.get_children()[0]
             btn = ln_btn.get_content()
-            btn.set_all_text(complex.name)
+            btn.text.value.set_all(complex.name)
             btn.complex = complex
             btn.register_pressed_callback(target_pressed)
             self._target_list.append(clone1)
@@ -342,47 +342,57 @@ class RMSDMenu():
 
         # no hydrogen = ! no hydrogen
         def no_hydrogen_button_pressed_callback(button):
-            no_hydrogen_button.selected = not no_hydrogen_button.selected
-            if no_hydrogen_button.selected:
+            button.selected = not button.selected
+            if button.selected:
                 no_hydrogen_text.text_color = SELECTED_COLOR
             else:
                 no_hydrogen_text.text_color = DESELECTED_COLOR     
-            self.update_args("no_hydrogen", no_hydrogen_button.selected)
-            self._plugin.update_content(no_hydrogen_button)
+            self.update_args("no_hydrogen", button.selected)
+            self._plugin.update_content(button)
             self._plugin.update_content(no_hydrogen_text)
 
         # backbone only = ! backbone only
         def backbone_only_button_pressed_callback(button):
-            backbone_only_button.selected = not backbone_only_button.selected
-            if backbone_only_button.selected:
+            button.selected = not button.selected
+            if button.selected:
                 backbone_only_text.text_color = SELECTED_COLOR
             else:
                 backbone_only_text.text_color = DESELECTED_COLOR     
-            self.update_args("backbone_only", backbone_only_button.selected)
-            self._plugin.update_content(backbone_only_button)
+            self.update_args("backbone_only", button.selected)
+            self._plugin.update_content(button)
             self._plugin.update_content(backbone_only_text)
         
         # selected only = ! selected only
         def selected_only_button_pressed_callback(button):
-            selected_only_button.selected = not selected_only_button.selected 
-            if selected_only_button.selected:
+            button.selected = not button.selected 
+            if button.selected:
                 selected_only_text.text_color = SELECTED_COLOR
             else:
                 selected_only_text.text_color = DESELECTED_COLOR     
-            self.update_args("selected_only", selected_only_button.selected)
-            self._plugin.update_content(selected_only_button)
+            self.update_args("selected_only", button.selected)
+            self._plugin.update_content(button)
             self._plugin.update_content(selected_only_text)
 
         # align box = ! align box
         def align_box_button_pressed_callback(button):
-            align_box_button.selected = not align_box_button.selected
-            if align_box_button.selected:
+            button.selected = not button.selected
+            if button.selected:
                 align_box_text.text_color = SELECTED_COLOR
             else:
                 align_box_text.text_color = DESELECTED_COLOR     
-            self.update_args("align_box",align_box_button.selected)
-            self._plugin.update_content(align_box_button)
+            self.update_args("align_box",button.selected)
+            self._plugin.update_content(button)
             self._plugin.update_content(align_box_text)
+
+        # global <=> local
+        def global_local_button_pressed_callback(button):
+            if self._plugin.args.select == "global":
+                self.update_args("select","local")
+                button.text.value.set_all("Local")
+            else:
+                self.update_args("select","global")
+                button.text.value.set_all("Global")
+            self._plugin.update_content(button)
 
         # change Reorder to the next option
         def reorder_button_pressed_callback(button):
@@ -394,8 +404,8 @@ class RMSDMenu():
 
             post_option = drop_down[post_index]
 
-            reorder_button.selected = post_option != "None"
-            reorder_button.set_all_text(post_option)
+            button.selected = post_option != "None"
+            button.text.value.set_all(post_option)
             
             if post_option == "None":
                 reorder_text.text_color = DESELECTED_COLOR     
@@ -406,7 +416,7 @@ class RMSDMenu():
             self._current_reorder = post_option
             self.update_args("reorder_method", post_option)
             self.update_args("reorder", post_option != "None")
-            self._plugin.update_content(reorder_button)
+            self._plugin.update_content(button)
             self._plugin.update_content(reorder_text)
 
         # change Rotation to the next option
@@ -419,8 +429,8 @@ class RMSDMenu():
 
             post_option = drop_down[post_index]
 
-            rotation_button.selected = post_option != "None"
-            rotation_button.set_all_text(post_option)
+            button.selected = post_option != "None"
+            button.text.value.set_all(post_option)
             
             if post_option == "None":
                 rotation_text.text_color = DESELECTED_COLOR     
@@ -430,8 +440,8 @@ class RMSDMenu():
             # tell the plugin and update the menu
             self._current_rotation = post_option
             self.update_args("rotation_method", post_option)
-            self._plugin.update_content(rotation_button)
-            self._plugin.update_content(rotation_button)
+            self._plugin.update_content(button)
+            self._plugin.update_content(button)
             self._plugin.update_content(rotation_text)
 
 
@@ -524,6 +534,12 @@ class RMSDMenu():
         selected_only_button =  menu.root.find_node("Selected Only btn",True).get_content()
         selected_only_button.register_pressed_callback(selected_only_button_pressed_callback)
         selected_only_text = menu.root.find_node("Selected Only txt",True).get_content()
+
+        # create the global/local button
+        global_local_button =  menu.root.find_node("Global Local menu",True).get_content()
+        global_local_button.register_pressed_callback(global_local_button_pressed_callback)
+        global_local_text = menu.root.find_node("Global Local txt",True).get_content()
+
 
         # create the align box button
         align_box_button =  menu.root.find_node("Box btn",True).get_content()

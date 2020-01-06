@@ -337,7 +337,7 @@ class RMSD(nanome.PluginInstance):
                 self._target = complex
        
 
-        if (self.args.select.lower() == "global" and self.args.align_sequence == True):
+        if (self.args.select.lower() == "global" and self.args.align_sequence):
             # self.selected_before = [[list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],
             #                         list(map(lambda a:a.selected,self._target.atoms))]
             # 1. DUMMY METHOD
@@ -348,14 +348,23 @@ class RMSD(nanome.PluginInstance):
                 percentage_count += 1/(total_percentage*2)
                 self._menu.change_loading_percentage(percentage_count)
 
-            for x in self._mobile[:-1]:
+            for x in self._mobile:
                 selection.global_align(x , self._target) 
                 percentage_count += 1/(total_percentage*2)
                 self._menu.change_loading_percentage(percentage_count )
-        
-        
-        if (self.args.select.lower() == "local"):
-            selection.local_align(self._mobile,self._target)
+
+        elif (self.args.select.lower() == "local" and self.args.align_sequence):
+            total_percentage = len(self._mobile) * 2 - 1
+            percentage_count = 0
+            for x in self._mobile:
+                selection.local_align(x , self._target)  
+                percentage_count += 1/(total_percentage*2)
+                self._menu.change_loading_percentage(percentage_count)
+
+            for x in self._mobile:
+                selection.local_align(x , self._target) 
+                percentage_count += 1/(total_percentage*2)
+                self._menu.change_loading_percentage(percentage_count )
 
         self.workspace = workspace
         self.update_workspace(workspace)

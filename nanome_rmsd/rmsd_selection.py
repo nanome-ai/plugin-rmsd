@@ -12,15 +12,15 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match
     selected_res2 = selected_res(complex2)
 
     # list of residues type of the complex
-    seq1 = list(map(lambda res: res.type, selected_res1))
-    seq2 = list(map(lambda res: res.type, selected_res2))
+    rest_types1 = list(map(lambda res: res.type, selected_res1))
+    rest_types2 = list(map(lambda res: res.type, selected_res2))
 
     # run the "smart occupancy selection method" on the residue lists of both complexes
     res_list1 =list(map(lambda a:select_occupancy(a),selected_res1))
     res_list2 =list(map(lambda a:select_occupancy(a),selected_res2))
 
     # create the table of global alignment
-    m, n = len(seq1), len(seq2)
+    m, n = len(rest_types1), len(rest_types2)
     shorter_len = min(m,n)
     score = np.zeros((m+1, n+1))      
     
@@ -33,7 +33,7 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match
     # fill the table wtih scores
     for i in range(1, m + 1):
         for j in range(1, n + 1):
-            if seq1[i-1] == seq2[ j-1]:
+            if rest_types1[i-1] == rest_types2[ j-1]:
                 match = score[i - 1][j - 1] + match_reward
             else:
                 match = score[i - 1][j - 1] + mismatch_penalty
@@ -58,11 +58,11 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match
         score_left = score[i-1][j]
         # two residuses match, only deselect when the selected atoms don't match (problem in the pdb file)
         if score_current == score_diagonal + match_reward and \
-           seq1[i-1] == seq2[j-1] and seq1[i-1] != 'UNK' and seq2[j-1] != 'UNK':
-            # align1 += seq1[i-1]
-            # align2 += seq2[j-1]
-            # final1 += seq1[i-1]
-            # final2 += seq2[j-1]
+           rest_types1[i-1] == rest_types2[j-1] and rest_types1[i-1] != 'UNK' and rest_types2[j-1] != 'UNK':
+            # align1 += rest_types1[i-1]
+            # align2 += rest_types2[j-1]
+            # final1 += rest_types1[i-1]
+            # final2 += rest_types2[j-1]
             # clustalW_score += match_reward
             match1=list(map(lambda a:a.selected,res_list1[i-1].atoms))
             match2=list(map(lambda a:a.selected,res_list2[j-1].atoms))
@@ -75,10 +75,10 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match
                 for x in res_list2[j-1].atoms:
                         x.selected = False
             else:
-                align1 += seq1[i-1]
-                align2 += seq2[j-1]
-                final1 += seq1[i-1]
-                final2 += seq2[j-1]
+                align1 += rest_types1[i-1]
+                align2 += rest_types2[j-1]
+                final1 += rest_types1[i-1]
+                final2 += rest_types2[j-1]
                 clustalW_score += match_reward
                 match_count += 1
             i -= 1
@@ -86,7 +86,7 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match
 
         # two of the residues do not match, deselect both
         elif score_current == score_diagonal + mismatch_penalty and \
-             seq1[i-1] != seq2[j-1] or (seq1[i-1] == 'UNK' and seq2[j-1] == 'UNK'):
+             rest_types1[i-1] != rest_types2[j-1] or (rest_types1[i-1] == 'UNK' and rest_types2[j-1] == 'UNK'):
             if not only_score:
                 for x in res_list1[i-1].atoms:
                     x.selected = False
@@ -96,9 +96,9 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match
             i -= 1
             j -= 1
             
-        # seq1 has an extra residue, deselect it
+        # rest_types1 has an extra residue, deselect it
         elif score_current == score_left + gap_penalty:
-            align1 += seq1[i-1]
+            align1 += rest_types1[i-1]
             align2 += '---'
             if not only_score:
                 for x in res_list1[i-1].atoms:
@@ -106,10 +106,10 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match
             clustalW_score += gap_penalty
             i -= 1
 
-        # seq2 has an extra residue, deselect it
+        # rest_types2 has an extra residue, deselect it
         elif score_current == score_up + gap_penalty:
             align1 += '---'
-            align2 += seq2[j-1]
+            align2 += rest_types2[j-1]
             if not only_score:
                 for x in res_list2[j-1].atoms:
                     x.selected = False
@@ -118,7 +118,7 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match
 
     # Finish tracing up to the top left cell
     while i > 0:
-        align1 += seq1[i-1]
+        align1 += rest_types1[i-1]
         align2 += '---'
         if not only_score:
             for x in res_list1[i-1].atoms:
@@ -127,7 +127,7 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match
         i -= 1
     while j > 0:
         align1 += '---'
-        align2 += seq2[j-1]
+        align2 += rest_types2[j-1]
         if not only_score:
             for x in res_list2[j-1].atoms:
                 x.selected = False
@@ -144,9 +144,174 @@ def global_align(complex1,complex2,gap_penalty = -1, mismatch_penalty = 0, match
     return rt
 
 
-def local_align(mobile,target):
-    pass
+def local_align(complex1,complex2,gap_penalty = -2, mismatch_penalty = -1, match_reward = 3, only_score = False):
+    match_count = 0
+    clustalW_score = 0
+    selected_res1 = selected_res(complex1)
+    selected_res2 = selected_res(complex2)
+    max_cell = [0,0]
+    max_cell_value = 0
+    stop_traceback = 0
 
+    # list of residues type of the complex
+    rest_types1 = list(map(lambda res: res.type, selected_res1))
+    rest_types2 = list(map(lambda res: res.type, selected_res2))
+
+    # run the "smart occupancy selection method" on the residue lists of both complexes
+    res_list1 =list(map(lambda a:select_occupancy(a),selected_res1))
+    res_list2 =list(map(lambda a:select_occupancy(a),selected_res2))
+
+    # create the table of global alignment
+    m, n = len(rest_types1), len(rest_types2)
+    shorter_len = min(m,n)
+    score = np.zeros((m+1, n+1))      
+    
+    # file the first column and first row of the table
+    for i in range(0, m + 1):
+        score[i][0] = 0
+    for j in range(0, n + 1):
+        score[0][j] = 0
+
+    # fill the table wtih scores
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if rest_types1[i-1] == rest_types2[ j-1]:
+                match = score[i - 1][j - 1] + match_reward
+            else:
+                match = score[i - 1][j - 1] + mismatch_penalty
+            delete = score[i - 1][j] + gap_penalty
+            insert = score[i][j - 1] + gap_penalty
+            score[i][j] = max(match, delete, insert,0)
+
+            if score[i][j] > max_cell_value:
+                max_cell_value = score[i][j]
+                max_cell = [i,j]
+   
+
+    # Traceback and compute the alignment 
+    # aligns are the output sequences with gaps (both delete and insert)
+    # finals are the output sequences that should be the same after the sequence alignment
+    align1, align2 = '', ''
+    final1, final2 = '', ''
+
+    i,j = m,n
+
+    while i > max_cell[0]:
+        # align1 += rest_types1[i-1]
+        # align2 += '---'
+        if not only_score:
+            for x in res_list1[i-1].atoms:
+                x.selected = False
+        clustalW_score += gap_penalty
+        i -= 1
+    while j > max_cell[1]:
+        # align1 += '---'
+        # align2 += rest_types2[j-1]
+        if not only_score:
+            for x in res_list2[j-1].atoms:
+                x.selected = False
+        clustalW_score += gap_penalty
+        j -= 1
+    
+
+
+    # start from the bottom right cell
+    i,j = max_cell
+
+    # go left and up until touching the 1st row/column
+    while i > 0 and j > 0: 
+        score_current = score[i][j]
+        score_diagonal = score[i-1][j-1]
+        score_up = score[i][j-1]
+        score_left = score[i-1][j]
+        # two residuses match, only deselect when the selected atoms don't match (problem in the pdb file)
+        if score_current == 0:
+            stop_traceback = 1
+            break
+        if score_current == score_diagonal + match_reward and \
+           rest_types1[i-1] == rest_types2[j-1] and rest_types1[i-1] != 'UNK' and rest_types2[j-1] != 'UNK':
+           
+            match1=list(map(lambda a:a.selected,res_list1[i-1].atoms))
+            match2=list(map(lambda a:a.selected,res_list2[j-1].atoms))
+            
+            if match1 != match2 and not only_score:
+                
+                for x in res_list1[i-1].atoms:
+                        x.selected = False
+
+                for x in res_list2[j-1].atoms:
+                        x.selected = False
+            else:
+
+                align1 += rest_types1[i-1]
+                align2 += rest_types2[j-1]
+                final1 += rest_types1[i-1]
+                final2 += rest_types2[j-1]
+                clustalW_score += match_reward
+                match_count += 1
+            i -= 1
+            j -= 1
+           
+        # two of the residues do not match, deselect both
+        elif score_current == score_diagonal + mismatch_penalty and \
+             rest_types1[i-1] != rest_types2[j-1] or (rest_types1[i-1] == 'UNK' and rest_types2[j-1] == 'UNK'):
+            if not only_score:
+                for x in res_list1[i-1].atoms:
+                    x.selected = False
+                for y in res_list2[j-1].atoms:
+                    y.selected = False
+            clustalW_score += mismatch_penalty
+            i -= 1
+            j -= 1
+           
+        # rest_types1 has an extra residue, deselect it
+        elif score_current == score_left + gap_penalty:
+            align1 += rest_types1[i-1]
+            align2 += '---'
+            if not only_score:
+                for x in res_list1[i-1].atoms:
+                    x.selected = False
+            clustalW_score += gap_penalty
+            i -= 1
+            
+        # rest_types2 has an extra residue, deselect it
+        elif score_current == score_up + gap_penalty:
+            align1 += '---'
+            align2 += rest_types2[j-1]
+            if not only_score:
+                for x in res_list2[j-1].atoms:
+                    x.selected = False
+            clustalW_score += gap_penalty
+            j -= 1
+          
+    # Finish tracing up to the top left cell
+    while i > 0:
+        align1 += rest_types1[i-1]
+        align2 += '---'
+        if not only_score:
+            for x in res_list1[i-1].atoms:
+                x.selected = False
+        clustalW_score += gap_penalty
+        i -= 1
+    while j > 0:
+        align1 += '---'
+        align2 += rest_types2[j-1]
+        if not only_score:
+            for x in res_list2[j-1].atoms:
+                x.selected = False
+        clustalW_score += gap_penalty
+        j -= 1
+    Logs.debug("final1 is ",final1)
+    Logs.debug("final2 is ",final2)
+    
+    # return complex1,complex2
+    # return clustalW_score
+    if shorter_len != 0:
+        rt = 1-(match_count/shorter_len)
+    else:
+        rt = 0
+        Logs.debug("one of the complexes has no atom selected")
+    return rt
 
 # takes in a single residue
 def select_occupancy(residue):
