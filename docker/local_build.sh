@@ -1,0 +1,1 @@
+docker build -f rmsd.Dockerfile -t rmsd:latest ..
