@@ -15,7 +15,17 @@ $ pip install nanome-rmsd
 To start the plugin:
 
 ```sh
-$ nanome-rmsd -a plugin_server_address
+$ nanome-rmsd -a <plugin_server_address>
+```
+
+### Docker Usage
+
+To run in a Docker container:
+
+```sh
+$ cd docker
+$ ./build.sh
+$ ./deploy.sh -a <plugin_server_address>
 ```
 
 ### License
