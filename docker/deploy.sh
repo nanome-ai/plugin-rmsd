@@ -1,5 +1,6 @@
+#!/bin/bash
+
 if [ "$(docker ps -aq -f name=rmsd)" != "" ]; then
-    # cleanup
     echo "removing exited container"
     docker rm -f rmsd
 fi

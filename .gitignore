@@ -2,5 +2,6 @@ __pycache__
 .vscode/
 build/
 dist/
+docker/.cachebust
 nanome_rmsd.egg-info/
 nanome/

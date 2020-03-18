@@ -2,7 +2,10 @@ FROM python:3.7
 
 ENV ARGS=''
 
-RUN pip install nanome numpy scipy
+RUN pip install numpy scipy
+
+ARG CACHEBUST
+RUN pip install nanome
 
 COPY . /app
 WORKDIR /app
