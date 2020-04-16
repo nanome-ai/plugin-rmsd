@@ -396,7 +396,7 @@ class RMSD(nanome.PluginInstance):
 
 
 def main():
-    plugin = nanome.Plugin("RMSD", "Aligns complexes using RMSD calculations.", "Test", False)
+    plugin = nanome.Plugin("RMSD", "Aligns complexes using RMSD calculations.", "Alignment", False)
     plugin.set_plugin_class(RMSD)
     plugin.run('127.0.0.1', 8888)
 
