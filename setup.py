@@ -6,7 +6,7 @@ README = (pathlib.Path(__file__).parent / "README.md").read_text()
 setup(
 	name = 'nanome-rmsd',
 	packages=find_packages(),
-	version = '1.0.0',
+	version = '1.0.1',
 	license='MIT',
 	description = 'Nanome Plugin for RMSD alignment',
 	long_description = README,
