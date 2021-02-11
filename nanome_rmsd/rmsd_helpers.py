@@ -23,6 +23,9 @@ def array_to_position(array):
 def strip_hydrogens(atoms):
     return list(filter(lambda a: a.symbol != "H", atoms))
 
+def strip_hets(atoms):
+    return list(filter(lambda a: not a.is_het, atoms))
+
 def strip_non_selected(atoms):
     return list(filter(lambda a: a.selected, atoms))
 

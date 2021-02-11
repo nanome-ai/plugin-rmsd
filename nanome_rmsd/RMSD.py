@@ -116,6 +116,7 @@ class RMSD(nanome.PluginInstance):
             self.use_reflections = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). This will affect stereo-chemistry.
             self.use_reflections_keep_stereo = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). Stereo-chemistry will be kept.
             #exclusion options
+            self.no_heterogens = True
             self.no_hydrogen = True
             self.selected_only = True
             self.backbone_only = True
@@ -157,6 +158,10 @@ class RMSD(nanome.PluginInstance):
         if args.no_hydrogen:
             p_atoms = help.strip_hydrogens(p_atoms)
             q_atoms = help.strip_hydrogens(q_atoms)
+
+        if args.no_heterogens:
+            p_atoms = help.strip_hets(p_atoms)
+            q_atoms = help.strip_hets(q_atoms)
 
         if args.backbone_only:
             p_atoms = help.strip_non_backbone(p_atoms)

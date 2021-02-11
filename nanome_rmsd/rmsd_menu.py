@@ -340,6 +340,17 @@ class RMSDMenu():
             self._plugin.update_content(align_sequence_button)
             self._plugin.update_content(align_sequence_text)
 
+        # no heterogens = ! no heterogens
+        def no_heterogens_button_pressed_callback(button):
+            button.selected = not button.selected
+            if button.selected:
+                no_heterogens_text.text_color = SELECTED_COLOR
+            else:
+                no_heterogens_text.text_color = DESELECTED_COLOR     
+            self.update_args("no_heterogens", button.selected)
+            self._plugin.update_content(button)
+            self._plugin.update_content(no_heterogens_text)
+
         # no hydrogen = ! no hydrogen
         def no_hydrogen_button_pressed_callback(button):
             button.selected = not button.selected
@@ -515,6 +526,11 @@ class RMSDMenu():
         align_sequence_button.register_pressed_callback(align_sequence_button_pressed_callback)
         align_sequence_text = menu.root.find_node("Align sequence txt",True).get_content()
 
+        # create the no heterogens button
+        no_heterogens_button = menu.root.find_node("No Heterogens btn",True).get_content()
+        no_heterogens_button.register_pressed_callback(no_heterogens_button_pressed_callback)
+        no_heterogens_text = menu.root.find_node("No Heterogens txt",True).get_content()
+        
         # create the no hydrogen button
         no_hydrogen_button = menu.root.find_node("No Hydrogen btn",True).get_content()
         no_hydrogen_button.register_pressed_callback(no_hydrogen_button_pressed_callback)
