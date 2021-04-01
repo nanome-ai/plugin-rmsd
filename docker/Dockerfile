@@ -1,13 +1,12 @@
-FROM python:3.7
+FROM nanome/plugin-env
 
 ENV ARGS=''
-
-RUN pip install numpy scipy
+WORKDIR /app
 
 ARG CACHEBUST
-RUN pip install nanome
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-COPY . /app
-WORKDIR /app
+COPY . .
 
 CMD python run.py ${ARGS}

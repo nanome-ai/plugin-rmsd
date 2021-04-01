@@ -1,33 +1,30 @@
-# Nanome - RMSD Plugin
+# Nanome - RMSD
 
-This python plugin allows for users to select multiple molecules, run an RMSD calculation, and auto-align the structures.
+A Nanome Plugin to run an RMSD calculation on multiple structures, and auto-align them.
 
-Plugin supported on Windows, Linux, and Mac for Nanome v1.14
+## Dependencies
 
-### Installation
+[Docker](https://docs.docker.com/get-docker/)
 
-```sh
-$ pip install nanome-rmsd
-```
+## Usage
 
-### Usage
-
-To start the plugin:
-
-```sh
-$ nanome-rmsd -a <plugin_server_address>
-```
-
-### Docker Usage
-
-To run in a Docker container:
+To run RMSD in a Docker container:
 
 ```sh
 $ cd docker
 $ ./build.sh
-$ ./deploy.sh -a <plugin_server_address>
+$ ./deploy.sh -a <plugin_server_address> [optional args]
 ```
 
-### License
+## Development
+
+To run RMSD with autoreload:
+
+```sh
+$ python3 -m pip install -r requirements.txt
+$ python3 run.py -r -a <plugin_server_address> [optional args]
+```
+
+## License
 
 MIT

@@ -21,7 +21,7 @@ class RMSD(nanome.PluginInstance):
         self.selected_before = []
         self._mobile = []
         self._target = None
-        # passed from rmsd_menu.py to compare the index 
+        # passed from rmsd_menu.py to compare the index
         # and autoselect entry menu complex
         self.compare_index = None
 
@@ -54,7 +54,7 @@ class RMSD(nanome.PluginInstance):
     def on_complex_list_received(self, complexes):
         Logs.debug("complex received: ", complexes)
         self._menu.change_complex_list(complexes)
- 
+
     def run_rmsd(self, mobile, target):
         self._mobile = mobile
         self._target = target
@@ -103,7 +103,7 @@ class RMSD(nanome.PluginInstance):
         self.update_structures_deep([target_complex])
         self.update_structures_deep(mobile_complex)
         self._menu.loadingBar.percentage = 0
-       
+
     def update_args(self, arg, option):
         setattr(self.args, arg, option)
 
@@ -197,11 +197,11 @@ class RMSD(nanome.PluginInstance):
         q_coords = help.positions_to_array(q_pos_orig)
 
         # Create the centroid of P and Q which is the geometric center of a
-        # N-dimensional region and translate P and Q onto that center. 
+        # N-dimensional region and translate P and Q onto that center.
         # http://en.wikipedia.org/wiki/Centroid
         p_cent = centroid(p_coords)
         q_cent = centroid(q_coords)
-      
+
         p_coords -= p_cent
         q_coords -= q_cent
 
@@ -295,7 +295,7 @@ class RMSD(nanome.PluginInstance):
             result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
             q_complex.rotation = result_quat
             Logs.debug("Finished update")
- 
+
             #align centroids
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
@@ -315,21 +315,21 @@ class RMSD(nanome.PluginInstance):
                 # restore aligned atom positions from global
                 matrix2 = q_complex.get_workspace_to_complex_matrix()
                 for (atom, gPos) in zip(q_complex.atoms, global_pos):
-                    atom.position = matrix2 * gPos 
+                    atom.position = matrix2 * gPos
 
             if(self._menu.error_message.text_value=="Loading..."):
                 self._menu.change_error("clear")
-            
-            p_complex.locked = True 
+
+            p_complex.locked = True
             q_complex.locked = True
-        
+
         return result_rmsd
 
     # auto select with global/local alignment
     def select(self,mobile,target):
         self._mobile = mobile
         self._target = target
-        self.request_workspace(self.on_select_received) 
+        self.request_workspace(self.on_select_received)
 
     def on_select_received(self, workspace):
         complexes = workspace.complexes
@@ -340,7 +340,7 @@ class RMSD(nanome.PluginInstance):
                 self._mobile.append(complex)
             if complex.index == self._target.index:
                 self._target = complex
-       
+
 
         if (self.args.select.lower() == "global" and self.args.align_sequence):
             # self.selected_before = [[list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],
@@ -349,12 +349,12 @@ class RMSD(nanome.PluginInstance):
             total_percentage = len(self._mobile) * 2 - 1
             percentage_count = 0
             for x in self._mobile:
-                selection.global_align(x , self._target)  
+                selection.global_align(x , self._target)
                 percentage_count += 1/(total_percentage*2)
                 self._menu.change_loading_percentage(percentage_count)
 
             for x in self._mobile:
-                selection.global_align(x , self._target) 
+                selection.global_align(x , self._target)
                 percentage_count += 1/(total_percentage*2)
                 self._menu.change_loading_percentage(percentage_count )
 
@@ -362,12 +362,12 @@ class RMSD(nanome.PluginInstance):
             total_percentage = len(self._mobile) * 2 - 1
             percentage_count = 0
             for x in self._mobile:
-                selection.local_align(x , self._target)  
+                selection.local_align(x , self._target)
                 percentage_count += 1/(total_percentage*2)
                 self._menu.change_loading_percentage(percentage_count)
 
             for x in self._mobile:
-                selection.local_align(x , self._target) 
+                selection.local_align(x , self._target)
                 percentage_count += 1/(total_percentage*2)
                 self._menu.change_loading_percentage(percentage_count )
 
@@ -376,11 +376,11 @@ class RMSD(nanome.PluginInstance):
         if self._menu.check_resolve_error():
             self._menu._run_rmsd()
 
-        self._menu.hide_loading_bar() 
+        self._menu.hide_loading_bar()
         self._menu.loadingBar.percentage = 0
         # self._menu.change_error("clear")
-        
-    
+
+
     # find the two sequences whose distance is the smallest
     # called in on_select_received, used in the clustalW part
     def min_dist(self, matrix):
@@ -397,13 +397,13 @@ class RMSD(nanome.PluginInstance):
                         seq2 = y
 
             return seq1, seq2
- 
+
 
 
 def main():
     plugin = nanome.Plugin("RMSD", "Aligns complexes using RMSD calculations.", "Alignment", False)
     plugin.set_plugin_class(RMSD)
-    plugin.run('127.0.0.1', 8888)
+    plugin.run()
 
 if __name__ == "__main__":
     main()
