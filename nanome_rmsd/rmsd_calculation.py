@@ -30,15 +30,15 @@ from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist
 
 
-def rmsd(V, W):
+def rmsd(v1, v2):
     """
-    Calculate Root-mean-square deviation from two sets of vectors V and W.
+    Calculate Root-mean-square deviation from two sets of vectors v1 and v2.
 
     Parameters
     ----------
-    V : array
+    v1 : array
         (N,D) matrix, where N is points and D is dimension.
-    W : array
+    v2 : array
         (N,D) matrix, where N is points and D is dimension.
 
     Returns
@@ -46,26 +46,26 @@ def rmsd(V, W):
     rmsd : float
         Root-mean-square deviation between the two vectors
     """
-    D = len(V[0])
-    N = len(V)
+    d = len(v1[0])
+    n = len(v1)
     result = 0.0
-    for v, w in zip(V, W):
-        result += sum([(v[i] - w[i])**2.0 for i in range(D)])
-    return math.sqrt(result / N)
+    for v, w in zip(v1, v2):
+        result += sum([(v[i] - w[i])**2.0 for i in range(d)])
+    return math.sqrt(result / n)
 
 
-def kabsch_rmsd(P, Q, translate=False):
+def kabsch_rmsd(p, q, translate=False):
     """
-    Rotate matrix P unto Q using Kabsch algorithm and calculate the RMSD.
+    Rotate matrix P unto q using Kabsch algorithm and calculate the RMSD.
 
     Parameters
     ----------
-    P : array
+    p : array
         (N,D) matrix, where N is points and D is dimension.
-    Q : array
+    q : array
         (N,D) matrix, where N is points and D is dimension.
     translate : bool
-        Use centroids to translate vector P and Q unto each other.
+        Use centroids to translate vector P and q unto each other.
 
     Returns
     -------
@@ -73,46 +73,46 @@ def kabsch_rmsd(P, Q, translate=False):
         root-mean squared deviation
     """
     if translate:
-        Q = Q - centroid(Q)
-        P = P - centroid(P)
+        q = q - centroid(q)
+        p = p - centroid(p)
 
-    P = kabsch_rotate(P, Q)
-    return rmsd(P, Q)
+    p = kabsch_rotate(p, q)
+    return rmsd(p, q)
 
 
-def kabsch_rotate(P, Q):
+def kabsch_rotate(p, q):
     """
-    Rotate matrix P unto matrix Q using Kabsch algorithm.
+    Rotate matrix p unto matrix q using Kabsch algorithm.
 
-    Parameters
+    parameters
     ----------
-    P : array
+    p : array
         (N,D) matrix, where N is points and D is dimension.
-    Q : array
+    q : array
         (N,D) matrix, where N is points and D is dimension.
 
     Returns
     -------
-    P : array
+    p : array
         (N,D) matrix, where N is points and D is dimension,
         rotated
 
     """
-    U = kabsch(P, Q)
+    u = kabsch(p, q)
 
-    # Rotate P
-    P = np.dot(P, U)
-    return P
+    # Rotate p
+    p = np.dot(p, u)
+    return p
 
 
-def kabsch(P, Q):
+def kabsch(p, q):
     """
-    Using the Kabsch algorithm with two sets of paired point P and Q, centered
+    Using the Kabsch algorithm with two sets of paired point p and q, centered
     around the centroid. Each vector set is represented as an NxD
     matrix, where D is the the dimension of the space.
 
     The algorithm works in three steps:
-    - a centroid translation of P and Q (assumed done before this function
+    - a centroid translation of p and q (assumed done before this function
       call)
     - the computation of a covariance matrix C
     - computation of the optimal rotation matrix U
@@ -121,9 +121,9 @@ def kabsch(P, Q):
 
     Parameters
     ----------
-    P : array
+    p : array
         (N,D) matrix, where N is points and D is dimension.
-    Q : array
+    q : array
         (N,D) matrix, where N is points and D is dimension.
 
     Returns
@@ -133,7 +133,7 @@ def kabsch(P, Q):
     """
 
     # Computation of the covariance matrix
-    C = np.dot(np.transpose(P), Q)
+    c = np.dot(np.transpose(p), q)
 
     # Computation of the optimal rotation matrix
     # This can be done using singular value decomposition (SVD)
@@ -142,17 +142,17 @@ def kabsch(P, Q):
     # right-handed coordinate system.
     # And finally calculating the optimal rotation matrix U
     # see http://en.wikipedia.org/wiki/Kabsch_algorithm
-    V, S, W = np.linalg.svd(C)
-    d = (np.linalg.det(V) * np.linalg.det(W)) < 0.0
+    v, s, w = np.linalg.svd(c)
+    d = (np.linalg.det(v) * np.linalg.det(w)) < 0.0
 
     if d:
-        S[-1] = -S[-1]
-        V[:, -1] = -V[:, -1]
+        s[-1] = -s[-1]
+        v[:, -1] = -v[:, -1]
 
-    # Create Rotation matrix U
-    U = np.dot(V, W)
+    # Create Rotation matrix u
+    u = np.dot(v, w)
 
-    return U
+    return u
 
 
 def quaternion_rmsd(P, Q):
