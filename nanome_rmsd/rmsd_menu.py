@@ -6,11 +6,11 @@ import os
 
 SELECTED_COLOR = Color.from_int(0x00ecc4ff)
 DESELECTED_COLOR = Color.from_int(0xffffffff)
-CHECKICON = "GreenCheck.png"
-LOCKICON = "Lock.png"
-UNLOCKICON = "Unlock.png"
-REFRESHICON = "Refresh.png"
-QUESTIONMARKICON = "QuestionMark.png"
+CHECKICON = "assets/GreenCheck.png"
+LOCKICON = "assets/Lock.png"
+UNLOCKICON = "assets/Unlock.png"
+REFRESHICON = "assets/Refresh.png"
+QUESTIONMARKICON = "assets/QuestionMark.png"
 
 
 class RMSDMenu():
