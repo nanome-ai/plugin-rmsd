@@ -1,4 +1,4 @@
-'''
+"""
 Copyright (c) 2013, Jimmy Charnley Kromann <jimmy@charnley.dk> & Lars Bratholm
 All rights reserved.
 
@@ -21,14 +21,14 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-'''
+"""
 import copy
-import re
 import math
 import numpy as np
 import nanome
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist
+
 
 def rmsd(V, W):
     """
@@ -51,7 +51,7 @@ def rmsd(V, W):
     result = 0.0
     for v, w in zip(V, W):
         result += sum([(v[i] - w[i])**2.0 for i in range(D)])
-    return math.sqrt(result/N)
+    return math.sqrt(result / N)
 
 
 def kabsch_rmsd(P, Q, translate=False):
@@ -131,8 +131,6 @@ def kabsch(P, Q):
     U : matrix
         Rotation matrix (D,D)
     """
-
-    
 
     # Computation of the covariance matrix
     C = np.dot(np.transpose(P), Q)
@@ -241,6 +239,7 @@ def quaternion_rotate(X, Y):
     r = eigen[1][:, eigen[0].argmax()]
     rot = quaternion_transform(r)
     return rot
+
 
 def matrix_to_quaternion(matrix):
     w = np.sqrt(1 + matrix[0][0] + matrix[1][1] + matrix[2][2]) / 2
@@ -529,12 +528,13 @@ def check_reflections(p_atoms, q_atoms, p_coord, q_coord,
     min_reflection = None
     min_review = None
     tmp_review = None
-    swap_mask = [1,-1,-1,1,-1,1]
-    reflection_mask = [1,-1,-1,-1,1,1,1,-1]
+    swap_mask = [1, -1, -1, 1, -1, 1]
+    reflection_mask = [1, -1, -1, -1, 1, 1, 1, -1]
 
     for swap, i in zip(AXIS_SWAPS, swap_mask):
         for reflection, j in zip(AXIS_REFLECTIONS, reflection_mask):
-            if keep_stereo and  i * j == -1: continue # skip enantiomers
+            if keep_stereo and i * j == -1:
+                continue  # skip enantiomers
 
             tmp_atoms = copy.copy(q_atoms)
             tmp_coord = copy.deepcopy(q_coord)
@@ -566,6 +566,7 @@ def check_reflections(p_atoms, q_atoms, p_coord, q_coord,
 
     return min_rmsd, min_swap, min_reflection, min_review
 
+
 def get_atom_types(atom_list):
     """
     Get coordinates from filename in format fmt. Supports XYZ and PDB.
@@ -583,7 +584,7 @@ def get_atom_types(atom_list):
     atoms = list()
     for atom in atom_list:
         symbol = atom.name[0]
-        if symbol in ("H", "C", "N", "O","S", "P"):
+        if symbol in ("H", "C", "N", "O", "S", "P"):
             atoms.append(symbol)
         else:
             # e.g. 1HD1
@@ -597,12 +598,13 @@ def get_atom_types(atom_list):
 
     return atoms
 
+
 def get_common_coordinates(complex0, complex1):
     residues0 = {}
     residues1 = {}
     common_serials = {}
 
-    #finds residues that are in both complexes using chain name and residue serial.
+    # finds residues that are in both complexes using chain name and residue serial.
     for molecule in complex0.molecules:
         for chain in molecule.chains:
             for residue in chain.residues:
@@ -611,7 +613,7 @@ def get_common_coordinates(complex0, complex1):
         for chain in molecule.chains:
             for residue in chain.residues:
                 key = chain.name + str(residue.serial)
-                residues1[key] = residue                
+                residues1[key] = residue
                 if key in residues0 and residues0[key].type == residues1[key].type:
                     common_serials[key] = key
 
@@ -627,9 +629,9 @@ def get_common_coordinates(complex0, complex1):
             if not atom.is_het:
                 atoms[atom.name] = atom
         for atom in atoms.values():
-            atoms0.append(atom)                
+            atoms0.append(atom)
             position = atom.position
-            atoms0_position.append(np.asarray([position.x, position.y, position.z], dtype = float))
+            atoms0_position.append(np.asarray([position.x, position.y, position.z], dtype=float))
 
         residue = residues1[serial]
         atoms = {}
@@ -637,16 +639,17 @@ def get_common_coordinates(complex0, complex1):
             if not atom.is_het:
                 atoms[atom.name] = atom
         for atom in atoms.values():
-            atoms1.append(atom)                
+            atoms1.append(atom)
             position = atom.position
-            atoms1_position.append(np.asarray([position.x, position.y, position.z], dtype = float))
+            atoms1_position.append(np.asarray([position.x, position.y, position.z], dtype=float))
 
     atoms0_position = np.asarray(atoms0_position)
     atoms0 = np.asarray(atoms0)
     atoms1_position = np.asarray(atoms1_position)
     atoms1 = np.asarray(atoms1)
 
-    return atoms0, atoms0_position, atoms1, atoms1_position 
+    return atoms0, atoms0_position, atoms1, atoms1_position
+
 
 def print_coordinates(atoms, V, title=""):
     """
