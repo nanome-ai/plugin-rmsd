@@ -1,16 +1,14 @@
 import nanome
-import sys
-import time
 import math
-from .rmsd_calculation import *
-# from rmsd_menu import RMSDMenu
+from .rmsd_calculation import (
+    centroid, get_atom_types, kabsch, kabsch_rmsd, quaternion_rmsd, reorder_hungarian,
+    reorder_brute, reorder_distance, check_reflections, rmsd)
 from .rmsd_menu import RMSDMenu
 from . import rmsd_helpers as help
 from nanome.util import Logs
-# from .quaternion import Quaternion
 import numpy as np
 from . import rmsd_selection as selection
-from itertools import combinations
+
 
 class RMSD(nanome.PluginInstance):
     def start(self):
@@ -24,7 +22,6 @@ class RMSD(nanome.PluginInstance):
         # passed from rmsd_menu.py to compare the index
         # and autoselect entry menu complex
         self.compare_index = None
-
 
     def on_run(self):
         menu = self.menu
@@ -69,20 +66,19 @@ class RMSD(nanome.PluginInstance):
     def select_all_atoms(self, complex_index):
         complex_list = list(self._mobile)
         complex_list.append(self._target)
-        complex_index_list = [x.index for x in complex_list if x != None]
+        complex_index_list = [x.index for x in complex_list if x is not None]
         self.compare_index = complex_index
-        self.request_complexes(complex_index_list,self.on_select_atoms_received)
+        self.request_complexes(complex_index_list, self.on_select_atoms_received)
 
     def on_select_atoms_received(self, complexes):
         for x in complexes:
-            if x != None and x.index == self.compare_index:
+            if x is not None and x.index == self.compare_index:
                 for y in x.atoms:
                     y.selected = True
                 self.update_structures_deep([x])
 
-
     # def on_workspace_received(self, workspace):
-    def on_complexes_received(self,complexes):
+    def on_complexes_received(self, complexes):
         target_complex = complexes[0]
         mobile_complex = complexes[1:]
         result = 0
@@ -92,8 +88,8 @@ class RMSD(nanome.PluginInstance):
         for x in mobile_complex:
             result += self.align(target_complex, x)
             percentage_count += 1
-            self._menu.change_loading_percentage(percentage_count/(total_percentage*2))
-        if result :
+            self._menu.change_loading_percentage(percentage_count / (total_percentage * 2))
+        if result:
             self._menu.update_score(result)
         self.update_mobile(mobile_complex)
         self.update_target(target_complex)
@@ -109,13 +105,13 @@ class RMSD(nanome.PluginInstance):
 
     class Args(object):
         def __init__(self):
-            self.rotation = "kabsch" #alt: "quaternion", "none"
+            self.rotation = "kabsch"  # alt: "quaternion", "none"
             self.reorder = False
-            self.reorder_method = "hungarian" #alt "brute", "distance"
+            self.reorder_method = "hungarian"  # alt "brute", "distance"
             self.select = "global"
-            self.use_reflections = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). This will affect stereo-chemistry.
-            self.use_reflections_keep_stereo = False # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). Stereo-chemistry will be kept.
-            #exclusion options
+            self.use_reflections = False  # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). This will affect stereo-chemistry.
+            self.use_reflections_keep_stereo = False  # scan through reflections in planes (eg Y transformed to -Y -> X, -Y, Z) and axis changes, (eg X and Z coords exchanged -> Z, Y, X). Stereo-chemistry will be kept.
+            # exclusion options
             self.no_heterogens = True
             self.no_hydrogen = True
             self.selected_only = True
@@ -131,7 +127,7 @@ class RMSD(nanome.PluginInstance):
         def __str__(self):
             ln = "\n"
             tab = "\t"
-            output  = "args:" + ln
+            output = "args:" + ln
             output += tab + "rotation:" + str(self.rotation) + ln
             output += tab + "reorder:" + str(self.reorder) + ln
             output += tab + "reorder_method:" + str(self.reorder_method) + ln
@@ -141,12 +137,12 @@ class RMSD(nanome.PluginInstance):
             output += tab + "selected_only:" + str(self.selected_only) + ln
             output += tab + "backbone_only:" + str(self.backbone_only) + ln
             output += tab + "align:" + str(self.align) + ln
-            output += tab + "align box:" +str(self.align_box) + ln
+            output += tab + "align box:" + str(self.align_box) + ln
             return output
 
     def align(self, p_complex, q_complex):
 
-        #p is fixed q is mobile
+        # p is fixed q is mobile
         args = self.args
         p_atoms = list(p_complex.atoms)
         q_atoms = list(q_complex.atoms)
@@ -184,13 +180,13 @@ class RMSD(nanome.PluginInstance):
             self._menu.change_error("different_size")
             return False
         if np.count_nonzero(p_atom_names != q_atom_names) and not args.reorder:
-            #message should be sent to nanome as notification?
+            # message should be sent to nanome as notification?
             msg = "\nerror: Atoms are not in the same order. \n reorder to align the atoms (can be expensive for large structures)."
             Logs.debug(msg)
             self._menu.change_error("different_order")
             return False
         else:
-            if(self._menu.error_message.text_value!="Loading..."):
+            if(self._menu.error_message.text_value != "Loading..."):
                 self._menu.change_error("clear")
 
         p_coords = help.positions_to_array(p_pos_orig)
@@ -228,7 +224,7 @@ class RMSD(nanome.PluginInstance):
             reorder_method = reorder_distance
         else:
             Logs.debug("error: Unknown reorder method:", args.reorder_method)
-            Logs.debug("The value of reorder is: ",args.reorder)
+            Logs.debug("The value of reorder is: ", args.reorder)
             return False
 
         # Save the resulting RMSD
@@ -253,7 +249,7 @@ class RMSD(nanome.PluginInstance):
                 Logs.debug("error: Structure not aligned")
                 return False
 
-        #calculate RMSD
+        # calculate RMSD
         if result_rmsd:
             pass
         elif rotation_method is None:
@@ -264,14 +260,14 @@ class RMSD(nanome.PluginInstance):
 
         # Logs.debug result
         if args.update:
-            #resetting coords
+            # resetting coords
             p_coords = help.positions_to_array(p_pos_orig)
             q_coords = help.positions_to_array(q_pos_orig)
 
             p_coords -= p_cent
             q_coords -= q_cent
 
-            #reordering coords  ?
+            # reordering coords  ?
             if args.reorder:
                 if q_review.shape[0] != len(q_coords):
                     Logs.debug("error: Reorder length error. Full atom list needed for --Logs.debug")
@@ -280,23 +276,23 @@ class RMSD(nanome.PluginInstance):
                 q_atoms = q_atoms[q_review]
 
             # Get rotation matrix
-            U = kabsch(p_coords, q_coords)
+            u = kabsch(p_coords, q_coords)
 
-            #update rotation
-            U_matrix = nanome.util.Matrix(4,4)
+            # update rotation
+            u_matrix = nanome.util.Matrix(4, 4)
             for i in range(3):
                 for k in range(3):
-                    U_matrix[i][k] = U[i][k]
-            U_matrix[3][3] = 1
+                    u_matrix[i][k] = u[i][k]
+            u_matrix[3][3] = 1
             rot_quat = p_complex.rotation
             rot_matrix = nanome.util.Matrix.from_quaternion(rot_quat)
 
-            result_matrix = rot_matrix * U_matrix
+            result_matrix = rot_matrix * u_matrix
             result_quat = nanome.util.Quaternion.from_matrix(result_matrix)
             q_complex.rotation = result_quat
             Logs.debug("Finished update")
 
-            #align centroids
+            # align centroids
             p_cent = p_complex.rotation.rotate_vector(help.array_to_position(p_cent))
             q_cent = q_complex.rotation.rotate_vector(help.array_to_position(q_cent))
 
@@ -317,7 +313,7 @@ class RMSD(nanome.PluginInstance):
                 for (atom, gPos) in zip(q_complex.atoms, global_pos):
                     atom.position = matrix2 * gPos
 
-            if(self._menu.error_message.text_value=="Loading..."):
+            if(self._menu.error_message.text_value == "Loading..."):
                 self._menu.change_error("clear")
 
             p_complex.locked = True
@@ -326,7 +322,7 @@ class RMSD(nanome.PluginInstance):
         return result_rmsd
 
     # auto select with global/local alignment
-    def select(self,mobile,target):
+    def select(self, mobile, target):
         self._mobile = mobile
         self._target = target
         self.request_workspace(self.on_select_received)
@@ -341,7 +337,6 @@ class RMSD(nanome.PluginInstance):
             if complex.index == self._target.index:
                 self._target = complex
 
-
         if (self.args.select.lower() == "global" and self.args.align_sequence):
             # self.selected_before = [[list(map(lambda a:a.selected,x.atoms)) for x in self._mobile],
             #                         list(map(lambda a:a.selected,self._target.atoms))]
@@ -349,27 +344,27 @@ class RMSD(nanome.PluginInstance):
             total_percentage = len(self._mobile) * 2 - 1
             percentage_count = 0
             for x in self._mobile:
-                selection.global_align(x , self._target)
-                percentage_count += 1/(total_percentage*2)
+                selection.global_align(x, self._target)
+                percentage_count += 1 / (total_percentage * 2)
                 self._menu.change_loading_percentage(percentage_count)
 
             for x in self._mobile:
-                selection.global_align(x , self._target)
-                percentage_count += 1/(total_percentage*2)
-                self._menu.change_loading_percentage(percentage_count )
+                selection.global_align(x, self._target)
+                percentage_count += 1 / (total_percentage * 2)
+                self._menu.change_loading_percentage(percentage_count)
 
         elif (self.args.select.lower() == "local" and self.args.align_sequence):
             total_percentage = len(self._mobile) * 2 - 1
             percentage_count = 0
             for x in self._mobile:
-                selection.local_align(x , self._target)
-                percentage_count += 1/(total_percentage*2)
+                selection.local_align(x, self._target)
+                percentage_count += 1 / (total_percentage * 2)
                 self._menu.change_loading_percentage(percentage_count)
 
             for x in self._mobile:
-                selection.local_align(x , self._target)
-                percentage_count += 1/(total_percentage*2)
-                self._menu.change_loading_percentage(percentage_count )
+                selection.local_align(x, self._target)
+                percentage_count += 1 / (total_percentage * 2)
+                self._menu.change_loading_percentage(percentage_count)
 
         self.workspace = workspace
         self.update_workspace(workspace)
@@ -380,18 +375,18 @@ class RMSD(nanome.PluginInstance):
         self._menu.loadingBar.percentage = 0
         # self._menu.change_error("clear")
 
-
     # find the two sequences whose distance is the smallest
     # called in on_select_received, used in the clustalW part
+
     def min_dist(self, matrix):
         if len(matrix) < 2 or len(matrix[0]) < 2:
             Logs.debug("distance matrix size is too small")
-            return -1,-1
+            return -1, -1
         else:
             min_val = math.inf
             for x in range(len(matrix)):
                 for y in range(len(matrix[0])):
-                    if x !=y and matrix[x][y] < min_val:
+                    if x != y and matrix[x][y] < min_val:
                         min_val = matrix[x][y]
                         seq1 = x
                         seq2 = y
@@ -399,11 +394,11 @@ class RMSD(nanome.PluginInstance):
             return seq1, seq2
 
 
-
 def main():
     plugin = nanome.Plugin("RMSD", "Aligns complexes using RMSD calculations.", "Alignment", False)
     plugin.set_plugin_class(RMSD)
     plugin.run()
+
 
 if __name__ == "__main__":
     main()
