@@ -321,8 +321,8 @@ class RMSD(nanome.PluginInstance):
             q_complex.locked = True
 
         if args.local_align:
-            Logs.debug(f'Locally Aligning {p_complex.full_name} to {q_complex.full_name}')
-            ComplexUtils.align_to(p_complex, q_complex)
+            Logs.debug(f'Locally Aligning {q_complex.full_name} to {p_complex.full_name}')
+            ComplexUtils.align_to(q_complex, p_complex)
 
         return result_rmsd
 
