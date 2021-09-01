@@ -362,12 +362,12 @@ class RMSDMenu():
 
         def local_align_button_pressed_callback(button):
             button.selected = not button.selected
-            
+
             if button.selected:
                 local_align_text.text_color = SELECTED_COLOR
             else:
                 local_align_text.text_color = DESELECTED_COLOR
-            
+
             self.update_args("local_align", button.selected)
             self._plugin.update_content(button)
             self._plugin.update_content(local_align_text)
