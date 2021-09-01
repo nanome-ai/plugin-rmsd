@@ -476,11 +476,6 @@ class RMSDMenu():
         prefab_button = child.add_new_button()
         prefab_button.text.active = True
 
-        # import the json file of the new UI
-        
-
-        menu = self._menu
-
         # add the refresh icon
         refresh_img = self._menu.root.find_node("Refresh Image", True)
         refresh_img.add_new_image(file_path=os.path.join(os.path.dirname(__file__), REFRESHICON))
