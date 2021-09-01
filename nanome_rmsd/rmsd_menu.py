@@ -362,9 +362,15 @@ class RMSDMenu():
 
         def local_align_button_pressed_callback(button):
             button.selected = not button.selected
+            
+            if button.selected:
+                local_align_text.text_color = SELECTED_COLOR
+            else:
+                local_align_text.text_color = DESELECTED_COLOR
+            
             self.update_args("local_align", button.selected)
             self._plugin.update_content(button)
-            self._plugin.update_content(no_hydrogen_text)
+            self._plugin.update_content(local_align_text)
 
         # backbone only = ! backbone only
         def backbone_only_button_pressed_callback(button):
@@ -540,7 +546,7 @@ class RMSDMenu():
 
         local_align_button = menu.root.find_node("Local Align btn", True).get_content()
         local_align_button.register_pressed_callback(local_align_button_pressed_callback)
-
+        local_align_text = menu.root.find_node("Local Align txt", True).get_content()
 
         # create the use reflection button
         # use_reflections_button = menu.root.find_node("Use Reflection btn",True).get_content()

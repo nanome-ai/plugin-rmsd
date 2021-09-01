@@ -5,7 +5,7 @@ from .rmsd_calculation import (
     reorder_brute, reorder_distance, check_reflections, rmsd)
 from .rmsd_menu import RMSDMenu
 from . import rmsd_helpers as help
-from nanome.util import Logs
+from nanome.util import Logs, ComplexUtils
 import numpy as np
 from . import rmsd_selection as selection
 
@@ -118,6 +118,7 @@ class RMSD(nanome.PluginInstance):
             self.align = True
             self.align_box = False
             self.align_sequence = True
+            self.local_align = False
 
         @property
         def update(self):
@@ -137,6 +138,7 @@ class RMSD(nanome.PluginInstance):
             output += tab + "backbone_only:" + str(self.backbone_only) + ln
             output += tab + "align:" + str(self.align) + ln
             output += tab + "align box:" + str(self.align_box) + ln
+            output += tab + "local align:" + str(self.local_align) + ln
             return output
 
     def align(self, p_complex, q_complex):
@@ -317,6 +319,10 @@ class RMSD(nanome.PluginInstance):
 
             p_complex.locked = True
             q_complex.locked = True
+
+        if args.local_align:
+            print(f'Locally Aligning {p_complex.full_name} to {q_complex.full_name}')
+            ComplexUtils.align_to(p_complex, q_complex)
 
         return result_rmsd
 
