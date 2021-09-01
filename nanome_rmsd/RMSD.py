@@ -24,8 +24,7 @@ class RMSD(nanome.PluginInstance):
         self.compare_index = None
 
     def on_run(self):
-        menu = self.menu
-        menu.enabled = True
+        self._menu.enabled = True
         self._menu._request_refresh()
 
     def on_complex_added(self):

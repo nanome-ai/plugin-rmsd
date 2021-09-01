@@ -360,6 +360,12 @@ class RMSDMenu():
             self._plugin.update_content(button)
             self._plugin.update_content(no_hydrogen_text)
 
+        def local_align_button_pressed_callback(button):
+            button.selected = not button.selected
+            self.update_args("local_align", button.selected)
+            self._plugin.update_content(button)
+            self._plugin.update_content(no_hydrogen_text)
+
         # backbone only = ! backbone only
         def backbone_only_button_pressed_callback(button):
             button.selected = not button.selected
@@ -531,6 +537,10 @@ class RMSDMenu():
         no_hydrogen_button = menu.root.find_node("No Hydrogen btn", True).get_content()
         no_hydrogen_button.register_pressed_callback(no_hydrogen_button_pressed_callback)
         no_hydrogen_text = menu.root.find_node("No Hydrogen txt", True).get_content()
+
+        local_align_button = menu.root.find_node("Local Align btn", True).get_content()
+        local_align_button.register_pressed_callback(local_align_button_pressed_callback)
+
 
         # create the use reflection button
         # use_reflections_button = menu.root.find_node("Use Reflection btn",True).get_content()
