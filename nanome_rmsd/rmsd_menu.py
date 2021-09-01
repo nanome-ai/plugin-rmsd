@@ -13,9 +13,12 @@ REFRESHICON = "Refresh.png"
 QUESTIONMARKICON = "QuestionMark.png"
 
 
+MENU_PATH = os.path.join(os.path.dirname(__file__), 'rmsd_pluginator.json')
+
+
 class RMSDMenu():
     def __init__(self, rmsd_plugin):
-        self._menu = rmsd_plugin.menu
+        self._menu = nanome.ui.Menu.io.from_json(MENU_PATH)
         self._plugin = rmsd_plugin
         self._selected_mobile = []  # button
         self._selected_target = None  # button
@@ -360,6 +363,18 @@ class RMSDMenu():
             self._plugin.update_content(button)
             self._plugin.update_content(no_hydrogen_text)
 
+        def local_align_button_pressed_callback(button):
+            button.selected = not button.selected
+
+            if button.selected:
+                local_align_text.text_color = SELECTED_COLOR
+            else:
+                local_align_text.text_color = DESELECTED_COLOR
+
+            self.update_args("local_align", button.selected)
+            self._plugin.update_content(button)
+            self._plugin.update_content(local_align_text)
+
         # backbone only = ! backbone only
         def backbone_only_button_pressed_callback(button):
             button.selected = not button.selected
@@ -461,39 +476,35 @@ class RMSDMenu():
         prefab_button = child.add_new_button()
         prefab_button.text.active = True
 
-        # import the json file of the new UI
-        menu = nanome.ui.Menu.io.from_json(os.path.join(os.path.dirname(__file__), 'rmsd_pluginator.json'))
-        self._plugin.menu = menu
-
         # add the refresh icon
-        refresh_img = menu.root.find_node("Refresh Image", True)
+        refresh_img = self._menu.root.find_node("Refresh Image", True)
         refresh_img.add_new_image(file_path=os.path.join(os.path.dirname(__file__), REFRESHICON))
 
         # add the receptor check icon
-        self.receptor_check = menu.root.find_node("Receptor Check", True)
+        self.receptor_check = self._menu.root.find_node("Receptor Check", True)
         self.receptor_check.add_new_image(file_path=os.path.join(os.path.dirname(__file__), QUESTIONMARKICON))
 
         # add the target check icon
-        self.target_check = menu.root.find_node("Target Check", True)
+        self.target_check = self._menu.root.find_node("Target Check", True)
         self.target_check.add_new_image(file_path=os.path.join(os.path.dirname(__file__), QUESTIONMARKICON))
 
         # create the layout node that contains select and run and refresh
-        self.ln_select_run = menu.root.find_node("Refresh Run", True)
+        self.ln_select_run = self._menu.root.find_node("Refresh Run", True)
 
         # create the Run button
-        self._run_button = menu.root.find_node("Run", True).get_content()
+        self._run_button = self._menu.root.find_node("Run", True).get_content()
         self._run_button.register_pressed_callback(run_button_pressed_callback)
 
         # create the Refresh button
-        refresh_button = menu.root.find_node("Refresh Button", True).get_content()
+        refresh_button = self._menu.root.find_node("Refresh Button", True).get_content()
         refresh_button.register_pressed_callback(refresh_button_pressed_callback)
 
         # create the lock button
-        lock_button = menu.root.find_node("Lock Button", True).get_content()
+        lock_button = self._menu.root.find_node("Lock Button", True).get_content()
         lock_button.register_pressed_callback(lock_button_pressed_callback)
 
         # add the lock icon,
-        self.lock_img = menu.root.find_node("Lock Image", True)
+        self.lock_img = self._menu.root.find_node("Lock Image", True)
         mobile_locked = False
         for x in self._selected_mobile:
             if x.locked:
@@ -505,84 +516,85 @@ class RMSDMenu():
             self.lock_img.add_new_image(file_path=os.path.join(os.path.dirname(__file__), UNLOCKICON))
 
         # create the List
-        self._show_list = menu.root.find_node("List", True).get_content()
+        self._show_list = self._menu.root.find_node("List", True).get_content()
         self._mobile_list = []
         self._target_list = []
 
         # create the Receptor tab
-        receptor_tab = menu.root.find_node("Receptor_tab", True).get_content()
+        receptor_tab = self._menu.root.find_node("Receptor_tab", True).get_content()
         receptor_tab.register_pressed_callback(receptor_tab_pressed_callback)
 
         # create the Target tab
-        target_tab = menu.root.find_node("Target_tab", True).get_content()
+        target_tab = self._menu.root.find_node("Target_tab", True).get_content()
         target_tab.register_pressed_callback(target_tab_pressed_callback)
 
         # create the align seqeuence button
-        align_sequence_button = menu._root.find_node("Align sequence btn", True).get_content()
+        align_sequence_button = self._menu._root.find_node("Align sequence btn", True).get_content()
         align_sequence_button.register_pressed_callback(align_sequence_button_pressed_callback)
-        align_sequence_text = menu.root.find_node("Align sequence txt", True).get_content()
+        align_sequence_text = self._menu.root.find_node("Align sequence txt", True).get_content()
 
         # create the no heterogens button
-        no_heterogens_button = menu.root.find_node("No Heterogens btn", True).get_content()
+        no_heterogens_button = self._menu.root.find_node("No Heterogens btn", True).get_content()
         no_heterogens_button.register_pressed_callback(no_heterogens_button_pressed_callback)
-        no_heterogens_text = menu.root.find_node("No Heterogens txt", True).get_content()
+        no_heterogens_text = self._menu.root.find_node("No Heterogens txt", True).get_content()
 
         # create the no hydrogen button
-        no_hydrogen_button = menu.root.find_node("No Hydrogen btn", True).get_content()
+        no_hydrogen_button = self._menu.root.find_node("No Hydrogen btn", True).get_content()
         no_hydrogen_button.register_pressed_callback(no_hydrogen_button_pressed_callback)
-        no_hydrogen_text = menu.root.find_node("No Hydrogen txt", True).get_content()
+        no_hydrogen_text = self._menu.root.find_node("No Hydrogen txt", True).get_content()
+
+        local_align_button = self._menu.root.find_node("Local Align btn", True).get_content()
+        local_align_button.register_pressed_callback(local_align_button_pressed_callback)
+        local_align_text = self._menu.root.find_node("Local Align txt", True).get_content()
 
         # create the use reflection button
-        # use_reflections_button = menu.root.find_node("Use Reflection btn",True).get_content()
+        # use_reflections_button = self._menu.root.find_node("Use Reflection btn",True).get_content()
         # use_reflections_button.register_pressed_callback(use_reflections_button_pressed_callback)
 
         # create the backbone only button
-        backbone_only_button = menu.root.find_node("Backbone only btn", True).get_content()
+        backbone_only_button = self._menu.root.find_node("Backbone only btn", True).get_content()
         backbone_only_button.register_pressed_callback(backbone_only_button_pressed_callback)
-        backbone_only_text = menu.root.find_node("Backbone only txt", True).get_content()
+        backbone_only_text = self._menu.root.find_node("Backbone only txt", True).get_content()
 
         # create the selected only button
-        selected_only_button = menu.root.find_node("Selected Only btn", True).get_content()
+        selected_only_button = self._menu.root.find_node("Selected Only btn", True).get_content()
         selected_only_button.register_pressed_callback(selected_only_button_pressed_callback)
-        selected_only_text = menu.root.find_node("Selected Only txt", True).get_content()
+        selected_only_text = self._menu.root.find_node("Selected Only txt", True).get_content()
 
         # create the global/local button
-        global_local_button = menu.root.find_node("Global Local menu", True).get_content()
+        global_local_button = self._menu.root.find_node("Global Local menu", True).get_content()
         global_local_button.register_pressed_callback(global_local_button_pressed_callback)
 
         # create the align box button
-        align_box_button = menu.root.find_node("Box btn", True).get_content()
+        align_box_button = self._menu.root.find_node("Box btn", True).get_content()
         align_box_button.register_pressed_callback(align_box_button_pressed_callback)
-        align_box_text = menu.root.find_node("Box txt", True).get_content()
+        align_box_text = self._menu.root.find_node("Box txt", True).get_content()
 
         # create the reorder button
-        reorder_button = menu.root.find_node("Reorder menu", True).get_content()
+        reorder_button = self._menu.root.find_node("Reorder menu", True).get_content()
         reorder_button.register_pressed_callback(reorder_button_pressed_callback)
-        reorder_text = menu.root.find_node("Reorder txt", True).get_content()
+        reorder_text = self._menu.root.find_node("Reorder txt", True).get_content()
 
         # create the roation "drop down"
-        rotation_button = menu.root.find_node("Rotation menu", True).get_content()
+        rotation_button = self._menu.root.find_node("Rotation menu", True).get_content()
         rotation_button.register_pressed_callback(rotation_button_pressed_callback)
-        rotation_text = menu.root.find_node("Rotation txt", True).get_content()
+        rotation_text = self._menu.root.find_node("Rotation txt", True).get_content()
 
-        self.ln_loading_bar = menu.root.find_node("Loading Bar", True)
+        self.ln_loading_bar = self._menu.root.find_node("Loading Bar", True)
         self.ln_loading_bar.forward_dist = .003
         self.loadingBar = self.ln_loading_bar.add_new_loading_bar()
         self.loadingBar.description = "      Loading...          "
 
         # create the rmsd score
-        self.rmsd_score_label = menu.root.find_node("RMSD number", True).get_content()
+        self.rmsd_score_label = self._menu.root.find_node("RMSD number", True).get_content()
 
         # create the receptor text
-        self.receptor_text = menu.root.find_node("Receptor").get_content()
+        self.receptor_text = self._menu.root.find_node("Receptor").get_content()
 
         # create the target text
-        self.target_text = menu.root.find_node("Target").get_content()
+        self.target_text = self._menu.root.find_node("Target").get_content()
 
         # create the error message text
-        error_node = menu.root.find_node("Error Message")
+        error_node = self._menu.root.find_node("Error Message")
         self.error_message = error_node.get_content()
-
-        self._menu = menu
-
         # self._request_refresh()
