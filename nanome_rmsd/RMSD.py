@@ -11,6 +11,7 @@ from . import rmsd_selection as selection
 
 
 class RMSD(nanome.PluginInstance):
+
     def start(self):
         Logs.debug("Start RMSD Plugin")
         self.args = RMSD.Args()
@@ -24,7 +25,7 @@ class RMSD(nanome.PluginInstance):
         self.compare_index = None
 
     def on_run(self):
-        self._menu.enabled = True
+        self._menu._menu.enabled = True
         self._menu._request_refresh()
 
     def on_complex_added(self):
