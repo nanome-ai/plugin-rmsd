@@ -1,4 +1,4 @@
-from nanome_rmsd import RMSD
+from plugin import RMSD
 
 if __name__ == "__main__":
     RMSD.main()
